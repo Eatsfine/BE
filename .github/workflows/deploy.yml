@@ -124,12 +124,16 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
             docker compose -f /home/ec2-user/deploy/docker-compose-${{ env.TARGET_UPSTREAM }}.yml up -d
           EOF
+
+      - name: 컨테이너 기동 대기
+        run: sleep 30
+
       - name: 새로 실행한 서버 컨테이너 헬스 체크
         uses: jtalk/url-health-check-action@v3
         with:
           url: http://${{ secrets.LIVE_SERVER_IP }}:${{ env.STOPPED_PORT }}/api/v1/deploy/health-check
-          max-attempts: 3
-          retry-delay: 10s
+          max-attempts: 10
+          retry-delay: 10
 
       - name: Nginx 의 대상 서버를 새로 실행한 컨테이너쪽으로 전환
         run: |
