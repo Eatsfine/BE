@@ -133,7 +133,7 @@ jobs:
         with:
           url: http://${{ secrets.LIVE_SERVER_IP }}:${{ env.STOPPED_PORT }}/api/v1/deploy/health-check
           max-attempts: 10
-          retry-delay: 10
+          retry-delay: 10s
 
       - name: Nginx 의 대상 서버를 새로 실행한 컨테이너쪽으로 전환
         run: |
