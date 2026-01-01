@@ -111,14 +111,18 @@ jobs:
           ssh eatsfine-ec2 << 'EOF'
             set -e
           
+            CONFIG_DIR=/home/ec2-user/config/eatsfine
+            DEPLOY_DIR=/home/ec2-user/deploy
+          
             # 필요한 프로필 파일을 서버로 복사합니다.
             if [ "${{ env.TARGET_UPSTREAM }}" = "blue" ]; then
-              echo "${{ secrets.APPLICATION_BLUE_YML }}" | base64 --decode > /home/ec2-user/config/eatsfine/application-blue.yml
+              echo "${{ secrets.APPLICATION_BLUE_YML }}" | base64 --decode > ${CONFIG_DIR}/application-blue.yml
             else
-              echo "${{ secrets.APPLICATION_GREEN_YML }}" | base64 --decode > /home/ec2-user/config/eatsfine/application-green.yml
+              echo "${{ secrets.APPLICATION_GREEN_YML }}" | base64 --decode > ${CONFIG_DIR}/application-green.yml
             fi
+            
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
-            docker compose -f docker-compose-${{ env.TARGET_UPSTREAM }}.yml up -d
+            docker compose -f /home/ec2-user/deploy/docker-compose-${{ env.TARGET_UPSTREAM }}.yml up -d
           EOF
       - name: 새로 실행한 서버 컨테이너 헬스 체크
         uses: jtalk/url-health-check-action@v3
