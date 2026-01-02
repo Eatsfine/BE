@@ -1,5 +1,5 @@
 spring:
   application:
-    name: eatsfine
+    name: Eatsfine
   profiles:
     active: local
