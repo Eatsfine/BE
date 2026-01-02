@@ -145,7 +145,8 @@ jobs:
         run: |
           ssh eatsfine-ec2 << 'EOF'
             set -e
-            docker rm -f "${{ env.CURRENT_UPSTREAM }}" || true
+            docker stop ${{ env.CURRENT_UPSTREAM }}
+            docker rm ${{ env.CURRENT_UPSTREAM }}
           EOF
       - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 제거
         if: always()
