@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.controller;
 
-import com.eatsfine.eatsfine.system.deploy.config.DeployProperties;
+import com.eatsfine.eatsfine.global.config.DeployProperties;
+import com.eatsfine.eatsfine.global.controller.HealthController;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
-package com.eatsfine.eatsfine.controller;
+package com.eatsfine.eatsfine.global.controller;
 
-import com.eatsfine.eatsfine.system.deploy.config.DeployProperties;
+import com.eatsfine.eatsfine.global.config.DeployProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;

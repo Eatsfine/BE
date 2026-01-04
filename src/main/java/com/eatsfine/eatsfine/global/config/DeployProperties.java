@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.system.deploy.config;
+package com.eatsfine.eatsfine.global.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
