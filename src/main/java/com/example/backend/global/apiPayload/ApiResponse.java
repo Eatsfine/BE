@@ -1,6 +1,7 @@
 package com.example.backend.global.apiPayload;
 
 import com.example.backend.global.apiPayload.code.BaseCode;
+import com.example.backend.global.apiPayload.code.status.SuccessStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
