@@ -39,6 +39,7 @@ public class Booking extends BaseEntity {
     private Integer partySize;
 
     //테이블 분리 허용 여부
+    @Builder.Default
     @Column(name = "is_split_accepted", nullable = false)
     private boolean isSplitAccepted = false;
 
