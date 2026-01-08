@@ -2,8 +2,24 @@ server:
   port: 8080
   profile: local
 
+
 spring:
   config:
     activate:
       on-profile: local
-
+  datasource:
+    url: jdbc:mysql://localhost:3306/eatsfine_local?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    username: root
+    password: 0766wjd!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
