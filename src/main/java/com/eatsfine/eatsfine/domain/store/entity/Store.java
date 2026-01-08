@@ -1,14 +1,18 @@
 package com.eatsfine.eatsfine.domain.store.entity;
 
+import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
 import com.eatsfine.eatsfine.domain.store.enums.StoreApprovalStatus;
+import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 @Table(name = "store")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -67,5 +71,18 @@ public class Store extends BaseEntity {
     @Builder.Default
     @Column(name = "booking_interval_minutes", nullable = false)
     private int bookingIntervalMinutes = 30;
+
+    @OneToMany(mappedBy = "store")
+    private List<BusinessHours> businessHours = new ArrayList<>();
+
+    @OneToMany(mappedBy = "store")
+    private List<StoreTable> storeTables = new ArrayList<>();
+
+    public void addBusinessHours(BusinessHours businessHours) {
+        this.businessHours.add(businessHours);
+        businessHours.assignStore(this);
+    }
+
+    // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
 
 }

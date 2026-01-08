@@ -43,4 +43,8 @@ public class BusinessHours extends BaseEntity {
     @Builder.Default
     @Column(name = "is_holiday", nullable = false)
     private boolean isHoliday = false;
+
+    public void assignStore(Store store){
+        this.store = store;
+    }
 }
