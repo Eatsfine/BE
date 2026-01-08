@@ -1,6 +1,8 @@
 package com.eatsfine.eatsfine.domain.businesshours.entity;
 
 import com.eatsfine.eatsfine.domain.businesshours.enums.DayOfWeek;
+import com.eatsfine.eatsfine.domain.store.entity.Store;
+import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -12,13 +14,14 @@ import java.time.LocalTime;
 @Builder
 @Getter
 @Table(name = "business_hours")
-public class BusinessHours {
+public class BusinessHours extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(name = "store_id", nullable = false)
-    private long storeId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 
     @Column(name = "day_of_week", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -36,6 +39,8 @@ public class BusinessHours {
     @Column(name = "break_end_time")
     private LocalTime breakEndTime;
 
+    // 휴일 여부 (특정 요일 고정 휴무)
+    @Builder.Default
     @Column(name = "is_holiday", nullable = false)
-    private boolean isHoliday;
+    private boolean isHoliday = false;
 }
