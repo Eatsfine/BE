@@ -36,6 +36,6 @@ public class BusinessHours {
     @Column(name = "break_end_time")
     private LocalTime breakEndTime;
 
-    @Column(name = "is_closed", nullable = false)
-    private boolean isClosed;
+    @Column(name = "is_holiday", nullable = false)
+    private boolean isHoliday;
 }
