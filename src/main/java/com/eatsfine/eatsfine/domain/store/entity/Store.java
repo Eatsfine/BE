@@ -75,8 +75,9 @@ public class Store extends BaseEntity {
     @OneToMany(mappedBy = "store")
     private List<BusinessHours> businessHours = new ArrayList<>();
 
-    @OneToMany(mappedBy = "store")
-    private List<StoreTable> storeTables = new ArrayList<>();
+    // 추후 StoreTable 엔티티 개발 완료 시 추가 예정
+    //@OneToMany(mappedBy = "store")
+    //private List<StoreTable> storeTables = new ArrayList<>();
 
     public void addBusinessHours(BusinessHours businessHours) {
         this.businessHours.add(businessHours);
