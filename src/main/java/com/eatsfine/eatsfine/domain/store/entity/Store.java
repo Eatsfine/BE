@@ -73,7 +73,7 @@ public class Store extends BaseEntity {
     @Column(name = "booking_interval_minutes", nullable = false)
     private int bookingIntervalMinutes = 30;
 
-    @OneToMany(mappedBy = "store")
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BusinessHours> businessHours = new ArrayList<>();
 
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -85,6 +85,11 @@ public class Store extends BaseEntity {
 
     public void addBusinessHours(BusinessHours businessHours) {
         this.businessHours.add(businessHours);
+        businessHours.assignStore(this);
+    }
+
+    public void removeBusinessHours(BusinessHours businessHours) {
+        this.businessHours.remove(businessHours);
         businessHours.assignStore(this);
     }
 
