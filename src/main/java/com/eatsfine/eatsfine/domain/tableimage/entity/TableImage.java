@@ -23,4 +23,8 @@ public class TableImage extends BaseEntity {
 
     @Column(name = "table_image_url", nullable = false)
     private String tableImageUrl;
+
+    public void assignStore(Store store) {
+        this.store = store;
+    }
 }

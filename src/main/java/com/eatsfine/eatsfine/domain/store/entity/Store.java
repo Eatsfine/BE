@@ -5,6 +5,7 @@ import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
 import com.eatsfine.eatsfine.domain.store.enums.StoreApprovalStatus;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
+import com.eatsfine.eatsfine.domain.tableimage.entity.TableImage;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
@@ -75,6 +76,9 @@ public class Store extends BaseEntity {
     @OneToMany(mappedBy = "store")
     private List<BusinessHours> businessHours = new ArrayList<>();
 
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TableImage> tableImages = new ArrayList<>();
+
     // 추후 StoreTable 엔티티 개발 완료 시 추가 예정
     //@OneToMany(mappedBy = "store")
     //private List<StoreTable> storeTables = new ArrayList<>();
@@ -82,6 +86,16 @@ public class Store extends BaseEntity {
     public void addBusinessHours(BusinessHours businessHours) {
         this.businessHours.add(businessHours);
         businessHours.assignStore(this);
+    }
+
+    public void addTableImage(TableImage tableImage) {
+        this.tableImages.add(tableImage);
+        tableImage.assignStore(this);
+    }
+
+    public void removeTableImage(TableImage tableImage) {
+        this.tableImages.remove(tableImage);
+        tableImage.assignStore(null);
     }
 
     // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
