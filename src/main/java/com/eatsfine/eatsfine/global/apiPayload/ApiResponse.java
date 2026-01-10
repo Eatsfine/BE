@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.global.apiPayload;
 
 import com.eatsfine.eatsfine.global.apiPayload.code.BaseCode;
+import com.eatsfine.eatsfine.global.apiPayload.code.BaseErrorCode;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.SuccessStatus;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -34,8 +35,11 @@ public class ApiResponse<T> {
                 result);
     }
 
-    public static <T> ApiResponse<T> onFailure(String code, String message, T data) {
-        return new ApiResponse<>(false, code, message, data);
+    public static <T> ApiResponse<T> onFailure(BaseErrorCode code, T result) {
+        return new ApiResponse<>(false,
+                code.getReasonHttpStatus().getCode(),
+                code.getReasonHttpStatus().getMessage(),
+                result);
     }
 
 }
