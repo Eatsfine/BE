@@ -16,13 +16,13 @@ import java.time.LocalTime;
 @Tag(name = "Booking", description = "예약 관련 API")
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/vi")
+@RequestMapping("/api/v1")
 public class BookingController {
 
     private final BookingQueryService bookingQueryService;
 
     @Operation(summary = "1단계: 예약 가능 시간대 조회"
-            , description = "가게, 날짜, 인원수를 입력받아 예약 가능한 시간 목록 반환")
+            , description = "가게, 날짜, 인원수, 테이블 분리 가능 여부를 입력받아 예약 가능한 시간 목록 반환")
     @GetMapping("/stores/{storeId}/bookings/available-times")
     public ApiResponse<BookingResponseDTO.TimeSlotListDTO> getAvailableTimes(
             @PathVariable Long storeId,

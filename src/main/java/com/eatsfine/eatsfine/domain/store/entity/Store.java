@@ -5,6 +5,7 @@ import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
 import com.eatsfine.eatsfine.domain.store.enums.StoreApprovalStatus;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
+import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.domain.tableimage.entity.TableImage;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
@@ -84,8 +85,13 @@ public class Store extends BaseEntity {
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TableImage> tableImages = new ArrayList<>();
 
+    // StoreTable이 아닌 TableLayout 엔티티 참조
+//    @OneToMany(mappedBy = "store")
+//    private List<StoreTable> storeTables = new ArrayList<>();
+
+    @Builder.Default
     @OneToMany(mappedBy = "store")
-    private List<StoreTable> storeTables = new ArrayList<>();
+    private List<TableLayout> tableLayouts = new ArrayList<>();
 
     public void addBusinessHours(BusinessHours businessHours) {
         this.businessHours.add(businessHours);
