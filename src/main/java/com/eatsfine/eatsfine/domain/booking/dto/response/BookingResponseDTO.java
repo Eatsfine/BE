@@ -14,6 +14,8 @@ public class BookingResponseDTO {
 
     @Builder
     public record AvailableTableListDTO(
+            int rows,
+            int cols,
             List<TableInfoDTO> tables
     ) {}
 
@@ -22,6 +24,10 @@ public class BookingResponseDTO {
             Long tableId,
             String tableNumber,
             Integer tableSeats,
-            String tableLocationType
+            String seatsType,
+            int gridX,
+            int gridY,
+            int widthSpan,
+            int heightSpan
     ){}
 }
