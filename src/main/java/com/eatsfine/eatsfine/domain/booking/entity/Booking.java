@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.booking.entity;
 
+import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingTable;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
@@ -10,6 +11,8 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -31,9 +34,8 @@ public class Booking extends BaseEntity {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "table_id", nullable = false)
-    private StoreTable table;
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private List<BookingTable> bookingTables = new ArrayList<>();
 
     @Column(name = "party_size", nullable = false)
     private Integer partySize;
