@@ -18,6 +18,7 @@ public class BusinessHoursConverter {
                 .day(bh.getDayOfWeek())
                 .openTime(bh.getOpenTime())
                 .closeTime(bh.getCloseTime())
+                .closed(false)
                 .build();
     }
 }

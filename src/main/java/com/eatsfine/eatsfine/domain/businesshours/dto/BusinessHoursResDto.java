@@ -12,6 +12,6 @@ public class BusinessHoursResDto {
             DayOfWeek day,
             LocalTime openTime,
             LocalTime closeTime,
-            Boolean closed // 영업일은 closed = null
+            boolean closed // true = 휴무, false = 영업
     ){}
 }
