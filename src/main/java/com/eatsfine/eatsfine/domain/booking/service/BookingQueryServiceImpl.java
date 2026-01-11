@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.domain.booking.service;
 
 import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
+import com.eatsfine.eatsfine.domain.booking.exception.BookingException;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
@@ -14,6 +15,7 @@ import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
 import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -29,9 +31,10 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     private final TableLayoutRepository tableLayoutRepository;
 
     @Override
+    @Transactional(readOnly = true)
     public BookingResponseDTO.TimeSlotListDTO getAvailableTimeSlots(Long storeId, LocalDate date, Integer partySize, Boolean isSplitAccepted) {
         Store store = storeRepository.findById(storeId)
-                .orElseThrow(()->new GeneralException(ErrorStatus._BAD_REQUEST));
+                .orElseThrow(() -> new BookingException(ErrorStatus._STORE_NOT_FOUND));
         BusinessHours hours = store.getBusinessHoursByDay(date.getDayOfWeek());
 
         List<LocalTime> availableSlots = new ArrayList<>();
@@ -85,9 +88,10 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize,Boolean isSplitAccepted, String seatsType) {
         TableLayout activeTableLayout = tableLayoutRepository.findByStoreIdAndIsActiveTrue(storeId)
-                .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+                .orElseThrow(() -> new BookingException(ErrorStatus._LAYOUT_NOT_FOUND));
         List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, date, time);
 
 
