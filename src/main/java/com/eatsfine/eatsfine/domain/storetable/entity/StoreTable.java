@@ -30,5 +30,13 @@ public class StoreTable extends BaseEntity {
     @Column(name = "seats_type")
     private SeatsType seatsType;
 
+    private int gridX;
+
+    private int gridY;
+
+    private int widthSpan;
+
+    private int heightSpan;
+
 
 }
