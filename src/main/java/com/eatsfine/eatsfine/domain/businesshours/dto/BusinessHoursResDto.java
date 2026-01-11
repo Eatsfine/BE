@@ -18,6 +18,6 @@ public class BusinessHoursResDto {
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
             LocalTime closeTime,
 
-            boolean closed // true = 휴무, false = 영업
+            boolean isClosed // true = 휴무, false = 영업
     ){}
 }

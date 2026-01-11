@@ -10,7 +10,7 @@ public class BusinessHoursConverter {
         if(bh.isHoliday()) {
             return BusinessHoursResDto.Summary.builder()
                     .day(bh.getDayOfWeek())
-                    .closed(true)
+                    .isClosed(true)
                     .build();
         }
         // 영업일일 때
@@ -18,7 +18,7 @@ public class BusinessHoursConverter {
                 .day(bh.getDayOfWeek())
                 .openTime(bh.getOpenTime())
                 .closeTime(bh.getCloseTime())
-                .closed(false)
+                .isClosed(false)
                 .build();
     }
 }
