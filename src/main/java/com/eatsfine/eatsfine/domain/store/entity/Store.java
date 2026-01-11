@@ -73,9 +73,11 @@ public class Store extends BaseEntity {
     @Column(name = "booking_interval_minutes", nullable = false)
     private int bookingIntervalMinutes = 30;
 
+    @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BusinessHours> businessHours = new ArrayList<>();
 
+    @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TableImage> tableImages = new ArrayList<>();
 
