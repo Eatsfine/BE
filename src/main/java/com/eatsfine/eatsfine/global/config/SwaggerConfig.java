@@ -24,7 +24,7 @@ public class SwaggerConfig {
                         .version("1.0.0"))
 
                 .servers(List.of(
-                        new Server().url("https://localhost:8080").description("Local")
+                        new Server().url("http://localhost:8080").description("Local")
                 ))
 
                 .addSecurityItem(new SecurityRequirement().addList(securitySchemeName))
