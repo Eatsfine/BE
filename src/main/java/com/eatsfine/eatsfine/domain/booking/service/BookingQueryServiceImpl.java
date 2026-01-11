@@ -12,12 +12,12 @@ import java.time.LocalTime;
 public class BookingQueryServiceImpl implements BookingQueryService {
 
     @Override
-    public BookingResponseDTO.TimeSlotListDTO getAvailableTimeSlots(Long storeId, LocalDate date, Integer partySize) {
+    public BookingResponseDTO.TimeSlotListDTO getAvailableTimeSlots(Long storeId, LocalDate date, Integer partySize, Boolean isSplitAccepted) {
         return null;
     }
 
     @Override
-    public BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize) {
+    public BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize, String seatsType) {
         return null;
     }
 }

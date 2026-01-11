@@ -6,16 +6,16 @@ import java.time.LocalTime;
 public class BookingRequestDTO {
 
     public record GetAvailableTimeDTO(
-            Long storeId,
             LocalDate date,
-            Integer partySize
+            Integer partySize,
+            Boolean isSplitAccepted
     ){}
 
     public record GetAvailableTableDTO(
-            Long storeId,
             LocalDate date,
             LocalTime time,
-            Integer partySize
+            Integer partySize,
+            String seatsType
     ){}
 
 }

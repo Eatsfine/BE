@@ -5,12 +5,10 @@ import com.eatsfine.eatsfine.domain.booking.service.BookingQueryService;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -18,6 +16,7 @@ import java.time.LocalTime;
 @Tag(name = "Booking", description = "예약 관련 API")
 @RestController
 @RequiredArgsConstructor
+@RequestMapping("/api/vi")
 public class BookingController {
 
     private final BookingQueryService bookingQueryService;
@@ -28,9 +27,10 @@ public class BookingController {
     public ApiResponse<BookingResponseDTO.TimeSlotListDTO> getAvailableTimes(
             @PathVariable Long storeId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-            @RequestParam Integer partySize) {
+            @RequestParam Integer partySize,
+            @RequestParam(defaultValue = "false") Boolean isSplitAccepted) {
 
-        return ApiResponse.onSuccess(bookingQueryService.getAvailableTimeSlots(storeId, date, partySize));
+        return ApiResponse.onSuccess(bookingQueryService.getAvailableTimeSlots(storeId, date, partySize,isSplitAccepted));
     }
 
     @Operation(summary = "2단계: 예약 가능 테이블 조회"
@@ -40,9 +40,10 @@ public class BookingController {
             @PathVariable Long storeId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
             @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime time,
-            @RequestParam Integer partySize) {
+            @RequestParam Integer partySize,
+            @RequestParam(required = false) String seatsType) {
 
-        return ApiResponse.onSuccess(bookingQueryService.getAvailableTables(storeId, date, time, partySize));
+        return ApiResponse.onSuccess(bookingQueryService.getAvailableTables(storeId, date, time, partySize,seatsType));
     }
 
 }
