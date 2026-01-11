@@ -4,6 +4,8 @@ import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
 import com.eatsfine.eatsfine.domain.booking.service.BookingQueryService;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -39,11 +41,14 @@ public class BookingController {
     public ApiResponse<BookingResponseDTO.AvailableTableListDTO> getAvailableTables(
             @PathVariable Long storeId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @Parameter(description = "예약 시간", example = "18:00")
+            @Schema(type = "string", pattern = "HH:mm", example = "18:00")
             @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime time,
             @RequestParam Integer partySize,
+            @RequestParam Boolean isSplitAccepted,
             @RequestParam(required = false) String seatsType) {
 
-        return ApiResponse.onSuccess(bookingQueryService.getAvailableTables(storeId, date, time, partySize,seatsType));
+        return ApiResponse.onSuccess(bookingQueryService.getAvailableTables(storeId, date, time, partySize,isSplitAccepted,seatsType));
     }
 
 }

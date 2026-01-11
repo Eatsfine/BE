@@ -9,5 +9,5 @@ public interface BookingQueryService {
 
     BookingResponseDTO.TimeSlotListDTO getAvailableTimeSlots(Long storeId, LocalDate date, Integer partySize,Boolean isSplitAccepted);
 
-    BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize, String seatsType);
+    BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize,Boolean isSplitAccepted, String seatsType);
 }

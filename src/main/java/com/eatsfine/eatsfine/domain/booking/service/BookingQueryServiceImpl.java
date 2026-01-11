@@ -85,15 +85,23 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     }
 
     @Override
-    public BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize, String seatsType) {
+    public BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize,Boolean isSplitAccepted, String seatsType) {
         TableLayout activeTableLayout = tableLayoutRepository.findByStoreIdAndIsActiveTrue(storeId)
                 .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
         List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, date, time);
 
+
         List<BookingResponseDTO.TableInfoDTO> availableTables = activeTableLayout.getTables().stream()
                 .filter(t -> !reservedTableIds.contains(t.getId()))
-                .filter(t -> t.getTableSeats() >= partySize)
-                .filter(t -> t.getSeatsType() == null || t.getSeatsType().name().equalsIgnoreCase(seatsType))
+                .filter(t -> {
+                    // 사용자가 "분리 허용 안 함(false)"을 선택했다면, 테이블 크기가 인원수보다 커야 함
+                    if (isSplitAccepted != null && !isSplitAccepted) {
+                        return t.getTableSeats() >= partySize;
+                    }
+                    // 사용자가 "분리 허용(true)"을 선택했다면 모든 빈 테이블 표시
+                    return true;
+                })
+                .filter(t -> seatsType == null || (t.getSeatsType() != null && t.getSeatsType().name().equalsIgnoreCase(seatsType)))
                 .map(t -> BookingResponseDTO.TableInfoDTO.builder()
                         .tableId(t.getId())
                         .tableNumber(t.getTableNumber())
