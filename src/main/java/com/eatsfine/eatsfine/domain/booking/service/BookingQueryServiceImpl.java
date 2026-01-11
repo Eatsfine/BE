@@ -7,9 +7,11 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
+import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
 import com.eatsfine.eatsfine.global.apiPayload.code.BaseErrorCode;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
+import jakarta.persistence.Table;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -24,6 +26,7 @@ public class BookingQueryServiceImpl implements BookingQueryService {
 
     private final BookingRepository bookingRepository;
     private final StoreRepository storeRepository;
+    private final TableLayoutRepository tableLayoutRepository;
 
     @Override
     public BookingResponseDTO.TimeSlotListDTO getAvailableTimeSlots(Long storeId, LocalDate date, Integer partySize, Boolean isSplitAccepted) {
@@ -43,6 +46,7 @@ public class BookingQueryServiceImpl implements BookingQueryService {
                 TableLayout activeTableLayout = tableLayouts.stream()
                         .filter(TableLayout::isActive).findFirst()
                         .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+
                 List<StoreTable> activeTables = activeTableLayout.getTables();
 
                 if (canAccommodate(activeTables, reservedTableIds, partySize, isSplitAccepted)) {
@@ -64,7 +68,6 @@ public class BookingQueryServiceImpl implements BookingQueryService {
         if(freeTables.stream().anyMatch(t-> t.getTableSeats() >= partySize)) return true;
 
         // 2. 단일 테이블로 안 될 때, 나눠 앉기 동의 했을 경우 합계로 체크
-
         if (isSplitAccepted) {
             int totalSeats = freeTables.stream().mapToInt(StoreTable::getTableSeats).sum();
             return totalSeats >= partySize;
@@ -83,6 +86,30 @@ public class BookingQueryServiceImpl implements BookingQueryService {
 
     @Override
     public BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, LocalDate date, LocalTime time, Integer partySize, String seatsType) {
-        return null;
+        TableLayout activeTableLayout = tableLayoutRepository.findByStoreIdAndIsActiveTrue(storeId)
+                .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+        List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, date, time);
+
+        List<BookingResponseDTO.TableInfoDTO> availableTables = activeTableLayout.getTables().stream()
+                .filter(t -> !reservedTableIds.contains(t.getId()))
+                .filter(t -> t.getTableSeats() >= partySize)
+                .filter(t -> t.getSeatsType() == null || t.getSeatsType().name().equalsIgnoreCase(seatsType))
+                .map(t -> BookingResponseDTO.TableInfoDTO.builder()
+                        .tableId(t.getId())
+                        .tableNumber(t.getTableNumber())
+                        .tableSeats(t.getTableSeats())
+                        .seatsType(t.getSeatsType().name())
+                        .gridX(t.getGridX())
+                        .gridY(t.getGridY())
+                        .widthSpan(t.getWidthSpan())
+                        .heightSpan(t.getHeightSpan())
+                        .build())
+                .toList();
+
+        return BookingResponseDTO.AvailableTableListDTO.builder()
+                .rows(activeTableLayout.getLows())
+                .cols(activeTableLayout.getCols())
+                .tables(availableTables)
+                .build();
     }
 }
