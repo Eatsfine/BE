@@ -25,7 +25,7 @@ public class TableLayout extends BaseEntity {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    private int rows;
+    private int lows;
     private int cols;
 
     @Column(name = "is_active")
@@ -33,5 +33,6 @@ public class TableLayout extends BaseEntity {
 
     @OneToMany(mappedBy = "tableLayout")
     private List<StoreTable> tables = new ArrayList<>();
+
 
 }
