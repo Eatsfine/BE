@@ -1,11 +1,11 @@
 package com.eatsfine.eatsfine.domain.businesshours.entity;
 
-import com.eatsfine.eatsfine.domain.businesshours.enums.DayOfWeek;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 @Entity
@@ -24,7 +24,6 @@ public class BusinessHours extends BaseEntity {
     private Store store;
 
     @Column(name = "day_of_week", nullable = false)
-    @Enumerated(EnumType.STRING)
     private DayOfWeek dayOfWeek;
 
     @Column(name = "open_time", nullable = false)
