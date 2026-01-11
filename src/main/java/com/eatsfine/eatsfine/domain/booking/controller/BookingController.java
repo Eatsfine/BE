@@ -41,8 +41,8 @@ public class BookingController {
     public ApiResponse<BookingResponseDTO.AvailableTableListDTO> getAvailableTables(
             @PathVariable Long storeId,
             @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-            @Parameter(description = "예약 시간", example = "18:00")
-            @Schema(type = "string", pattern = "HH:mm", example = "18:00")
+            @Parameter(description = "예약 시간 (HH:mm)", example = "18:00")
+            @Schema(type = "string", example = "18:00", description = "HH:mm 형식으로 입력하세요.")
             @RequestParam @DateTimeFormat(pattern = "HH:mm") LocalTime time,
             @RequestParam Integer partySize,
             @RequestParam Boolean isSplitAccepted,
