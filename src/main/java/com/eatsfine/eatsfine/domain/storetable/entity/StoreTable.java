@@ -1,6 +1,8 @@
 package com.eatsfine.eatsfine.domain.storetable.entity;
 
 import com.eatsfine.eatsfine.domain.store.entity.Store;
+import com.eatsfine.eatsfine.domain.storetable.enums.SeatsType;
+import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -19,10 +21,14 @@ public class StoreTable extends BaseEntity {
     private String tableNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store")
-    private Store store;
+    @JoinColumn(name = "table_layout_id", nullable = false)
+    private TableLayout tableLayout; // 부모 변경
 
     private Integer tableSeats;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "seats_type")
+    private SeatsType seatsType;
 
 
 }
