@@ -152,8 +152,8 @@ jobs:
         run: |
           ssh eatsfine-ec2 << 'EOF'
             set -e
-            echo "set \$service_url ${{ env.TARGET_UPSTREAM }};" > /home/ec2-user/nginx/service-env.inc
-            docker exec nginx nginx -s reload
+            # 컨테이너 내부의 파일에 직접 쓰기 (sh 사용, 경로 이슈 해결)
+            docker exec -i nginx sh -c 'echo "set \$service_url ${{ env.TARGET_UPSTREAM }};" > /etc/nginx/conf.d/service-env.inc && nginx -s reload'
           EOF
       - name: 기존 배포 컨테이너 정지
         run: |
