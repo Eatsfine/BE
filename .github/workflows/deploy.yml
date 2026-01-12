@@ -79,20 +79,25 @@ jobs:
 
       - name: 배포 대상 판단 (nginx 기준)
         run: |
-          RESULT=$(ssh -T eatsfine-ec2 << 'EOF' | tail -n 1
-            awk '{print $3}' /home/ec2-user/nginx/service-env.inc | tr -d ';'
+          CURRENT=$(ssh -T eatsfine-ec2 << 'EOF'
+            if docker ps --format '{{.Names}}' | grep -q '^blue$'; then
+              echo blue
+            else
+              echo green
+            fi
           EOF
           )
+    
+    
+          echo "CURRENT_UPSTREAM=$CURRENT" >> $GITHUB_ENV
             
-            echo "CURRENT_UPSTREAM=$RESULT" >> $GITHUB_ENV
-            
-            if [ "$RESULT" = "blue" ]; then
-              echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
-              echo "TARGET_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
-            else
-              echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
-              echo "TARGET_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
-            fi
+          if [ "$CURRENT" = "blue" ]; then
+            echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
+            echo "TARGET_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
+          else
+            echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
+            echo "TARGET_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
+          fi
 
       - name: GitHub Actions - TARGET 컨테이너 포트 오픈
         run: |
@@ -120,7 +125,8 @@ jobs:
           
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
             docker compose -f /home/ec2-user/deploy/docker-compose-${{ env.TARGET_UPSTREAM }}.yml up -d
-          
+            
+            docker ps
           EOF
 
       - name: 컨테이너 기동 대기
