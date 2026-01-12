@@ -79,7 +79,7 @@ jobs:
 
       - name: 배포 대상 판단 (nginx 기준)
         run: |
-          CURRENT=$(ssh -T eatsfine-ec2 << 'EOF'
+          CURRENT=$(ssh -T eatsfine-ec2 << 'EOF' | tail -n 1
             if docker ps --format '{{.Names}}' | grep -q '^blue$'; then
               echo blue
             else
