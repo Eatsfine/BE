@@ -1,16 +1,16 @@
-server:
-  port: 8080
-  profile: local
+port: 8080
+profile: local
 
 
 spring:
   config:
     activate:
       on-profile: local
+
   datasource:
     url: jdbc:mysql://localhost:3306/eatsfine_local?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     username: root
-    password: 0766wjd!
+    password: password
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
