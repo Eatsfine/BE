@@ -79,7 +79,7 @@ jobs:
 
       - name: 배포 대상 판단 (nginx 기준)
         run: |
-          RESULT=$(ssh eatsfine-ec2 << 'EOF'
+          RESULT=$(ssh -T eatsfine-ec2 << 'EOF' | tail -n 1
             awk '{print $3}' /home/ec2-user/nginx/service-env.inc | tr -d ';'
           EOF
           )
