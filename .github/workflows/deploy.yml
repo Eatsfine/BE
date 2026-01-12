@@ -48,46 +48,22 @@ jobs:
       - name: 도커 이미지 푸시
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
 
-      - name: 배포 대상 포트/PROFILE 확인
+      - name: 배포 대상 판단 (nginx 기준)
         run: |
-          # curl 연결 실패 시(서버 꺼짐 등)에도 에러내지 않고 넘어감 (|| true)
-          response=$(curl -s -w "%{http_code}" "http://${{ secrets.LIVE_SERVER_IP }}/api/v1/deploy/health-check") || true
-          
-          echo "Response: $response"
-          
-          # 응답이 비어있거나(연결실패) 200이 아니면
-          if [ -z "$response" ] || [ "${#response}" -lt 3 ]; then
-            STATUS="ERROR"
-          else
-            STATUS="${response: -3}"
-            BODY="${response::-3}"
-          fi
-          
-          echo "STATUS=$STATUS"
-          
-          if [ "$STATUS" = "200" ]; then
-            CURRENT_UPSTREAM="$BODY"
-          else
-            # 서버가 죽어있거나 응답이 없으면 기본적으로 green을 현재 상태로 보고 blue를 배포
-            CURRENT_UPSTREAM="green"
-          fi
-          
-          echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM" >> $GITHUB_ENV
-          
-          if [ "$CURRENT_UPSTREAM" = "blue" ]; then
-            echo "CURRENT_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
-            echo "STOPPED_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
-            echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
-            echo "TARGET_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
-          elif [ "$CURRENT_UPSTREAM" = "green" ]; then
-            echo "CURRENT_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
-            echo "STOPPED_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
-            echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
-            echo "TARGET_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
-          else
-            echo "error"
-            exit 1
-          fi
+          ssh eatsfine-ec2 << 'EOF'
+            set -e
+            CURRENT_UPSTREAM=$(awk '{print $3}' /home/ec2-user/nginx/service-env.inc | tr -d ';')
+            
+            echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM" >> $GITHUB_ENV
+            
+            if [ "$CURRENT_UPSTREAM" = "blue" ]; then
+              echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
+              echo "TARGET_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
+            else
+              echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
+              echo "TARGET_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
+            fi
+          EOF
 
       - name: GitHub Actions 실행자 IP 얻어오기
         id: GITHUB_ACTIONS_IP
@@ -106,7 +82,7 @@ jobs:
             --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
             --ip-permissions \
               'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]' \
-              'IpProtocol=tcp,FromPort=${{ env.STOPPED_PORT }},ToPort=${{ env.STOPPED_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
+              'IpProtocol=tcp,FromPort=${{ env.TARGET_PORT }},ToPort=${{ env.TARGET_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
       - name: SSH Key 설정
         run: |
           mkdir -p ~/.ssh
@@ -170,4 +146,4 @@ jobs:
           --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
           --ip-permissions \
             'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]' \
-            'IpProtocol=tcp,FromPort=${{env.STOPPED_PORT}},ToPort=${{env.STOPPED_PORT}},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
+            'IpProtocol=tcp,FromPort=${{env.TARGET_PORT}},ToPort=${{env.TARGET_PORT}},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
