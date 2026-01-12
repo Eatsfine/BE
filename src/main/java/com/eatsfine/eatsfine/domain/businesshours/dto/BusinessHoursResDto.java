@@ -1,9 +1,9 @@
 package com.eatsfine.eatsfine.domain.businesshours.dto;
 
-import com.eatsfine.eatsfine.domain.businesshours.enums.DayOfWeek;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 
 public class BusinessHoursResDto {
