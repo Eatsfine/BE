@@ -136,11 +136,6 @@ jobs:
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
             docker compose -f /home/ec2-user/deploy/docker-compose-${{ env.TARGET_UPSTREAM }}.yml up -d
           
-            # 컨테이너 존재 검증
-            docker ps --format '{{.Names}}' | grep -q "^${{ env.TARGET_UPSTREAM }}$"
-          
-            # 컨테이너 직접 헬스체크
-            curl -f http://localhost:${{ env.TARGET_PORT }}/api/v1/deploy/health-check
           EOF
 
       - name: 컨테이너 기동 대기
@@ -164,8 +159,8 @@ jobs:
         run: |
           ssh eatsfine-ec2 << 'EOF'
             set -e
-            docker ps --format '{{.Names}}' | grep -q "^${{ env.CURRENT_UPSTREAM }}$" && \
-            docker stop ${{ env.CURRENT_UPSTREAM }} && docker rm ${{ env.CURRENT_UPSTREAM }} || true
+            docker stop ${{ env.CURRENT_UPSTREAM }}
+            docker rm ${{ env.CURRENT_UPSTREAM }}
           EOF
       - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 제거
         if: always()
