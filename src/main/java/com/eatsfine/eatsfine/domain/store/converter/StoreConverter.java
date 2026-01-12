@@ -25,8 +25,8 @@ public class StoreConverter {
                 .category(store.getCategory())
                 .rating(store.getRating())
                 .reviewCount(null) // reviewCount는 추후 리뷰 로직 구현 시 추가 예정
-                .mainImage(store.getMainImageUrl())
-                .tableImages(Collections.emptyList()) // tableImages는 추후 사진 등록 API 구현 시 추가 예정
+                .mainImageUrl(store.getMainImageUrl())
+                .tableImageUrls(Collections.emptyList()) // tableImages는 추후 사진 등록 API 구현 시 추가 예정
                 .businessHours(
                         store.getBusinessHours().stream()
                                 .map(BusinessHoursConverter::toSummary)

@@ -1,10 +1,10 @@
 package com.eatsfine.eatsfine.domain.businesshours.validator;
 
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
-import com.eatsfine.eatsfine.domain.businesshours.enums.DayOfWeek;
 import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
 import com.eatsfine.eatsfine.domain.businesshours.status.BusinessHoursErrorStatus;
 
+import java.time.DayOfWeek;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
