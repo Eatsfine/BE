@@ -19,7 +19,6 @@ public class StoreResDto {
             StoreApprovalStatus status
     ){}
 
-
     @Builder
     public record StoreDetailDto(
             Long storeId,
@@ -33,8 +32,7 @@ public class StoreResDto {
             String mainImage,
             List<String> tableImages,
             List<BusinessHoursResDto.Summary> businessHours,
-            boolean isOpenNow,
-            String priceRange
+            boolean isOpenNow
     ){}
 
 }

@@ -66,12 +66,6 @@ public class Store extends BaseEntity {
     @Column(name = "category", nullable = false)
     private Category category;
 
-    @Column(name = "min_price", nullable = false)
-    private int minPrice;
-
-    @Column(name = "max_price", nullable = false)
-    private int maxPrice;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "store_approval_status", nullable = false)
     private StoreApprovalStatus approvalStatus;

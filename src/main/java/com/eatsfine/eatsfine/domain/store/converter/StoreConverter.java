@@ -32,8 +32,7 @@ public class StoreConverter {
                                 .map(BusinessHoursConverter::toSummary)
                                 .toList())
                 .isOpenNow(false) // 추후 영업 여부 판단 로직 구현 예정
-                .priceRange(null) // 추후
                 .build();
     }
     }
-}
+

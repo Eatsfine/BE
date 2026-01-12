@@ -18,8 +18,6 @@ public class StoreReqDto {
             String phoneNumber,
             Category category,
             int bookingIntervalMinutes,
-            List<BusinessHoursReqDto.Summary> businessHours,
-            int minPrice,
-            int maxPrice
+            List<BusinessHoursReqDto.Summary> businessHours
     ){}
 }
