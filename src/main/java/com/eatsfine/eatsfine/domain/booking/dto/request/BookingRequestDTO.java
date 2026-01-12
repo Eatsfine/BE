@@ -21,7 +21,6 @@ public class BookingRequestDTO {
 
     public record GetAvailableTableDTO(
             @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-            @Parameter(description = "예약 시간 (HH:mm)", example = "18:00")
             @Schema(type = "string", example = "18:00", description = "HH:mm 형식으로 입력하세요.")
             @NotNull @DateTimeFormat(pattern = "HH:mm") LocalTime time,
             @NotNull @Min(1) Integer partySize,
@@ -31,11 +30,11 @@ public class BookingRequestDTO {
 
     public record CreateBookingDTO(
             @NotNull @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
-            @Parameter(description = "예약 시간 (HH:mm)", example = "18:00")
             @Schema(type = "string", example = "18:00", description = "HH:mm 형식으로 입력하세요.")
             @NotNull @DateTimeFormat(pattern = "HH:mm") LocalTime time,
             @NotNull @Min(1) Integer partySize,
-            @NotNull List<Long> tableIds
+            @NotNull List<Long> tableIds,
+            @NotNull boolean isSplitAccepted
     ){}
 
 }
