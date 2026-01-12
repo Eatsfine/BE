@@ -58,7 +58,7 @@ public class BookingController {
     @PostMapping("stores/{storeId}/bookings")
     public ApiResponse<BookingResponseDTO.CreateBookingResultDTO> createBooking(
             @PathVariable Long storeId,
-            @ModelAttribute @Valid BookingRequestDTO.CreateBookingDTO dto
+            @RequestBody @Valid BookingRequestDTO.CreateBookingDTO dto
             ) {
 
         User user = userRepository.findById(1L).orElseThrow(); // 임시로 임의의 유저 사용
