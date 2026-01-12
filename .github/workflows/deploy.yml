@@ -79,20 +79,20 @@ jobs:
 
       - name: 배포 대상 판단 (nginx 기준)
         run: |
-          ssh eatsfine-ec2 << 'EOF'
-            set -e
-            CURRENT_UPSTREAM=$(awk '{print $3}' /home/ec2-user/nginx/service-env.inc | tr -d ';')
+          RESULT=$(ssh eatsfine-ec2 << 'EOF'
+            awk '{print $3}' /home/ec2-user/nginx/service-env.inc | tr -d ';'
+          EOF
+          )
             
-            echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM" >> $GITHUB_ENV
+            echo "CURRENT_UPSTREAM=$RESULT" >> $GITHUB_ENV
             
-            if [ "$CURRENT_UPSTREAM" = "blue" ]; then
+            if [ "$RESULT" = "blue" ]; then
               echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
               echo "TARGET_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
             else
               echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
               echo "TARGET_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
             fi
-          EOF
 
       - name: GitHub Actions - TARGET 컨테이너 포트 오픈
         run: |
