@@ -48,6 +48,24 @@ jobs:
       - name: 도커 이미지 푸시
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
 
+      - name: GitHub Actions 실행자 IP 얻어오기
+        id: GITHUB_ACTIONS_IP
+        uses: haythem/public-ip@v1.3
+
+      - name: AWS CLI 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: GitHub Actions - SSH 접근 허용
+        run: |
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+            --ip-permissions \
+              'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
+
       - name: SSH Key 설정
         run: |
           mkdir -p ~/.ssh
@@ -68,39 +86,23 @@ jobs:
               CURRENT_UPSTREAM="green"
             fi
 
-            echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM"
-
             if [ "$CURRENT_UPSTREAM" = "blue" ]; then
-              echo "CURRENT_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
-              echo "STOPPED_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
+              echo "CURRENT_UPSTREAM=blue" >> $GITHUB_ENV
               echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
               echo "TARGET_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
             else
-              echo "CURRENT_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
-              echo "STOPPED_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
+              echo "CURRENT_UPSTREAM=green" >> $GITHUB_ENV
               echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
               echo "TARGET_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
             fi
           EOF
-
-      - name: GitHub Actions 실행자 IP 얻어오기
-        id: GITHUB_ACTIONS_IP
-        uses: haythem/public-ip@v1.3
-
-      - name: AWS CLI 설정
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-
-      - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 부여
+          
+      - name: GitHub Actions - TARGET 포트 접근 허용
         run: |
           aws ec2 authorize-security-group-ingress \
             --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
             --ip-permissions \
-              'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]' \
-              'IpProtocol=tcp,FromPort=${{ env.TARGET_PORT }},ToPort=${{ env.TARGET_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
+              'IpProtocol=tcp,FromPort=${{ env.TARGET_PORT }},ToPort=${{ env.TARGET_PORT }},IpRanges=[{CidrIp=${{ steps.gh-ip.outputs.ipv4 }}/32}]'
       
 
       - name: 도커 이미지 풀링 및 컨테이너 실행
