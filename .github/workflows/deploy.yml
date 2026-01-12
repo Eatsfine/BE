@@ -48,6 +48,17 @@ jobs:
       - name: 도커 이미지 푸시
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
 
+      - name: SSH Key 설정
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/eatsfine-ec2-key.pem
+          chmod 600 ~/.ssh/eatsfine-ec2-key.pem
+          echo "Host eatsfine-ec2" >> ~/.ssh/config
+          echo "  HostName ${{ secrets.LIVE_SERVER_IP }}" >> ~/.ssh/config
+          echo "  User ${{ secrets.EC2_USERNAME }}" >> ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/eatsfine-ec2-key.pem" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+
       - name: 배포 대상 판단 (nginx 기준)
         run: |
           ssh eatsfine-ec2 << 'EOF'
@@ -83,16 +94,7 @@ jobs:
             --ip-permissions \
               'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]' \
               'IpProtocol=tcp,FromPort=${{ env.TARGET_PORT }},ToPort=${{ env.TARGET_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
-      - name: SSH Key 설정
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/eatsfine-ec2-key.pem
-          chmod 600 ~/.ssh/eatsfine-ec2-key.pem
-          echo "Host eatsfine-ec2" >> ~/.ssh/config
-          echo "  HostName ${{ secrets.LIVE_SERVER_IP }}" >> ~/.ssh/config
-          echo "  User ${{ secrets.EC2_USERNAME }}" >> ~/.ssh/config
-          echo "  IdentityFile ~/.ssh/eatsfine-ec2-key.pem" >> ~/.ssh/config
-          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+      
 
       - name: 도커 이미지 풀링 및 컨테이너 실행
         run: |
