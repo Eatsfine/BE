@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.booking.dto.request;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 public class BookingRequestDTO {
 
@@ -16,6 +17,14 @@ public class BookingRequestDTO {
             LocalTime time,
             Integer partySize,
             String seatsType
+    ){}
+
+    public record CreateBookingDTO(
+            Long storeId,
+            LocalDate date,
+            LocalTime time,
+            Integer partySize,
+            List<Long> tableIds
     ){}
 
 }
