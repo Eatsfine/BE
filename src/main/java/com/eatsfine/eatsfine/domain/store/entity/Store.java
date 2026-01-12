@@ -39,6 +39,12 @@ public class Store extends BaseEntity {
     @JoinColumn(name = "region_id", nullable = false)
     private Region region;
 
+    @Column(nullable = false)
+    private double latitude;
+
+    @Column(nullable = false)
+    private double longitude;
+
     @Column(name = "store_name", nullable = false)
     private String storeName;
 

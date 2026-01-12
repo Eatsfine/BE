@@ -17,6 +17,32 @@ public class StoreResDto {
             StoreApprovalStatus status
     ){}
 
+    @Builder
+    public record StoreSearchDto(
+            Long storeId,
+            String name,
+            String address,
+            Category category,
+            BigDecimal rating,
+            Integer reviewCount, // 리뷰 도메인이 존재하지 않아 null 허용
+            double distance,
+            String mainImageUrl,
+            boolean isOpenNow
+    ){}
+
+    @Builder
+    public record PaginationDto(
+            int currentPage,
+            int totalPages,
+            long totalCount
+    ){}
+
+    @Builder
+    public record StoreSearchResDto(
+            List<StoreResDto.StoreSearchDto> stores,
+            PaginationDto pagination
+    ){}
+
     // 가게 상세 조회 응답
     @Builder
     public record StoreDetailDto(
