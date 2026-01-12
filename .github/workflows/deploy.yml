@@ -48,37 +48,32 @@ jobs:
       - name: 도커 이미지 푸시
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
 
-      # ================= DEBUG START =================
-      - name: 배포 대상 포트/PROFILE 확인 (DEBUG)
+      - name: 배포 대상 포트/PROFILE 확인
         run: |
-          set +e
-          echo "===== [DEBUG] deploy target check ====="
-          echo "curl -I 결과:"
-          curl -I "http://${{ secrets.LIVE_SERVER_IP }}/api/v1/deploy/health-check" || true
-
+          # curl 연결 실패 시(서버 꺼짐 등)에도 에러내지 않고 넘어감 (|| true)
           response=$(curl -s -w "%{http_code}" "http://${{ secrets.LIVE_SERVER_IP }}/api/v1/deploy/health-check") || true
-          echo "Response(raw): [$response]"
-          echo "Response(length): ${#response}"
-
+          
+          echo "Response: $response"
+          
+          # 응답이 비어있거나(연결실패) 200이 아니면
           if [ -z "$response" ] || [ "${#response}" -lt 3 ]; then
             STATUS="ERROR"
-            BODY=""
           else
             STATUS="${response: -3}"
             BODY="${response::-3}"
           fi
-
+          
           echo "STATUS=$STATUS"
-          echo "BODY=[$BODY]"
-
+          
           if [ "$STATUS" = "200" ]; then
             CURRENT_UPSTREAM="$BODY"
           else
+            # 서버가 죽어있거나 응답이 없으면 기본적으로 green을 현재 상태로 보고 blue를 배포
             CURRENT_UPSTREAM="green"
           fi
-
+          
           echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM" >> $GITHUB_ENV
-
+          
           if [ "$CURRENT_UPSTREAM" = "blue" ]; then
             echo "CURRENT_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
             echo "STOPPED_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
@@ -94,10 +89,6 @@ jobs:
             exit 1
           fi
 
-          echo "===== [DEBUG] env decided ====="
-          echo "CURRENT_UPSTREAM=$CURRENT_UPSTREAM"
-      # ================= DEBUG END =================
-
       - name: GitHub Actions 실행자 IP 얻어오기
         id: GITHUB_ACTIONS_IP
         uses: haythem/public-ip@v1.3
@@ -109,13 +100,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: [DEBUG] ENV 확인
-        run: |
-          echo "CURRENT_UPSTREAM=${{ env.CURRENT_UPSTREAM }}"
-          echo "TARGET_UPSTREAM=${{ env.TARGET_UPSTREAM }}"
-          echo "TARGET_PORT=${{ env.TARGET_PORT }}"
-          echo "STOPPED_PORT=${{ env.STOPPED_PORT }}"
-
       - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 부여
         run: |
           aws ec2 authorize-security-group-ingress \
@@ -123,7 +107,6 @@ jobs:
             --ip-permissions \
               'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]' \
               'IpProtocol=tcp,FromPort=${{ env.STOPPED_PORT }},ToPort=${{ env.STOPPED_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
-
       - name: SSH Key 설정
         run: |
           mkdir -p ~/.ssh
@@ -135,31 +118,24 @@ jobs:
           echo "  IdentityFile ~/.ssh/eatsfine-ec2-key.pem" >> ~/.ssh/config
           echo "  StrictHostKeyChecking no" >> ~/.ssh/config
 
-      - name: 도커 이미지 풀링 및 컨테이너 실행 (DEBUG)
+      - name: 도커 이미지 풀링 및 컨테이너 실행
         run: |
           ssh eatsfine-ec2 << 'EOF'
-            set +e
-            echo "===== [DEBUG] docker before ====="
-            docker ps -a
-
+            set -e
+          
             CONFIG_DIR=/home/ec2-user/config/eatsfine
-            mkdir -p $CONFIG_DIR
-
+            DEPLOY_DIR=/home/ec2-user/deploy
+          
+            # 필요한 프로필 파일을 서버로 복사합니다.
             if [ "${{ env.TARGET_UPSTREAM }}" = "blue" ]; then
               echo "${{ secrets.APPLICATION_BLUE_YML }}" | base64 --decode > ${CONFIG_DIR}/application-blue.yml
             else
               echo "${{ secrets.APPLICATION_GREEN_YML }}" | base64 --decode > ${CONFIG_DIR}/application-green.yml
             fi
-
+          
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
             docker compose -f /home/ec2-user/deploy/docker-compose-${{ env.TARGET_UPSTREAM }}.yml up -d
-            echo "compose exit code: $?"
-
-            echo "===== [DEBUG] docker after ====="
-            docker ps -a
-
-            echo "===== [DEBUG] target logs ====="
-            docker logs --tail 200 ${{ env.TARGET_UPSTREAM }} || true
+          
           EOF
 
       - name: 컨테이너 기동 대기
@@ -172,28 +148,21 @@ jobs:
           max-attempts: 10
           retry-delay: 10s
 
-      - name: Nginx 의 대상 서버를 새로 실행한 컨테이너쪽으로 전환 (DEBUG)
+      - name: Nginx 의 대상 서버를 새로 실행한 컨테이너쪽으로 전환
         run: |
           ssh eatsfine-ec2 << 'EOF'
-            echo "===== [DEBUG] nginx before ====="
-            cat /home/ec2-user/nginx/service-env.inc || true
+            set -e
             echo "set \$service_url ${{ env.TARGET_UPSTREAM }};" > /home/ec2-user/nginx/service-env.inc
-            cat /home/ec2-user/nginx/service-env.inc
-            docker exec nginx nginx -t
             docker exec nginx nginx -s reload
           EOF
-
       - name: 기존 배포 컨테이너 정지
         run: |
           ssh eatsfine-ec2 << 'EOF'
-            if docker ps -a --format '{{.Names}}' | grep -q "^${{ env.CURRENT_UPSTREAM }}$"; then
-              docker stop ${{ env.CURRENT_UPSTREAM }}
-              docker rm ${{ env.CURRENT_UPSTREAM }}
-            else
-              echo "컨테이너 ${{ env.CURRENT_UPSTREAM }} 없음 - 스킵"
-            fi
+            set -e
+            # 컨테이너가 없어도 에러내지 않고 넘어감 (|| true)
+            docker stop ${{ env.CURRENT_UPSTREAM }} || true
+            docker rm ${{ env.CURRENT_UPSTREAM }} || true
           EOF
-
       - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 제거
         if: always()
         run: |
