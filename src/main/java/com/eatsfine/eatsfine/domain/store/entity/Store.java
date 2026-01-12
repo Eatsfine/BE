@@ -32,7 +32,7 @@ public class Store extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", nullable = false)
+    @JoinColumn(name = "owner_id") // 임시 nullable 허용 (User 도메인 머지 후 owner 처리 예정)
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -41,6 +41,9 @@ public class Store extends BaseEntity {
 
     @Column(name = "store_name", nullable = false)
     private String storeName;
+
+    @Column(name = "business_number", nullable = false)
+    private String businessNumber;
 
     @Lob
     @Column(name = "description", nullable = false)
@@ -52,7 +55,7 @@ public class Store extends BaseEntity {
     @Column(name = "address", nullable = false)
     private String address;
 
-    @Column(name = "main_image_url", nullable = false)
+    @Column(name = "main_image_url")
     private String mainImageUrl;
 
     @Builder.Default
@@ -100,7 +103,7 @@ public class Store extends BaseEntity {
 
     public void removeBusinessHours(BusinessHours businessHours) {
         this.businessHours.remove(businessHours);
-        businessHours.assignStore(this);
+        businessHours.assignStore(null);
     }
 
     public void addTableImage(TableImage tableImage) {
