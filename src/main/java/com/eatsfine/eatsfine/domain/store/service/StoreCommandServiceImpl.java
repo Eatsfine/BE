@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.store.service;
 
 import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConverter;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.businesshours.validator.BusinessHoursValidator;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.region.repository.RegionRepository;
 import com.eatsfine.eatsfine.domain.region.status.RegionErrorStatus;
@@ -28,6 +29,9 @@ public class StoreCommandServiceImpl implements StoreCommandService {
     public StoreResDto.StoreCreateDto createStore(StoreReqDto.StoreCreateDto dto) {
         Region region = regionRepository.findById(dto.regionId())
                 .orElseThrow(() -> new StoreException(RegionErrorStatus._REGION_NOT_FOUND));
+
+        // 영업시간 정상 여부 검증
+        BusinessHoursValidator.validate(dto.businessHours());
 
         Store store = Store.builder()
                 .owner(null) // User 도메인 머지 후 owner 처리 예정
