@@ -1,9 +1,8 @@
 package com.eatsfine.eatsfine.domain.storetable.entity;
 
-import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.storetable.enums.SeatsType;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
-import com.eatsfine.eatsfine.global.entity.BaseEntity;
+import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

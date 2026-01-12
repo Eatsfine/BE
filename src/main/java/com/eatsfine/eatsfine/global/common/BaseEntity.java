@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.global.entity;
+package com.eatsfine.eatsfine.global.common;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
