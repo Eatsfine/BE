@@ -144,9 +144,14 @@ jobs:
         run: |
           ssh eatsfine-ec2 << 'EOF'
             set -e
-            # 컨테이너가 없어도 에러내지 않고 넘어감 (|| true)
-            docker stop ${{ env.CURRENT_UPSTREAM }} || true
-            docker rm ${{ env.CURRENT_UPSTREAM }} || true
+            for C in blue green; do
+              if docker ps -a --format '{{.Names}}' | grep -q "^$C$"; then
+                if [ "$C" != "${{ env.TARGET_UPSTREAM }}" ]; then
+                  docker stop "$C" || true
+                  docker rm "$C" || true
+                fi
+              fi
+            done
           EOF
       - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 제거
         if: always()
