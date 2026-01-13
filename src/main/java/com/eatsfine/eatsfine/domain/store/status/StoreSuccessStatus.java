@@ -12,6 +12,8 @@ public enum StoreSuccessStatus implements BaseCode {
 
     _STORE_FOUND(HttpStatus.OK, "STORE200", "성공적으로 가게를 찾았습니다."),
 
+    _STORE_SEARCH_SUCCESS(HttpStatus.OK, "STORE2002", "성공적으로 가게를 검색했습니다."),
+
     _STORE_DETAIL_FOUND(HttpStatus.FOUND, "STORE_DETAIL200", "성공적으로 가게 상세 리뷰를 조회했습니다."),
 
     _STORE_CREATED(HttpStatus.CREATED, "STORE201", "성공적으로 가게를 등록했습니다.")
