@@ -31,8 +31,10 @@ public class BusinessHoursValidator {
     // open < close 검증
     private static void validateOpenCloseTime(List<BusinessHoursReqDto.Summary> dto) {
         for(BusinessHoursReqDto.Summary s: dto) {
-            if(s.openTime().isAfter(s.closeTime())) {
-                throw new BusinessHoursException(BusinessHoursErrorStatus._INVALID_BUSINESS_TIME);
+            if(!s.isClosed()){
+                if(s.openTime().isAfter(s.closeTime())) {
+                    throw new BusinessHoursException(BusinessHoursErrorStatus._INVALID_BUSINESS_TIME);
+                }
             }
         }
     }

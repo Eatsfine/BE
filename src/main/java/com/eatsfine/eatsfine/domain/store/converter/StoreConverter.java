@@ -15,7 +15,7 @@ public class StoreConverter {
                 .build();
     }
 
-    public static StoreResDto.StoreSearchDto toSearchDto(Store store, Double distance) {
+    public static StoreResDto.StoreSearchDto toSearchDto(Store store, Double distance, boolean isOpenNow) {
         return StoreResDto.StoreSearchDto.builder()
                 .storeId(store.getId())
                 .name(store.getStoreName())
@@ -23,13 +23,13 @@ public class StoreConverter {
                 .category(store.getCategory())
                 .rating(store.getRating())
                 .reviewCount(null) // 리뷰 도메인 구현 이후 추가 예정
-                .distance(distance != null ? distance : 0)
+                .distance(distance)
                 .mainImageUrl(store.getMainImageUrl())
-                .isOpenNow(false) // 영업 상태 체크 로직 구현 후 추가 예정
+                .isOpenNow(isOpenNow)
                 .build();
     }
 
-    public static StoreResDto.StoreDetailDto toDetailDto(Store store) {
+    public static StoreResDto.StoreDetailDto toDetailDto(Store store, boolean isOpenNow) {
         return StoreResDto.StoreDetailDto.builder()
                 .storeId(store.getId())
                 .storeName(store.getStoreName())
@@ -45,7 +45,7 @@ public class StoreConverter {
                         store.getBusinessHours().stream()
                                 .map(BusinessHoursConverter::toSummary)
                                 .toList())
-                .isOpenNow(false) // 추후 영업 여부 판단 로직 구현 예정
+                .isOpenNow(isOpenNow) // 추후 영업 여부 판단 로직 구현 예정
                 .build();
     }
     }

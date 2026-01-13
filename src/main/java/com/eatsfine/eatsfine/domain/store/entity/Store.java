@@ -18,6 +18,7 @@ import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Table(name = "store")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -122,6 +123,14 @@ public class Store extends BaseEntity {
                 .filter(bh -> bh.getDayOfWeek() == dayOfWeek)
                 .findFirst()
                 .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+    }
+
+    // 특정 요일의 영업시간 조회 메서드 (Optional)
+    // -> 검색 로직에서는 결과들 중 하나가 영업시간이 비어있어도 나머지는 보여줘야 함
+    public Optional<BusinessHours> findBusinessHoursByDay(DayOfWeek dayOfWeek) {
+        return this.businessHours.stream()
+                .filter(bh -> bh.getDayOfWeek() == dayOfWeek)
+                .findFirst();
     }
 
     // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
