@@ -8,16 +8,15 @@ import com.eatsfine.eatsfine.domain.booking.status.BookingErrorStatus;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
+import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
-import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
-import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,7 +34,12 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     public BookingResponseDTO.TimeSlotListDTO getAvailableTimeSlots(Long storeId, BookingRequestDTO.GetAvailableTimeDTO dto) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._STORE_NOT_FOUND));
+
         BusinessHours hours = store.getBusinessHoursByDay(dto.date().getDayOfWeek());
+
+        if (hours == null) {
+            throw new BookingException(StoreErrorStatus._STORE_NOT_OPEN_ON_DAY);
+        }
 
         List<LocalTime> availableSlots = new ArrayList<>();
         LocalTime currentTime = hours.getOpenTime();
@@ -48,7 +52,7 @@ public class BookingQueryServiceImpl implements BookingQueryService {
                 List<TableLayout> tableLayouts = store.getTableLayouts();
                 TableLayout activeTableLayout = tableLayouts.stream()
                         .filter(TableLayout::isActive).findFirst()
-                        .orElseThrow(() -> new GeneralException(ErrorStatus._BAD_REQUEST));
+                        .orElseThrow(() -> new BookingException(BookingErrorStatus._LAYOUT_NOT_FOUND));
 
                 List<StoreTable> activeTables = activeTableLayout.getTables();
 
@@ -75,7 +79,6 @@ public class BookingQueryServiceImpl implements BookingQueryService {
             int totalSeats = freeTables.stream().mapToInt(StoreTable::getTableSeats).sum();
             return totalSeats >= partySize;
         }
-
         return false;
     }
 
