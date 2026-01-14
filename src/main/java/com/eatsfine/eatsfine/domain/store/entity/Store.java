@@ -52,8 +52,7 @@ public class Store extends BaseEntity {
     @Column(name = "business_number", nullable = false)
     private String businessNumber;
 
-    @Lob
-    @Column(name = "description", nullable = false)
+    @Column(name = "description", length = 1000, nullable = false)
     private String description;
 
     @Column(name = "phone_number", nullable = false)

@@ -1,6 +1,6 @@
 package com.eatsfine.eatsfine.domain.store.service;
 
-import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.store.condition.StoreSearchCondition;
 import com.eatsfine.eatsfine.domain.store.converter.StoreConverter;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.dto.projection.StoreSearchResult;
@@ -30,18 +30,15 @@ public class StoreQueryServiceImpl implements StoreQueryService {
     // 식당 검색
     @Override
     public StoreResDto.StoreSearchResDto search(
-            double lat,
-            double lng,
-            Double radius,
-            Category category,
-            StoreSortType sort,
+            StoreSearchCondition cond,
             int page,
             int limit
     ) {
         Pageable pageable = PageRequest.of(page - 1, limit);
 
         Page<StoreSearchResult> resultPage = storeRepository.searchStores(
-                lat, lng, radius, category, sort, pageable
+                cond.getLat(), cond.getLng(), cond.getKeyword(), cond.getCategory(), cond.getSort(),
+                cond.getProvince(), cond.getCity(), cond.getDistrict(), pageable
         );
 
         LocalDateTime now = LocalDateTime.now();
@@ -82,22 +79,17 @@ public class StoreQueryServiceImpl implements StoreQueryService {
         DayOfWeek dayOfWeek = now.getDayOfWeek();
         LocalTime time = now.toLocalTime();
 
-        BusinessHours bh = store.getBusinessHoursByDay(dayOfWeek);
+        return store.findBusinessHoursByDay(dayOfWeek)
+                .map(bh -> {
+                    if (bh.isHoliday()) return false;
 
-        if(bh.isHoliday()) {
-            return false;
-        }
+                    if ((bh.getBreakStartTime() != null && bh.getBreakEndTime() != null)) {
+                        if (!time.isBefore(bh.getBreakStartTime()) && (time.isBefore(bh.getBreakEndTime()))) {
+                            return false; // start <= time < end 에 쉼
+                        }
+                    }
+                    return (!time.isBefore(bh.getOpenTime()) && time.isBefore(bh.getCloseTime()));
 
-        if((bh.getBreakStartTime() != null && bh.getBreakEndTime() != null)) {
-            if(!time.isBefore(bh.getBreakStartTime()) && time.isBefore(bh.getBreakEndTime())) { // start <= time < end 에 쉼
-                return false;
-            }
-        }
-
-        if(time.isBefore(bh.getOpenTime()) || !time.isBefore(bh.getCloseTime())) { // open <= time < end 일때만 true
-            return false;
-        }
-
-        return true;
+                }).orElse(false); // 현재 요일에 해당하는 영업시간 없으면 닫힘처리
     }
 }
