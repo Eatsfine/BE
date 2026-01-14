@@ -13,5 +13,5 @@ public interface BookingCommandService {
 
     BookingResponseDTO.CreateBookingResultDTO createBooking(User user, Long storeId, BookingRequestDTO.CreateBookingDTO dto);
 
-    BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(BookingRequestDTO.PaymentConfirmDTO dto);
+    BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(Long BookingId, BookingRequestDTO.PaymentConfirmDTO dto);
 }

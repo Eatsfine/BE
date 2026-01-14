@@ -95,9 +95,9 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
     @Override
     @Transactional
-    public BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(BookingRequestDTO.PaymentConfirmDTO dto) {
+    public BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(Long bookingId, BookingRequestDTO.PaymentConfirmDTO dto) {
 
-        Booking booking = bookingRepository.findById(dto.bookingId())
+        Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
         //이미 예약이 확정됐는지 최종 확인
@@ -117,7 +117,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         return BookingResponseDTO.ConfirmPaymentResultDTO.builder()
                 .bookingId(booking.getId())
                 .status(booking.getStatus().name())
-                .paymentKey(dto.paymentKey())  // 추후 변경
+                .paymentKey(dto.paymentKey())
                 .amount(booking.getDepositAmount())
                 .build();
     }

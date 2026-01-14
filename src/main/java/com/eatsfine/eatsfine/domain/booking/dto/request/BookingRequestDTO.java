@@ -39,7 +39,6 @@ public class BookingRequestDTO {
     ){}
 
     public record PaymentConfirmDTO(
-            @NotNull Long bookingId,
             @NotBlank String paymentKey, //결제 고유 키
             @NotNull Integer amount //실제 결제 금액
     ){}
