@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.booking.dto.request;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -35,6 +36,12 @@ public class BookingRequestDTO {
             @NotNull @Min(1) Integer partySize,
             @NotNull List<Long> tableIds,
             @NotNull boolean isSplitAccepted
+    ){}
+
+    public record PaymentConfirmDTO(
+            @NotNull Long bookingId,
+            @NotBlank String paymentKey, //결제 고유 키
+            @NotNull Integer amount //실제 결제 금액
     ){}
 
 }

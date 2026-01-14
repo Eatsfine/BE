@@ -54,4 +54,13 @@ public class BookingResponseDTO {
             Integer tableSeats,
             String seatsType
     ){}
+
+
+    @Builder
+    public record ConfirmPaymentResultDTO(
+            Long bookingId,
+            String status,         // CONFIRMED
+            String paymentKey,     // PG사 결제 키
+            Integer amount        // 최종 결제 금액
+    ){}
 }
