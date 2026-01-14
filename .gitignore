@@ -45,3 +45,6 @@ src/main/resources/application.yml
 
 ### Gradle 설정 파일 제외
 build.gradle
+
+# QueryDSL generated sources
+/build/generated/
