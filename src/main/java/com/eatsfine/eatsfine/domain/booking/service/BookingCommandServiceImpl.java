@@ -54,7 +54,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
 
         Booking booking = Booking.builder()
-
+                .depositAmount(totalDeposit)
                 .bookingDate(dto.date())
                 .bookingTime(dto.time())
                 .partySize(dto.partySize())
@@ -90,6 +90,35 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .totalDeposit(totalDeposit)
                 .createdAt(savedBooking.getCreatedAt())
                 .tables(resultTableDTOS)
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(BookingRequestDTO.PaymentConfirmDTO dto) {
+
+        Booking booking = bookingRepository.findById(dto.bookingId())
+                .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
+
+        //이미 예약이 확정됐는지 최종 확인
+        if(booking.getStatus() == BookingStatus.CONFIRMED) {
+            throw new BookingException(BookingErrorStatus._ALREADY_CONFIRMED);
+        }
+
+        // 예약 생성 시 설정된 예약금액과 결제 완료된 금액이 일치하는지 확인
+        if(!booking.getDepositAmount().equals(dto.amount())) {
+            throw new BookingException(BookingErrorStatus._PAYMENT_AMOUNT_MISMATCH);
+        }
+
+        //예약 상태 확정으로 변경
+        booking.confirm();
+
+
+        return BookingResponseDTO.ConfirmPaymentResultDTO.builder()
+                .bookingId(booking.getId())
+                .status(booking.getStatus().name())
+                .paymentKey(dto.paymentKey())  // 추후 변경
+                .amount(booking.getDepositAmount())
                 .build();
     }
 }

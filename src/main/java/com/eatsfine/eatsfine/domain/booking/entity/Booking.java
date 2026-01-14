@@ -66,8 +66,10 @@ public class Booking extends BaseEntity {
         this.bookingTables.add(bookingTable);
     }
 
-    // 결제는 일단 보류
-  //  private PaymentType paymentType;
+    private Integer depositAmount;
 
+    public void confirm() {
+        this.status = BookingStatus.CONFIRMED;
+    }
 
 }
