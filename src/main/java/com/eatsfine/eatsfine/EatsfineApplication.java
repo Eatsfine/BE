@@ -8,7 +8,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 
 @ConfigurationPropertiesScan
 @SpringBootApplication
-@EnableJpaAuditing
+//@EnableJpaAuditing
 public class EatsfineApplication {
 
     public static void main(String[] args) {
