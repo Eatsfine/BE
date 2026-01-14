@@ -39,6 +39,8 @@ out/
 ### secret properties files ###
 /src/main/resources/application-blue.yml
 /src/main/resources/application-green.yml
+/src/main/resources/application-local.yml
+
 
 ### Application Config (개인 설정, 보안 정보) ###
 src/main/resources/application.yml
