@@ -5,6 +5,7 @@ import lombok.Builder;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
 
 public class BusinessHoursResDto {
 
@@ -19,5 +20,11 @@ public class BusinessHoursResDto {
             LocalTime closeTime,
 
             boolean isClosed // true = 휴무, false = 영업
+    ){}
+
+    @Builder
+    public record UpdateBusinessHoursDto(
+            Long storeId,
+            List<String> updatedDays
     ){}
 }

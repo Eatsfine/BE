@@ -1,11 +1,13 @@
 package com.eatsfine.eatsfine.domain.businesshours.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 import java.time.DayOfWeek;
 import java.time.LocalTime;
+import java.util.List;
 
 public class BusinessHoursReqDto {
 
@@ -22,5 +24,11 @@ public class BusinessHoursReqDto {
             LocalTime closeTime,
 
             boolean isClosed
+    ){}
+
+    @Builder
+    public record UpdateBusinessHoursDto(
+            @Valid
+            List<Summary> businessHours
     ){}
 }
