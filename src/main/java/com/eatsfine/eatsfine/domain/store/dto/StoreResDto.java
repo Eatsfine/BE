@@ -65,4 +65,11 @@ public class StoreResDto {
             String mainImageUrl
     ) {}
 
+    // 식당 수정 응답
+    @Builder
+    public record StoreUpdateDto(
+            Long storeId,
+            List<String> updatedFields
+    ){};
+
 }
