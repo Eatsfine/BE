@@ -25,10 +25,13 @@ public class TableLayout extends BaseEntity {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
+    @Column(name = "grid_rows", nullable = false)
     private int lows;
+
+    @Column(name = "grid_cols", nullable = false)
     private int cols;
 
-    @Column(name = "is_active")
+    @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
     @OneToMany(mappedBy = "tableLayout")
