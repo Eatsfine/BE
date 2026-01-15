@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.store.entity;
 
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
+import com.eatsfine.eatsfine.domain.store.dto.StoreReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
 import com.eatsfine.eatsfine.domain.store.enums.DepositRate;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
@@ -92,8 +93,6 @@ public class Store extends BaseEntity {
     private List<TableImage> tableImages = new ArrayList<>();
 
     // StoreTable이 아닌 TableLayout 엔티티 참조
-//    @OneToMany(mappedBy = "store")
-//    private List<StoreTable> storeTables = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "store")
@@ -142,5 +141,36 @@ public class Store extends BaseEntity {
     }
 
     // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
+
+    // 가게 기본 정보 변경 메서드
+    public void updateBasicInfo(StoreReqDto.StoreUpdateDto dto) {
+        if(dto.storeName() != null) {
+            this.storeName = dto.storeName();
+        }
+
+        if(dto.description() != null) {
+            this.description = dto.description();
+        }
+
+        if(dto.phoneNumber() != null) {
+            this.phoneNumber = dto.phoneNumber();
+        }
+
+        if(dto.category() != null) {
+            this.category = dto.category();
+        }
+
+        if(dto.minPrice() != null) {
+            this.minPrice = dto.minPrice();
+        }
+
+        if(dto.depositRate() != null) {
+            this.depositRate = dto.depositRate();
+        }
+
+        if(dto.bookingIntervalMinutes() != null) {
+            this.bookingIntervalMinutes = dto.bookingIntervalMinutes();
+        }
+    }
 
 }
