@@ -34,7 +34,8 @@ public class Booking extends BaseEntity {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @Builder.Default
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BookingTable> bookingTables = new ArrayList<>();
 
     @Column(name = "party_size", nullable = false)
@@ -57,8 +58,18 @@ public class Booking extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
-  // 결제는 일단 보류
-  //  private PaymentType paymentType;
+    public void addBookingTable(StoreTable storeTable) {
+        BookingTable bookingTable = BookingTable.builder()
+                .booking(this)
+                .storeTable(storeTable)
+                .build();
+        this.bookingTables.add(bookingTable);
+    }
 
+    private Integer depositAmount;
+
+    public void confirm() {
+        this.status = BookingStatus.CONFIRMED;
+    }
 
 }
