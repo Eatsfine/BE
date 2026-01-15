@@ -7,6 +7,8 @@ import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -28,6 +30,12 @@ public class StoreTable extends BaseEntity {
 
     private Integer tableSeats; // 추후 삭제 예정
 
+    @Column(name = "min_seat_count", nullable = false)
+    private int minSeatCount;
+
+    @Column(name = "max_seat_count", nullable = false)
+    private int maxSeatCount;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "seats_type")
     private SeatsType seatsType;
@@ -44,5 +52,10 @@ public class StoreTable extends BaseEntity {
     @Column(name = "height_span", nullable = false)
     private int heightSpan;
 
+    @Builder.Default
+    @Column(name = "rating", precision = 2, scale = 1, nullable = false)
+    private BigDecimal rating = BigDecimal.ZERO;
 
+    @Column(name = "table_image_url")
+    private String tableImageUrl;
 }
