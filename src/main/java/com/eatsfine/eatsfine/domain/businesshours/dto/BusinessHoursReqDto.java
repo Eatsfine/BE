@@ -1,0 +1,26 @@
+package com.eatsfine.eatsfine.domain.businesshours.dto;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import jakarta.validation.constraints.NotNull;
+import lombok.Builder;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+
+public class BusinessHoursReqDto {
+
+    @Builder
+    public record Summary(
+
+            @NotNull(message = "요일은 필수입니다.")
+            DayOfWeek dayOfWeek,
+
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+            LocalTime openTime,
+
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+            LocalTime closeTime,
+
+            boolean isClosed
+    ){}
+}

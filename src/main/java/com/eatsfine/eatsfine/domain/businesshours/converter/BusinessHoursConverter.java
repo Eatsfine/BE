@@ -1,9 +1,21 @@
 package com.eatsfine.eatsfine.domain.businesshours.converter;
 
+import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 
 public class BusinessHoursConverter {
+
+    public static BusinessHours toEntity(BusinessHoursReqDto.Summary dto) {
+        return BusinessHours.builder()
+                .dayOfWeek(dto.dayOfWeek())
+                .openTime(dto.openTime())
+                .closeTime(dto.closeTime())
+                .isHoliday(dto.isClosed()) // 특정 요일 고정 휴무
+                .build();
+    }
+
+
 
     public static BusinessHoursResDto.Summary toSummary(BusinessHours bh) {
         // 휴무일 때
