@@ -10,15 +10,20 @@ import java.util.List;
 import java.util.Set;
 
 public class BusinessHoursValidator {
-    public static void validate(List<BusinessHoursReqDto.Summary> dto) {
+    public static void validateForCreate(List<BusinessHoursReqDto.Summary> dto) {
 
         validateComplete(dto);
         validateDuplicateDayOfWeek(dto);
         validateOpenDay(dto);
         validateClosedDay(dto);
         validateOpenCloseTime(dto);
+    }
 
-
+    public static void validateForUpdate(List<BusinessHoursReqDto.Summary> dto) {
+        validateDuplicateDayOfWeek(dto);
+        validateOpenDay(dto);
+        validateClosedDay(dto);
+        validateOpenCloseTime(dto);
     }
 
     // 7일 모두 입력 여부 검증

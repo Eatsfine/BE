@@ -34,7 +34,7 @@ public class StoreCommandServiceImpl implements StoreCommandService {
                 .orElseThrow(() -> new StoreException(RegionErrorStatus._REGION_NOT_FOUND));
 
         // 영업시간 정상 여부 검증
-        BusinessHoursValidator.validate(dto.businessHours());
+        BusinessHoursValidator.validateForCreate(dto.businessHours());
 
         Store store = Store.builder()
                 .owner(null) // User 도메인 머지 후 owner 처리 예정
