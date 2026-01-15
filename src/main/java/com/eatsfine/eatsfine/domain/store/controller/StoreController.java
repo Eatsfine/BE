@@ -25,7 +25,7 @@ public class StoreController {
 
     @Operation(
             summary = "식당 등록",
-            description = "사장 회원이 새로운 식당을 등록합니다. 등록 후 승인 상태는 PENDING입니다."
+            description = "사장 회원이 새로운 식당을 등록합니다"
     )
     @PostMapping("/stores")
     public ApiResponse<StoreResDto.StoreCreateDto> createStore(

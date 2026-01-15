@@ -10,7 +10,6 @@ import com.eatsfine.eatsfine.domain.store.converter.StoreConverter;
 import com.eatsfine.eatsfine.domain.store.dto.StoreReqDto;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
-import com.eatsfine.eatsfine.domain.store.enums.StoreApprovalStatus;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import jakarta.transaction.Transactional;
@@ -43,8 +42,9 @@ public class StoreCommandServiceImpl implements StoreCommandService {
                 .region(region)
                 .phoneNumber(dto.phoneNumber())
                 .category(dto.category())
-                .approvalStatus(StoreApprovalStatus.PENDING)
                 .bookingIntervalMinutes(dto.bookingIntervalMinutes())
+                .minPrice(dto.minPrice())
+                .depositRate(dto.depositRate())
                 .build();
 
         dto.businessHours().forEach(bhDto -> {

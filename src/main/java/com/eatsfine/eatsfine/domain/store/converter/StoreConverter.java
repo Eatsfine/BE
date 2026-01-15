@@ -4,6 +4,7 @@ import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConvert
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 
 public class StoreConverter {
@@ -11,7 +12,6 @@ public class StoreConverter {
     public static StoreResDto.StoreCreateDto toCreateDto(Store store) {
         return StoreResDto.StoreCreateDto.builder()
                 .storeId(store.getId())
-                .status(store.getApprovalStatus())
                 .build();
     }
 
@@ -41,6 +41,7 @@ public class StoreConverter {
                 .reviewCount(null) // reviewCount는 추후 리뷰 로직 구현 시 추가 예정
                 .mainImageUrl(store.getMainImageUrl())
                 .tableImageUrls(Collections.emptyList()) // tableImages는 추후 사진 등록 API 구현 시 추가 예정
+                .depositAmount(store.calculateDepositAmount())
                 .businessHours(
                         store.getBusinessHours().stream()
                                 .map(BusinessHoursConverter::toSummary)

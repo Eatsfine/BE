@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.store.dto;
 
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
+import com.eatsfine.eatsfine.domain.store.enums.DepositRate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -33,6 +34,12 @@ public class StoreReqDto {
 
             @NotNull(message = "카테고리는 필수입니다.")
             Category category,
+
+            @NotNull(message = "최소 메뉴 가격은 필수입니다.")
+            int minPrice,
+
+            @NotNull(message = "예약금 비율은 필수입니다.")
+            DepositRate depositRate,
 
             int bookingIntervalMinutes,
 

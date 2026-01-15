@@ -2,7 +2,6 @@ package com.eatsfine.eatsfine.domain.store.dto;
 
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
-import com.eatsfine.eatsfine.domain.store.enums.StoreApprovalStatus;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -13,8 +12,7 @@ public class StoreResDto {
     // 가게 등록 응답
     @Builder
     public record StoreCreateDto(
-            Long storeId,
-            StoreApprovalStatus status
+            Long storeId
     ){}
 
     @Builder
@@ -54,6 +52,7 @@ public class StoreResDto {
             Category category,
             BigDecimal rating,
             Long reviewCount,
+            BigDecimal depositAmount,
             String mainImageUrl,
             List<String> tableImageUrls,
             List<BusinessHoursResDto.Summary> businessHours,
