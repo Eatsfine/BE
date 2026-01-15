@@ -34,8 +34,7 @@ public class TableLayout extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
-    @OneToMany(mappedBy = "tableLayout")
+    @OneToMany(mappedBy = "tableLayout", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<StoreTable> tables = new ArrayList<>();
-
 
 }
