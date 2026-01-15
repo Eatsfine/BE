@@ -1,6 +1,8 @@
 package com.eatsfine.eatsfine.domain.store.entity;
 
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
+import com.eatsfine.eatsfine.domain.businesshours.status.BusinessHoursErrorStatus;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.store.dto.StoreReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
@@ -17,6 +19,7 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -108,6 +111,15 @@ public class Store extends BaseEntity {
         businessHours.assignStore(null);
     }
 
+    // 영업시간 변경
+    public void updateBusinessHours(DayOfWeek dayOfWeek, LocalTime open, LocalTime close, boolean isClosed) {
+        BusinessHours businessHours = this.businessHours.stream()
+                .filter(bh -> bh.getDayOfWeek() == dayOfWeek)
+                .findFirst()
+                .orElseThrow(() -> new BusinessHoursException(BusinessHoursErrorStatus._BUSINESS_HOURS_DAY_NOT_FOUND));
+
+        businessHours.update(open, close, isClosed);
+    }
     public void addTableImage(TableImage tableImage) {
         this.tableImages.add(tableImage);
         tableImage.assignStore(this);
