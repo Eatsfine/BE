@@ -12,9 +12,13 @@ import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
-import jakarta.transaction.Transactional;
+import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @Transactional
@@ -55,6 +59,33 @@ public class StoreCommandServiceImpl implements StoreCommandService {
         Store savedStore = storeRepository.save(store);
 
         return StoreConverter.toCreateDto(savedStore);
+    }
+
+    // 가게 기본 정보 수정 (필드)
+    @Override
+    public StoreResDto.StoreUpdateDto updateBasicInfo(Long storeId, StoreReqDto.StoreUpdateDto dto) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        store.updateBasicInfo(dto);
+        List<String> updatedFields = extractUpdatedFields(dto);
+
+        return StoreConverter.toUpdateDto(storeId, updatedFields);
+    }
+
+    // 수정된 필드 목록
+    public List<String> extractUpdatedFields(StoreReqDto.StoreUpdateDto dto) {
+        List<String> updated = new ArrayList<>();
+
+        if(dto.storeName() != null) updated.add("storeName");
+        if(dto.description() != null) updated.add("description");
+        if(dto.phoneNumber() != null) updated.add("phoneNumber");
+        if(dto.category() != null) updated.add("category");
+        if(dto.minPrice() != null) updated.add("minPrice");
+        if(dto.depositRate() != null) updated.add("depositRate");
+        if(dto.bookingIntervalMinutes() != null) updated.add("bookingIntervalMinutes");
+
+        return updated;
     }
 
 }

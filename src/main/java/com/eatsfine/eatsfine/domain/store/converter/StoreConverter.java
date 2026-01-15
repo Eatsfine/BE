@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
 
 public class StoreConverter {
 
@@ -49,5 +50,12 @@ public class StoreConverter {
                 .isOpenNow(isOpenNow) // 추후 영업 여부 판단 로직 구현 예정
                 .build();
     }
+
+    public static StoreResDto.StoreUpdateDto toUpdateDto(Long storeId, List<String> updatedFields) {
+        return StoreResDto.StoreUpdateDto.builder()
+                .storeId(storeId)
+                .updatedFields(updatedFields)
+                .build();
     }
+}
 
