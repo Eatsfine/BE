@@ -5,6 +5,7 @@ import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
+@SQLDelete(sql = "UPDATE table_layout SET is_deleted = true WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "table_layout")
 public class TableLayout extends BaseEntity {
