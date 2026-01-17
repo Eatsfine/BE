@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 public enum BusinessHoursSuccessStatus implements BaseCode {
 
     _UPDATE_BUSINESS_HOURS_SUCCESS(HttpStatus.OK, "BUSINESS_HOURS200", "영업시간이 성공적으로 수정되었습니다."),
+    _UPDATE_BREAKTIME_SUCCESS(HttpStatus.OK, "BUSINESS_HOURS2001", "브레이크타임이 성공적으로 설정되었습니다.")
     ;
 
     private final HttpStatus httpStatus;

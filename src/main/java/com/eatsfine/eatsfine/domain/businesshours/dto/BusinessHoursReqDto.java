@@ -31,4 +31,16 @@ public class BusinessHoursReqDto {
             @Valid
             List<Summary> businessHours
     ){}
+
+    @Builder
+    public record UpdateBreakTimeDto(
+
+            @NotNull(message = "브레이크타임 시작 시간은 필수입니다.")
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+            LocalTime breakStartTime,
+
+            @NotNull(message = "브레이크타임 종료 시간은 필수입니다.")
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+            LocalTime breakEndTime
+    ){}
 }
