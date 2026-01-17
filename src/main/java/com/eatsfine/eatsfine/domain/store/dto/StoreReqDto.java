@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.store.enums.DepositRate;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Builder;
 
 import java.util.List;
@@ -29,6 +30,10 @@ public class StoreReqDto {
             @NotBlank(message = "주소는 필수입니다.")
             String address,
 
+            @Pattern(
+                    regexp = "^0\\d{1,2}-\\d{3,4}-\\d{4}$",
+                    message = "전화번호 형식이 올바르지 않습니다."
+            )
             @NotBlank(message = "전화번호는 필수입니다.")
             String phoneNumber,
 
@@ -45,5 +50,26 @@ public class StoreReqDto {
 
             @Valid
             List<BusinessHoursReqDto.Summary> businessHours
+    ){}
+
+    @Builder
+    public record StoreUpdateDto(
+            String storeName,
+
+            String description,
+
+            @Pattern(
+                    regexp = "^0\\d{1,2}-\\d{3,4}-\\d{4}$",
+                    message = "전화번호 형식이 올바르지 않습니다. (예: 02-123-4567, 010-1234-5678)"
+            )
+            String phoneNumber,
+
+            Category category,
+
+            Integer minPrice,
+
+            DepositRate depositRate,
+
+            Integer bookingIntervalMinutes
     ){}
 }

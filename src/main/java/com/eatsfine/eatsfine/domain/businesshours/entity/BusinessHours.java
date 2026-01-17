@@ -41,10 +41,23 @@ public class BusinessHours extends BaseEntity {
 
     // 휴일 여부 (특정 요일 고정 휴무)
     @Builder.Default
-    @Column(name = "is_holiday", nullable = false)
-    private boolean isHoliday = false;
+    @Column(name = "is_closed", nullable = false)
+    private boolean isClosed = false;
 
     public void assignStore(Store store){
         this.store = store;
+    }
+
+    // 영업시간 변경
+    public void update(LocalTime open, LocalTime close, boolean isClosed){
+        this.openTime = open;
+        this.closeTime = close;
+        this.isClosed = isClosed;
+    }
+
+    // 브레이크타임 변경
+    public void updateBreakTime(LocalTime breakStart, LocalTime breakEnd){
+        this.breakStartTime = breakStart;
+        this.breakEndTime = breakEnd;
     }
 }

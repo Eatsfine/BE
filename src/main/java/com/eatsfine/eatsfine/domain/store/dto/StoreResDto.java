@@ -2,9 +2,11 @@ package com.eatsfine.eatsfine.domain.store.dto;
 
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 import java.util.List;
 
 public class StoreResDto {
@@ -56,6 +58,13 @@ public class StoreResDto {
             String mainImageUrl,
             List<String> tableImageUrls,
             List<BusinessHoursResDto.Summary> businessHours,
+
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+            LocalTime breakStartTime,
+
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+            LocalTime breakEndTime,
+
             boolean isOpenNow
     ){}
 
@@ -64,5 +73,12 @@ public class StoreResDto {
     public record uploadMainImageResDto(
             String mainImageUrl
     ) {}
+
+    // 식당 수정 응답
+    @Builder
+    public record StoreUpdateDto(
+            Long storeId,
+            List<String> updatedFields
+    ){};
 
 }

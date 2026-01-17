@@ -81,7 +81,7 @@ public class StoreQueryServiceImpl implements StoreQueryService {
 
         return store.findBusinessHoursByDay(dayOfWeek)
                 .map(bh -> {
-                    if (bh.isHoliday()) return false;
+                    if (bh.isClosed()) return false;
 
                     if ((bh.getBreakStartTime() != null && bh.getBreakEndTime() != null)) {
                         if (!time.isBefore(bh.getBreakStartTime()) && (time.isBefore(bh.getBreakEndTime()))) {
