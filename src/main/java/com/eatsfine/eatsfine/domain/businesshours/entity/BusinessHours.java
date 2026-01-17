@@ -48,9 +48,16 @@ public class BusinessHours extends BaseEntity {
         this.store = store;
     }
 
+    // 영업시간 변경
     public void update(LocalTime open, LocalTime close, boolean isClosed){
         this.openTime = open;
         this.closeTime = close;
         this.isClosed = isClosed;
+    }
+
+    // 브레이크타임 변경
+    public void updateBreakTime(LocalTime breakStart, LocalTime breakEnd){
+        this.breakStartTime = breakStart;
+        this.breakEndTime = breakEnd;
     }
 }

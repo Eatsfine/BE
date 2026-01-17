@@ -33,4 +33,19 @@ public class BusinessHoursController {
         );
     }
 
+    @Operation(
+            summary = "브레이크타임 설정",
+            description = "가게의 브레이크타임을 설정합니다."
+    )
+    @PatchMapping("/stores/{storeId}/break-time")
+    public ApiResponse<BusinessHoursResDto.UpdateBreakTimeDto> updateBreakTime(
+            @PathVariable Long storeId,
+            @RequestBody BusinessHoursReqDto.UpdateBreakTimeDto dto
+    ){
+        return ApiResponse.of(
+                BusinessHoursSuccessStatus._UPDATE_BREAKTIME_SUCCESS,
+                businessHoursCommandService.updateBreakTime(storeId, dto)
+        );
+    }
+
 }

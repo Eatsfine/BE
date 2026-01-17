@@ -48,4 +48,12 @@ public class BusinessHoursConverter {
                 )
                 .build();
     }
+
+    public static BusinessHoursResDto.UpdateBreakTimeDto toUpdateBreakTimeDto(Long storeId, BusinessHoursReqDto.UpdateBreakTimeDto dto) {
+        return BusinessHoursResDto.UpdateBreakTimeDto.builder()
+                .storeId(storeId)
+                .breakStartTime(dto.breakStartTime())
+                .breakEndTime(dto.breakEndTime())
+                .build();
+    }
 }

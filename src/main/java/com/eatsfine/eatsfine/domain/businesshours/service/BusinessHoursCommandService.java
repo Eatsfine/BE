@@ -8,4 +8,10 @@ public interface BusinessHoursCommandService {
             Long storeId,
             BusinessHoursReqDto.UpdateBusinessHoursDto updateBusinessHoursDto
     );
+
+    BusinessHoursResDto.UpdateBreakTimeDto updateBreakTime(
+            Long storeId,
+            BusinessHoursReqDto.UpdateBreakTimeDto dto
+    );
+
 }
