@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.booking.entity;
 
 import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingTable;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
+import com.eatsfine.eatsfine.domain.payment.entity.Payment;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
@@ -33,13 +34,18 @@ public class Booking extends BaseEntity {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    @Builder.Default
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BookingTable> bookingTables = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL) // 결제 내역은 중요하므로 orphanRemoval은 신중하게, 우선 제외
+    private List<Payment> payments = new ArrayList<>();
 
     @Column(name = "party_size", nullable = false)
     private Integer partySize;
 
-    //테이블 분리 허용 여부
+    // 테이블 분리 허용 여부
     @Builder.Default
     @Column(name = "is_split_accepted", nullable = false)
     private boolean isSplitAccepted = false;
@@ -52,12 +58,21 @@ public class Booking extends BaseEntity {
     @Column(name = "booking_time", nullable = false)
     private LocalTime bookingTime;
 
-
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
 
-  // 결제는 일단 보류
-  //  private PaymentType paymentType;
+    public void addBookingTable(StoreTable storeTable) {
+        BookingTable bookingTable = BookingTable.builder()
+                .booking(this)
+                .storeTable(storeTable)
+                .build();
+        this.bookingTables.add(bookingTable);
+    }
 
+    private Integer depositAmount;
+
+    public void confirm() {
+        this.status = BookingStatus.CONFIRMED;
+    }
 
 }
