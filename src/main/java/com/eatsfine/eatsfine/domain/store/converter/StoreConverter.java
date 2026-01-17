@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.domain.store.converter;
 
 import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConverter;
+import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 
@@ -31,6 +32,11 @@ public class StoreConverter {
     }
 
     public static StoreResDto.StoreDetailDto toDetailDto(Store store, boolean isOpenNow) {
+        BusinessHours anyOpenDay = store.getBusinessHours().stream()
+                .filter(bh -> !bh.isClosed())
+                .findFirst()
+                .orElse(null);
+
         return StoreResDto.StoreDetailDto.builder()
                 .storeId(store.getId())
                 .storeName(store.getStoreName())
@@ -47,6 +53,8 @@ public class StoreConverter {
                         store.getBusinessHours().stream()
                                 .map(BusinessHoursConverter::toSummary)
                                 .toList())
+                .breakStartTime(anyOpenDay != null ? anyOpenDay.getBreakStartTime() : null)
+                .breakEndTime(anyOpenDay != null ? anyOpenDay.getBreakEndTime() : null)
                 .isOpenNow(isOpenNow) // 추후 영업 여부 판단 로직 구현 예정
                 .build();
     }
