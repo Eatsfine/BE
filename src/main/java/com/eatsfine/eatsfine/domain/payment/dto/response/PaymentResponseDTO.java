@@ -10,11 +10,8 @@ public class PaymentResponseDTO {
     public record PaymentRequestResultDTO(
             Long paymentId,
             Long bookingId,
-            PaymentMethod paymentMethod,
-            String tid,
+            String orderId,
             Integer amount,
-            PaymentStatus paymentStatus,
-            String nextRedirectUrl,
             LocalDateTime requestedAt) {
     }
 }
