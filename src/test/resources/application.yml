@@ -1,5 +1,18 @@
 spring:
-  application:
-    name: Eatsfine
-  profiles:
-    active: test
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+payment:
+  toss:
+    widget-secret-key: test_sk_sample_key_for_testing
