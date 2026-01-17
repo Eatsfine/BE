@@ -10,10 +10,10 @@ public class BusinessHoursConverter {
 
     public static BusinessHours toEntity(BusinessHoursReqDto.Summary dto) {
         return BusinessHours.builder()
-                .dayOfWeek(dto.dayOfWeek())
+                .dayOfWeek(dto.day())
                 .openTime(dto.openTime())
                 .closeTime(dto.closeTime())
-                .isHoliday(dto.isClosed()) // 특정 요일 고정 휴무
+                .isClosed(dto.isClosed()) // 특정 요일 고정 휴무
                 .build();
     }
 
@@ -21,9 +21,11 @@ public class BusinessHoursConverter {
 
     public static BusinessHoursResDto.Summary toSummary(BusinessHours bh) {
         // 휴무일 때
-        if(bh.isHoliday()) {
+        if(bh.isClosed()) {
             return BusinessHoursResDto.Summary.builder()
                     .day(bh.getDayOfWeek())
+                    .openTime(null)
+                    .closeTime(null)
                     .isClosed(true)
                     .build();
         }
@@ -36,10 +38,14 @@ public class BusinessHoursConverter {
                 .build();
     }
 
-    public static BusinessHoursResDto.UpdateBusinessHoursDto toUpdateBusinessHoursDto(Long storeId, List<String> updatedDays) {
+    public static BusinessHoursResDto.UpdateBusinessHoursDto toUpdateBusinessHoursDto(Long storeId, List<BusinessHours> updatedBusinessHours) {
         return BusinessHoursResDto.UpdateBusinessHoursDto.builder()
                 .storeId(storeId)
-                .updatedDays(updatedDays)
+                .updatedBusinessHours(
+                        updatedBusinessHours.stream().map(
+                                BusinessHoursConverter::toSummary
+                        ).toList()
+                )
                 .build();
     }
 }

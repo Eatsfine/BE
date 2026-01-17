@@ -59,7 +59,7 @@ public class StoreController {
 
     @Operation(
             summary = "가게 기본 정보 수정",
-            description = "가게 기본 정보(단일 필드)를 수정합니다. " +
+            description = "가게 기본 정보(영업시간, 브레이크타임 제외)를 수정합니다. " +
                     "영업시간, 브레이크타임, 이미지는 별도 엔티티/컬렉션이므로 개별 API로 분리"
     )
     @PatchMapping("/stores/{storeId}")

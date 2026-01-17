@@ -48,7 +48,7 @@ public class BusinessHoursValidator {
     private static void validateDuplicateDayOfWeek(List<BusinessHoursReqDto.Summary> dto) {
         Set<DayOfWeek> set = new HashSet<>();
         for(BusinessHoursReqDto.Summary s: dto) {
-            if(!set.add(s.dayOfWeek())) {
+            if(!set.add(s.day())) {
                 throw new BusinessHoursException(BusinessHoursErrorStatus._DUPLICATE_DAY_OF_WEEK);
             }
         }

@@ -25,6 +25,6 @@ public class BusinessHoursResDto {
     @Builder
     public record UpdateBusinessHoursDto(
             Long storeId,
-            List<String> updatedDays
+            List<Summary> updatedBusinessHours
     ){}
 }

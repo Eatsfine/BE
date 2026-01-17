@@ -15,7 +15,7 @@ public class BusinessHoursReqDto {
     public record Summary(
 
             @NotNull(message = "요일은 필수입니다.")
-            DayOfWeek dayOfWeek,
+            DayOfWeek day,
 
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
             LocalTime openTime,
