@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.tableimage.service.TableImageQueryService;
 import com.eatsfine.eatsfine.domain.tableimage.status.TableImageSuccessStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
+@Tag(name = "TableImage", description = "테이블 이미지 조회 및 관리 API")
 @RestController
 @RequestMapping("/api/v1")
 @RequiredArgsConstructor

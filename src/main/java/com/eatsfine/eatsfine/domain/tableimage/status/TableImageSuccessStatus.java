@@ -10,9 +10,9 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum TableImageSuccessStatus implements BaseCode {
 
-        _STORE_TABLE_IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "STORE200", "성공적으로 가게 테이블 이미지를 업로드했습니다."),
+        _STORE_TABLE_IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "TABLE_IMAGE200", "성공적으로 가게 테이블 이미지를 업로드했습니다."),
 
-        _STORE_TABLE_IMAGE_GET_SUCCESS(HttpStatus.OK, "STORE2001", "성공적으로 가게 테이블 이미지를 조회했습니다.")
+        _STORE_TABLE_IMAGE_GET_SUCCESS(HttpStatus.OK, "TABLE_IMAGE2001", "성공적으로 가게 테이블 이미지를 조회했습니다.")
         ;
 
 
