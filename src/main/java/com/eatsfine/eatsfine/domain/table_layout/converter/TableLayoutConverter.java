@@ -32,6 +32,7 @@ public class TableLayoutConverter {
                 .seatsType(table.getSeatsType())
                 .minSeatCount(table.getMinSeatCount())
                 .maxSeatCount(table.getMaxSeatCount())
+                .reviewCount(0) // 추후 리뷰 로직 구현 시 추가
                 .gridX(table.getGridX())
                 .gridY(table.getGridY())
                 .widthSpan(table.getWidthSpan())

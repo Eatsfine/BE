@@ -27,6 +27,7 @@ public class TableLayoutResDto {
             SeatsType seatsType,
             Integer minSeatCount,
             Integer maxSeatCount,
+            Integer reviewCount,
             Integer gridX,
             Integer gridY,
             Integer widthSpan,
