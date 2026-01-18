@@ -81,5 +81,11 @@ public class StoreResDto {
             Long storeId,
             List<String> updatedFields
     ){};
+    // 가게 대표 이미지 조회 응답
+    @Builder
+    public record GetMainImageDto(
+            Long storeId,
+            String mainImageUrl
+    ) {}
 
 }
