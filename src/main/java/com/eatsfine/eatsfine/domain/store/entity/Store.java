@@ -95,7 +95,6 @@ public class Store extends BaseEntity {
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TableImage> tableImages = new ArrayList<>();
 
-    // StoreTable이 아닌 TableLayout 엔티티 참조
 
     @Builder.Default
     @OneToMany(mappedBy = "store")
