@@ -50,3 +50,6 @@ build.gradle
 
 # QueryDSL generated sources
 /build/generated/
+
+src/main/resources/static/payment-test.html
+src/main/resources/static/payment-success.html

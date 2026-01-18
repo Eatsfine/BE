@@ -38,7 +38,7 @@ public class Payment extends BaseEntity {
     private String paymentKey;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_provider", nullable = false)
+    @Column(name = "payment_provider")
     private PaymentProvider paymentProvider;
 
     @Enumerated(EnumType.STRING)
@@ -63,10 +63,12 @@ public class Payment extends BaseEntity {
         this.paymentKey = paymentKey;
     }
 
-    public void completePayment(LocalDateTime approvedAt, PaymentMethod method, String paymentKey) {
+    public void completePayment(LocalDateTime approvedAt, PaymentMethod method, String paymentKey,
+            PaymentProvider provider) {
         this.paymentStatus = PaymentStatus.COMPLETED;
         this.approvedAt = approvedAt;
         this.paymentMethod = method;
         this.paymentKey = paymentKey;
+        this.paymentProvider = provider;
     }
 }
