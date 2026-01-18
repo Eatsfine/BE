@@ -1,0 +1,14 @@
+package com.eatsfine.eatsfine.domain.tableimage.dto;
+
+import lombok.Builder;
+
+import java.util.List;
+
+public class TableImageResDto {
+
+    @Builder
+    public record UploadTableImageDto(
+            Long storeId,
+            List<String> tableImages
+    ){}
+}
