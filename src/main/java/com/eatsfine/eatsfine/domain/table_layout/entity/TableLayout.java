@@ -47,7 +47,7 @@ public class TableLayout extends BaseEntity {
     private LocalDateTime deletedAt;
 
     @Builder.Default
-    @OneToMany(mappedBy = "tableLayout", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "tableLayout", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private List<StoreTable> tables = new ArrayList<>();
 
 }
