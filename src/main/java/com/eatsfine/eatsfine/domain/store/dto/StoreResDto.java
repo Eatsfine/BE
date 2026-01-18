@@ -72,7 +72,7 @@ public class StoreResDto {
     @Builder
     public record UploadMainImageDto(
             Long storeId,
-            String mainImageKey
+            String mainImageUrl
     ) {}
 
     // 식당 수정 응답

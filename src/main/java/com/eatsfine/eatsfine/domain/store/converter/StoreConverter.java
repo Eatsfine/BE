@@ -4,6 +4,7 @@ import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConvert
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
@@ -62,6 +63,13 @@ public class StoreConverter {
         return StoreResDto.StoreUpdateDto.builder()
                 .storeId(storeId)
                 .updatedFields(updatedFields)
+                .build();
+    }
+
+    public static StoreResDto.UploadMainImageDto toUploadMainImageDto(Long storeId, String mainImageUrl) {
+        return StoreResDto.UploadMainImageDto.builder()
+                .storeId(storeId)
+                .mainImageUrl(mainImageUrl)
                 .build();
     }
 }

@@ -130,6 +130,11 @@ public class Store extends BaseEntity {
         tableImage.assignStore(null);
     }
 
+    // 가게 메인 이미지 등록
+    public void updateMainImageKey(String mainImageKey) {
+        this.mainImageKey = mainImageKey;
+    }
+
     // 특정 요일의 영업시간 조회 메서드
     public BusinessHours getBusinessHoursByDay(DayOfWeek dayOfWeek) {
         return this.businessHours.stream()
@@ -146,6 +151,7 @@ public class Store extends BaseEntity {
                 .findFirst();
     }
 
+    // 예약금 계산 메서드
     public BigDecimal calculateDepositAmount() {
         return BigDecimal.valueOf(minPrice)
                 .multiply(BigDecimal.valueOf(depositRate.getPercent()))
