@@ -17,7 +17,7 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@SQLDelete(sql = "UPDATE table_layout SET is_deleted = true WHERE id = ?")
+@SQLDelete(sql = "UPDATE table_layout SET is_deleted = true, is_active = false, deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "table_layout")
 public class TableLayout extends BaseEntity {
@@ -46,7 +46,8 @@ public class TableLayout extends BaseEntity {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    @OneToMany(mappedBy = "tableLayout", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @Builder.Default
+    @OneToMany(mappedBy = "tableLayout", cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REMOVE})
     private List<StoreTable> tables = new ArrayList<>();
 
 }
