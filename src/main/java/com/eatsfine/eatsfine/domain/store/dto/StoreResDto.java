@@ -70,8 +70,9 @@ public class StoreResDto {
 
     // 가게 대표 이미지 등록 응답
     @Builder
-    public record uploadMainImageResDto(
-            String mainImageUrl
+    public record UploadMainImageDto(
+            Long storeId,
+            String mainImageKey
     ) {}
 
     // 식당 수정 응답
