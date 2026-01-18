@@ -88,4 +88,15 @@ public class StoreController {
         return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_UPLOAD_SUCCESS, storeCommandService.uploadMainImage(storeId, mainImage));
     }
 
+    @Operation(
+            summary = "식당 대표 이미지 조회",
+            description = "식당의 대표 이미지를 조회합니다."
+    )
+    @GetMapping("/stores/{storeId}/main-image")
+    public ApiResponse<StoreResDto.GetMainImageDto> getMainImage(
+            @PathVariable Long storeId
+    ) {
+        return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_GET_SUCCESS, storeQueryService.getMainImage(storeId));
+    }
+
 }

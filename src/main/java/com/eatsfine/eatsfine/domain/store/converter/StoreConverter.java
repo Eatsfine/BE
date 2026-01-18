@@ -72,5 +72,12 @@ public class StoreConverter {
                 .mainImageUrl(mainImageUrl)
                 .build();
     }
+
+    public static StoreResDto.GetMainImageDto toGetMainImageDto(Long storeId, String key) {
+        return StoreResDto.GetMainImageDto.builder()
+                .storeId(storeId)
+                .mainImageUrl(key)
+                .build();
+    }
 }
 

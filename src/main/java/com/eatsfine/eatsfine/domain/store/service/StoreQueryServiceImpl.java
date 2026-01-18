@@ -10,6 +10,7 @@ import com.eatsfine.eatsfine.domain.store.enums.StoreSortType;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,6 +27,7 @@ import java.util.List;
 public class StoreQueryServiceImpl implements StoreQueryService {
 
     private final StoreRepository storeRepository;
+    private final S3Service s3Service;
 
     // 식당 검색
     @Override
@@ -71,6 +73,15 @@ public class StoreQueryServiceImpl implements StoreQueryService {
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
         return StoreConverter.toDetailDto(store, isOpenNow(store, LocalDateTime.now()));
+    }
+
+    // 식당 대표 이미지 조회
+    @Override
+    public StoreResDto.GetMainImageDto getMainImage(Long storeId) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        return StoreConverter.toGetMainImageDto(storeId, s3Service.toUrl(store.getMainImageKey()));
     }
 
     // 현재 영업 여부 계산 (실시간 계산)
