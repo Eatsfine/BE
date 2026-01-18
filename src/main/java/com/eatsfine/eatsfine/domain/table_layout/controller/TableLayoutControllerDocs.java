@@ -30,4 +30,24 @@ public interface TableLayoutControllerDocs {
             Long storeId,
             @RequestBody @Valid TableLayoutReqDto.LayoutCreateDto dto
     );
+
+    @Operation(
+            summary = "테이블 배치도 조회",
+            description = """
+                      가게의 활성화된 테이블 배치도를 조회합니다.
+
+                      - isActive = true인 배치도만 조회됩니다.
+                      - 배치된 테이블 목록도 함께 반환됩니다. (삭제된 테이블은 제외)
+                      - 활성 배치도가 없는 경우 204 응답을 반환합니다.
+                      """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "배치도 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "204", description = "조회는 성공했지만 가게 배치도가 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가게를 찾을 수 없음")
+    })
+    ApiResponse<TableLayoutResDto.LayoutDetailDto> getActiveLayout(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId
+    );
 }
