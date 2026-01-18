@@ -50,6 +50,6 @@ public class TableImageCommandServiceImpl implements TableImageCommandService {
             store.addTableImage(tableImage);
             tableImages.add(s3Service.toUrl(key));
         }
-        return TableImageConverter.toTableImageDto(storeId, tableImages);
+        return TableImageConverter.toUploadTableImageDto(storeId, tableImages);
     }
 }

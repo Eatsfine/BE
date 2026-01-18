@@ -9,6 +9,12 @@ public class TableImageResDto {
     @Builder
     public record UploadTableImageDto(
             Long storeId,
-            List<String> tableImages
+            List<String> tableImageUrls
+    ){}
+
+    @Builder
+    public record GetTableImageDto(
+            Long storeId,
+            List<String> tableImageUrls
     ){}
 }

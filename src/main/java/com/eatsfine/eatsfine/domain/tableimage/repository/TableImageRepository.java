@@ -1,8 +1,11 @@
 package com.eatsfine.eatsfine.domain.tableimage.repository;
 
+import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.tableimage.entity.TableImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
 
 public interface TableImageRepository extends JpaRepository<TableImage, Long> {
 
@@ -12,4 +15,6 @@ public interface TableImageRepository extends JpaRepository<TableImage, Long> {
     where ti.store.id = :storeId
 """)
     int findMaxOrderByStoreId(Long storeId);
+
+    List<TableImage> findAllByStoreOrderByImageOrder(Store store);
 }

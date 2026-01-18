@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.tableimage.controller;
 
 import com.eatsfine.eatsfine.domain.tableimage.dto.TableImageResDto;
 import com.eatsfine.eatsfine.domain.tableimage.service.TableImageCommandService;
+import com.eatsfine.eatsfine.domain.tableimage.service.TableImageQueryService;
 import com.eatsfine.eatsfine.domain.tableimage.status.TableImageSuccessStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,6 +19,7 @@ import java.util.List;
 public class TableImageController {
 
     private final TableImageCommandService tableImageCommandService;
+    private final TableImageQueryService tableImageQueryService;
 
     @Operation(
             summary = "식당 테이블 이미지 등록",
@@ -35,6 +37,17 @@ public class TableImageController {
                 TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS,
                 tableImageCommandService.uploadTableImage(storeId, files)
         );
+    }
+
+    @Operation(
+            summary = "식당 테이블 이미지 조회",
+            description = "식당 테이블 이미지들을 조회합니다."
+    )
+    @GetMapping("/stores/{storeId}/table-images")
+    ApiResponse<TableImageResDto.GetTableImageDto>  getTableImage(
+            @PathVariable Long storeId
+    ) {
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_GET_SUCCESS, tableImageQueryService.getTableImage(storeId));
     }
 
 }
