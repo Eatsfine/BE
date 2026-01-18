@@ -42,7 +42,7 @@ public class StoreCommandServiceImpl implements StoreCommandService {
                 .businessNumber(dto.businessNumber())
                 .description(dto.description())
                 .address(dto.address())
-                .mainImageUrl(null) // 별도 API로 구현
+                .mainImageKey(null) // 별도 API로 구현
                 .region(region)
                 .phoneNumber(dto.phoneNumber())
                 .category(dto.category())

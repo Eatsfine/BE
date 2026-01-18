@@ -66,7 +66,7 @@ public class Store extends BaseEntity {
     private String address;
 
     @Column(name = "main_image_url")
-    private String mainImageUrl;
+    private String mainImageKey;
 
     @Builder.Default
     @Column(name = "rating", precision = 2, scale = 1, nullable = false)
