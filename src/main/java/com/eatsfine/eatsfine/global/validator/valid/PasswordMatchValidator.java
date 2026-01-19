@@ -1,6 +1,6 @@
 package com.eatsfine.eatsfine.global.validator.valid;
 
-import com.eatsfine.eatsfine.domain.user.dto.UserRequestDto;
+import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.global.validator.annotation.PasswordMatch;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
