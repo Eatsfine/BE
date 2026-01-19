@@ -20,9 +20,6 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 20)
-    private String name;
-
-    @Column(nullable = false, length = 20)
     private String nickName;
 
     @Column(nullable = false, unique = true)
