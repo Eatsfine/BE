@@ -17,8 +17,9 @@ public enum BookingErrorStatus implements BaseErrorCode {
     _INVALID_PARTY_SIZE(HttpStatus.BAD_REQUEST, "BOOKING4001", "인원 설정이 잘못되었습니다."),
     _ALREADY_RESERVED_TABLE(HttpStatus.CONFLICT, "BOOKING4091", "선택하신 테이블 중 이미 예약된 테이블이 포함되어 있습니다."),
     _ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST,"BOOKING4002", "이미 확정된 예약입니다."),
-    _PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "BOOKING4003", "결제 금액이 일치하지 않습니다.");
-
+    _PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "BOOKING4003", "결제 금액이 일치하지 않습니다."),
+    _ALREADY_CANCELED(HttpStatus.BAD_REQUEST,"BOOKING4004", "이미 취소된 예약입니다."),
+    ;
 
     private final HttpStatus httpStatus;
     private final String code;
