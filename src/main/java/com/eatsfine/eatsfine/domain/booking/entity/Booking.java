@@ -54,6 +54,7 @@ public class Booking extends BaseEntity {
     @Column(name = "booking_time", nullable = false)
     private LocalTime bookingTime;
 
+    private String cancelReason;
 
     @Enumerated(EnumType.STRING)
     private BookingStatus status;
@@ -72,4 +73,8 @@ public class Booking extends BaseEntity {
         this.status = BookingStatus.CONFIRMED;
     }
 
+    public void cancel(String reason) {
+        this.status = BookingStatus.CANCELED;
+        this.cancelReason = reason;
+    }
 }
