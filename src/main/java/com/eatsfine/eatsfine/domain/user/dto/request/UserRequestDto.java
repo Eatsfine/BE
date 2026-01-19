@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.user.dto;
+package com.eatsfine.eatsfine.domain.user.dto.request;
 
 import com.eatsfine.eatsfine.global.validator.annotation.PasswordMatch;
 import jakarta.validation.constraints.Email;

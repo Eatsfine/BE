@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.user.dto;
+package com.eatsfine.eatsfine.domain.user.dto.response;
 
 import lombok.*;
 
