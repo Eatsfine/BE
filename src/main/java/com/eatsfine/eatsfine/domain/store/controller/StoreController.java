@@ -57,4 +57,18 @@ public class StoreController {
         return ApiResponse.of(StoreSuccessStatus._STORE_DETAIL_FOUND, storeQueryService.getStoreDetail(storeId));
     }
 
+    @Operation(
+            summary = "가게 기본 정보 수정",
+            description = "가게 기본 정보(영업시간, 브레이크타임 제외)를 수정합니다. " +
+                    "영업시간, 브레이크타임, 이미지는 별도 엔티티/컬렉션이므로 개별 API로 분리"
+    )
+    @PatchMapping("/stores/{storeId}")
+    public ApiResponse<StoreResDto.StoreUpdateDto> updateStoreBasicInfo(
+            @PathVariable Long storeId,
+            @Valid @RequestBody StoreReqDto.StoreUpdateDto dto
+            ) {
+        return ApiResponse.of(StoreSuccessStatus._STORE_UPDATE_SUCCESS, storeCommandService.updateBasicInfo(storeId, dto));
+    }
+
+
 }

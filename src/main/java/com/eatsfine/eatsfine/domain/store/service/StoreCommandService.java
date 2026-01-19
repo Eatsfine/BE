@@ -5,4 +5,5 @@ import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 
 public interface StoreCommandService {
     StoreResDto.StoreCreateDto createStore(StoreReqDto.StoreCreateDto storeCreateDto);
+    StoreResDto.StoreUpdateDto updateBasicInfo(Long storeId, StoreReqDto.StoreUpdateDto storeUpdateDto);
 }
