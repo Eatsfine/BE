@@ -68,7 +68,7 @@ public class BookingResponseDTO {
     @Builder
     public record CancelBookingResultDTO(
             Long bookingId,
-            BookingStatus status,         // CANCELED
+            String status,         // CANCELED
             String cancelReason,   // 취소 사유
             LocalDateTime canceledAt, // 취소 시간
             Integer refundAmount    // 환불 금액

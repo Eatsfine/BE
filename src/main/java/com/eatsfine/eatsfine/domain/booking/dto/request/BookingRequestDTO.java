@@ -45,6 +45,7 @@ public class BookingRequestDTO {
 
     public record CancelBookingDTO(
             @NotBlank String reason //예약 취소 사유
+
     ){}
 
 }
