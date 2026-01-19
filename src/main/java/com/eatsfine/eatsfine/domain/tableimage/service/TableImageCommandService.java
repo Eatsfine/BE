@@ -8,4 +8,6 @@ import java.util.List;
 public interface TableImageCommandService {
 
     TableImageResDto.UploadTableImageDto uploadTableImage(Long storeId, List<MultipartFile> files);
+
+    TableImageResDto.DeleteTableImageDto deleteTableImage(Long storeId, List<Long> tableImageIds);
 }

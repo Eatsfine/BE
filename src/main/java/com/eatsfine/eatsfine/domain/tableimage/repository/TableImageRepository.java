@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface TableImageRepository extends JpaRepository<TableImage, Long> {
 
@@ -17,4 +18,6 @@ public interface TableImageRepository extends JpaRepository<TableImage, Long> {
     int findMaxOrderByStoreId(Long storeId);
 
     List<TableImage> findAllByStoreOrderByImageOrder(Store store);
+
+    Optional<TableImage> findByIdAndStore(Long id, Store store);
 }

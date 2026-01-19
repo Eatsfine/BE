@@ -52,4 +52,17 @@ public class TableImageController {
         return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_GET_SUCCESS, tableImageQueryService.getTableImage(storeId));
     }
 
+    @Operation(
+            summary = "식당 테이블 이미지 삭제",
+            description = "식당 테이블 이미지를 삭제합니다."
+    )
+    @DeleteMapping("/stores/{storeId}/table-images")
+    ApiResponse<TableImageResDto.DeleteTableImageDto> deleteTableImage(
+            @PathVariable Long storeId,
+            @RequestBody List<Long> tableImageIds
+    ) {
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_DELETE_SUCCESS, tableImageCommandService.deleteTableImage(storeId, tableImageIds));
+    }
+
+
 }

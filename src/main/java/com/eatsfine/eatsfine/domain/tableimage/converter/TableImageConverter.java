@@ -19,4 +19,11 @@ public class TableImageConverter {
                 .tableImageUrls(tableImages)
                 .build();
     }
+
+    public static TableImageResDto.DeleteTableImageDto toDeleteTableImageDto(Long storeId, List<Long> removedTableImages) {
+        return TableImageResDto.DeleteTableImageDto.builder()
+                .storeId(storeId)
+                .deletedTableImageIds(removedTableImages)
+                .build();
+    }
 }

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,5 +52,23 @@ public class TableImageCommandServiceImpl implements TableImageCommandService {
             tableImages.add(s3Service.toUrl(key));
         }
         return TableImageConverter.toUploadTableImageDto(storeId, tableImages);
+    }
+
+    @Override
+    public TableImageResDto.DeleteTableImageDto deleteTableImage(Long storeId, List<Long> tableImageIds) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        List<TableImage> tableImages = tableImageIds.stream()
+                        .map(id -> tableImageRepository.findByIdAndStore(id, store)
+                                .orElseThrow(() -> new ImageException(ImageErrorStatus._IMAGE_NOT_FOUND)))
+                .toList();
+
+        for (TableImage tableImage : tableImages) {
+            s3Service.deleteByKey(tableImage.getTableImageKey());
+            store.removeTableImage(tableImage);
+        }
+
+        return TableImageConverter.toDeleteTableImageDto(storeId, tableImageIds);
     }
 }
