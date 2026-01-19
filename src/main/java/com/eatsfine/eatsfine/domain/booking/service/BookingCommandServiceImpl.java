@@ -121,4 +121,27 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .amount(booking.getDepositAmount())
                 .build();
     }
+
+    @Override
+    @Transactional
+    public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
+
+
+        // 이미 취소된 예약인지 최종 확인
+        if(booking.getStatus().equals(BookingStatus.CANCELED)) {
+            throw new BookingException(BookingErrorStatus._ALREADY_CONFIRMED);
+        }
+
+        // TODO 환불 로직
+
+        booking.cancel(dto.reason());
+
+        return BookingResponseDTO.CancelBookingResultDTO.builder()
+                .bookingId(booking.getId())
+                .status(booking.getStatus().name())
+                .refundAmount(booking.getDepositAmount())
+                .build();
+    }
 }

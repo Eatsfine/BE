@@ -4,6 +4,7 @@ import com.eatsfine.eatsfine.domain.booking.dto.request.BookingRequestDTO;
 import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
 import com.eatsfine.eatsfine.domain.booking.service.BookingCommandService;
 import com.eatsfine.eatsfine.domain.booking.service.BookingQueryService;
+import com.eatsfine.eatsfine.domain.booking.status.BookingSuccessStatus;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
@@ -69,6 +70,17 @@ public class BookingController {
     ) {
 
         return ApiResponse.onSuccess(bookingCommandService.confirmPayment(bookingId,dto));
+    }
+
+    @Operation(summary = "예약 취소",
+    description = "예약을 취소하고 환불을 진행합니다.")
+    @PatchMapping("/bookings/{bookingId}/cancel")
+    public ApiResponse<BookingResponseDTO.CancelBookingResultDTO> cancelBooking(
+        @PathVariable Long bookingId,
+        @RequestBody @Valid BookingRequestDTO.CancelBookingDTO dto
+    ) {
+        return ApiResponse.of(BookingSuccessStatus._BOOKING_CANCELED,
+            bookingCommandService.cancelBooking(bookingId, dto));
     }
 
 }
