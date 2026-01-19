@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.global.config.jwt;
 
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.config.properties.Constants;
 import org.springframework.security.core.userdetails.User;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
@@ -94,7 +95,7 @@ public class JwtTokenProvider {
     public Authentication extractAuthentication(HttpServletRequest request) {
         String accessToken = resolveToken(request);
         if (accessToken == null || !validateToken(accessToken)) {
-            throw new UserException(ErrorStatus.INVALID_TOKEN);
+            throw new UserException(UserErrorStatus.INVALID_TOKEN);
         }
         return getAuthentication(accessToken);
     }
