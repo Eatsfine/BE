@@ -12,7 +12,9 @@ public enum TableImageSuccessStatus implements BaseCode {
 
         _STORE_TABLE_IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "TABLE_IMAGE200", "성공적으로 가게 테이블 이미지를 업로드했습니다."),
 
-        _STORE_TABLE_IMAGE_GET_SUCCESS(HttpStatus.OK, "TABLE_IMAGE2001", "성공적으로 가게 테이블 이미지를 조회했습니다.")
+        _STORE_TABLE_IMAGE_GET_SUCCESS(HttpStatus.OK, "TABLE_IMAGE2001", "성공적으로 가게 테이블 이미지를 조회했습니다."),
+
+        _STORE_TABLE_IMAGE_DELETE_SUCCESS(HttpStatus.OK, "TABLE_IMAGE2002", "성공적으로 가게 테이블 이미지를 삭제했습니다.")
         ;
 
 

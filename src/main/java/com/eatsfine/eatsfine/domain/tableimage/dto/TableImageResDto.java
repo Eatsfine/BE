@@ -17,4 +17,10 @@ public class TableImageResDto {
             Long storeId,
             List<String> tableImageUrls
     ){}
+
+    @Builder
+    public record DeleteTableImageDto(
+            Long storeId,
+            List<Long> deletedTableImageIds
+    ){}
 }
