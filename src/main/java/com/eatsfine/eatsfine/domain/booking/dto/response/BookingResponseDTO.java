@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.booking.dto.response;
 
+import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import lombok.Builder;
 
 import java.time.LocalDate;
@@ -62,5 +63,14 @@ public class BookingResponseDTO {
             String status,         // CONFIRMED
             String paymentKey,     // PG사 결제 키
             Integer amount        // 최종 결제 금액
+    ){}
+
+    @Builder
+    public record CancelBookingResultDTO(
+            Long bookingId,
+            BookingStatus status,         // CANCELED
+            String cancelReason,   // 취소 사유
+            LocalDateTime canceledAt, // 취소 시간
+            Integer refundAmount    // 환불 금액
     ){}
 }

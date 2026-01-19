@@ -43,4 +43,8 @@ public class BookingRequestDTO {
             @NotNull Integer amount //실제 결제 금액
     ){}
 
+    public record CancelBookingDTO(
+            @NotBlank String reason //예약 취소 사유
+    ){}
+
 }
