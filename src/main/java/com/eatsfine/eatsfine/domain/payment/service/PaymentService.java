@@ -12,9 +12,12 @@ import com.eatsfine.eatsfine.domain.payment.enums.PaymentProvider;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentType;
 import com.eatsfine.eatsfine.domain.payment.repository.PaymentRepository;
+import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
+import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
@@ -22,6 +25,7 @@ import org.springframework.web.client.RestClient;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -33,14 +37,14 @@ public class PaymentService {
     @Transactional
     public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto) {
         Booking booking = bookingRepository.findById(dto.bookingId())
-                .orElseThrow(() -> new GeneralException(ErrorStatus.BOOKING_NOT_FOUND));
+                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._BOOKING_NOT_FOUND));
 
         // 주문 ID 생성
         String orderId = UUID.randomUUID().toString();
 
         // 예약금 검증
         if (booking.getDepositAmount() == null || booking.getDepositAmount() <= 0) {
-            throw new GeneralException(ErrorStatus.PAYMENT_INVALID_DEPOSIT);
+            throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_DEPOSIT);
         }
 
         Payment payment = Payment.builder()
@@ -62,27 +66,37 @@ public class PaymentService {
                 savedPayment.getRequestedAt());
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = GeneralException.class)
     public PaymentResponseDTO.PaymentRequestResultDTO confirmPayment(PaymentConfirmDTO dto) {
         Payment payment = paymentRepository.findByOrderId(dto.orderId())
-                .orElseThrow(() -> new GeneralException(ErrorStatus.PAYMENT_NOT_FOUND));
+                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
         if (!payment.getAmount().equals(dto.amount())) {
-            throw new GeneralException(ErrorStatus.PAYMENT_INVALID_AMOUNT);
+            payment.failPayment();
+            throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_AMOUNT);
         }
 
-        // 토스 API 호출 
-        TossPaymentResponse response = tossPaymentClient.post()
-                .uri("/v1/payments/confirm")
-                .body(dto)
-                .retrieve()
-                .body(TossPaymentResponse.class);
+        // 토스 API 호출
+        TossPaymentResponse response;
+        try {
+            response = tossPaymentClient.post()
+                    .uri("/v1/payments/confirm")
+                    .body(dto)
+                    .retrieve()
+                    .body(TossPaymentResponse.class);
 
-        if (response == null || !"DONE".equals(response.status())) {
-             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR); 
+            if (response == null || !"DONE".equals(response.status())) {
+                log.error("Toss Payment Confirmation Failed: Status is not DONE");
+                payment.failPayment();
+                throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+            }
+        } catch (Exception e) {
+            log.error("Toss Payment API Error", e);
+            payment.failPayment();
+            throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
 
-        // Provider 파싱 
+        // Provider 파싱
         PaymentProvider provider = null;
         if (response.easyPay() != null) {
             String providerCode = response.easyPay().provider();
@@ -99,6 +113,8 @@ public class PaymentService {
                 response.paymentKey(),
                 provider
         );
+
+        log.info("Payment confirmed for OrderID: {}", dto.orderId());
 
         return new PaymentResponseDTO.PaymentRequestResultDTO(
                 payment.getId(),

@@ -71,4 +71,8 @@ public class Payment extends BaseEntity {
         this.paymentKey = paymentKey;
         this.paymentProvider = provider;
     }
+
+    public void failPayment() {
+        this.paymentStatus = PaymentStatus.FAILED;
+    }
 }
