@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Tag(name = "Payment", description = "결제 관련 API")
 @RestController
@@ -34,5 +35,13 @@ public class PaymentController {
     public ApiResponse<PaymentResponseDTO.PaymentRequestResultDTO> confirmPayment(
             @RequestBody @Valid PaymentConfirmDTO dto) {
         return ApiResponse.onSuccess(paymentService.confirmPayment(dto));
+    }
+
+    @Operation(summary = "결제 취소", description = "결제 키를 받아 결제를 취소합니다.")
+    @PostMapping("/{paymentKey}/cancel")
+    public ApiResponse<PaymentResponseDTO.CancelPaymentResultDTO> cancelPayment(
+            @PathVariable String paymentKey,
+            @RequestBody @Valid PaymentRequestDTO.CancelPaymentDTO dto) {
+        return ApiResponse.onSuccess(paymentService.cancelPayment(paymentKey, dto));
     }
 }

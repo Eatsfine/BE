@@ -14,4 +14,12 @@ public class PaymentResponseDTO {
             Integer amount,
             LocalDateTime requestedAt) {
     }
+
+    public record CancelPaymentResultDTO(
+            Long paymentId,
+            String orderId,
+            String paymentKey,
+            String status,
+            LocalDateTime canceledAt) {
+    }
 }

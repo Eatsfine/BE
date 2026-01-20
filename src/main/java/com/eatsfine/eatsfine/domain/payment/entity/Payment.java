@@ -75,4 +75,8 @@ public class Payment extends BaseEntity {
     public void failPayment() {
         this.paymentStatus = PaymentStatus.FAILED;
     }
+
+    public void cancelPayment() {
+        this.paymentStatus = PaymentStatus.REFUNDED;
+    }
 }

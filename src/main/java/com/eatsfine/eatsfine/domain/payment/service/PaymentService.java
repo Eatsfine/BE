@@ -30,97 +30,130 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class PaymentService {
 
-    private final PaymentRepository paymentRepository;
-    private final BookingRepository bookingRepository;
-    private final RestClient tossPaymentClient;
+        private final PaymentRepository paymentRepository;
+        private final BookingRepository bookingRepository;
+        private final RestClient tossPaymentClient;
 
-    @Transactional
-    public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto) {
-        Booking booking = bookingRepository.findById(dto.bookingId())
-                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._BOOKING_NOT_FOUND));
+        @Transactional
+        public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto) {
+                Booking booking = bookingRepository.findById(dto.bookingId())
+                                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._BOOKING_NOT_FOUND));
 
-        // 주문 ID 생성
-        String orderId = UUID.randomUUID().toString();
+                // 주문 ID 생성
+                String orderId = UUID.randomUUID().toString();
 
-        // 예약금 검증
-        if (booking.getDepositAmount() == null || booking.getDepositAmount() <= 0) {
-            throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_DEPOSIT);
+                // 예약금 검증
+                if (booking.getDepositAmount() == null || booking.getDepositAmount() <= 0) {
+                        throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_DEPOSIT);
+                }
+
+                Payment payment = Payment.builder()
+                                .booking(booking)
+                                .orderId(orderId)
+                                .amount(booking.getDepositAmount())
+                                .paymentStatus(PaymentStatus.PENDING)
+                                .paymentType(PaymentType.DEPOSIT)
+                                .requestedAt(LocalDateTime.now())
+                                .build();
+
+                Payment savedPayment = paymentRepository.save(payment);
+
+                return new PaymentResponseDTO.PaymentRequestResultDTO(
+                                savedPayment.getId(),
+                                booking.getId(),
+                                savedPayment.getOrderId(),
+                                savedPayment.getAmount(),
+                                savedPayment.getRequestedAt());
         }
 
-        Payment payment = Payment.builder()
-                .booking(booking)
-                .orderId(orderId)
-                .amount(booking.getDepositAmount())
-                .paymentStatus(PaymentStatus.PENDING)
-                .paymentType(PaymentType.DEPOSIT)
-                .requestedAt(LocalDateTime.now())
-                .build();
+        @Transactional(noRollbackFor = GeneralException.class)
+        public PaymentResponseDTO.PaymentRequestResultDTO confirmPayment(PaymentConfirmDTO dto) {
+                Payment payment = paymentRepository.findByOrderId(dto.orderId())
+                                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
-        Payment savedPayment = paymentRepository.save(payment);
+                if (!payment.getAmount().equals(dto.amount())) {
+                        payment.failPayment();
+                        throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_AMOUNT);
+                }
 
-        return new PaymentResponseDTO.PaymentRequestResultDTO(
-                savedPayment.getId(),
-                booking.getId(),
-                savedPayment.getOrderId(),
-                savedPayment.getAmount(),
-                savedPayment.getRequestedAt());
-    }
+                // 토스 API 호출
+                TossPaymentResponse response;
+                try {
+                        response = tossPaymentClient.post()
+                                        .uri("/v1/payments/confirm")
+                                        .body(dto)
+                                        .retrieve()
+                                        .body(TossPaymentResponse.class);
 
+                        if (response == null || !"DONE".equals(response.status())) {
+                                log.error("Toss Payment Confirmation Failed: Status is not DONE");
+                                payment.failPayment();
+                                throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+                        }
+                } catch (Exception e) {
+                        log.error("Toss Payment API Error", e);
+                        payment.failPayment();
+                        throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
+                }
+
+                // Provider 파싱
+                PaymentProvider provider = null;
+                if (response.easyPay() != null) {
+                        String providerCode = response.easyPay().provider();
+                        if ("토스페이".equals(providerCode)) {
+                                provider = PaymentProvider.TOSS;
+                        } else if ("카카오페이".equals(providerCode)) {
+                                provider = PaymentProvider.KAKAOPAY;
+                        }
+                }
+
+                payment.completePayment(
+                                response.approvedAt() != null ? response.approvedAt().toLocalDateTime()
+                                                : LocalDateTime.now(),
+                                PaymentMethod.SIMPLE_PAYMENT,
+                                response.paymentKey(),
+                                provider);
+
+                log.info("Payment confirmed for OrderID: {}", dto.orderId());
+
+                return new PaymentResponseDTO.PaymentRequestResultDTO(
+                                payment.getId(),
+                                payment.getBooking().getId(),
+                                payment.getOrderId(),
+                                payment.getAmount(),
+                                payment.getRequestedAt());
+        }
     @Transactional(noRollbackFor = GeneralException.class)
-    public PaymentResponseDTO.PaymentRequestResultDTO confirmPayment(PaymentConfirmDTO dto) {
-        Payment payment = paymentRepository.findByOrderId(dto.orderId())
+    public PaymentResponseDTO.CancelPaymentResultDTO cancelPayment(String paymentKey, PaymentRequestDTO.CancelPaymentDTO dto) {
+        Payment payment = paymentRepository.findByPaymentKey(paymentKey)
                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
-        if (!payment.getAmount().equals(dto.amount())) {
-            payment.failPayment();
-            throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_AMOUNT);
-        }
-
-        // 토스 API 호출
+        // 토스 결제 취소 API 호출
         TossPaymentResponse response;
         try {
             response = tossPaymentClient.post()
-                    .uri("/v1/payments/confirm")
+                    .uri("/v1/payments/" + paymentKey + "/cancel")
                     .body(dto)
                     .retrieve()
                     .body(TossPaymentResponse.class);
 
-            if (response == null || !"DONE".equals(response.status())) {
-                log.error("Toss Payment Confirmation Failed: Status is not DONE");
-                payment.failPayment();
+            if (response == null || !"CANCELED".equals(response.status())) {
+                log.error("Toss Payment Cancel Failed: {}", response);
                 throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
             }
         } catch (Exception e) {
-            log.error("Toss Payment API Error", e);
-            payment.failPayment();
+            log.error("Toss Payment Cancel API Error", e);
             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
 
-        // Provider 파싱
-        PaymentProvider provider = null;
-        if (response.easyPay() != null) {
-            String providerCode = response.easyPay().provider();
-            if ("토스페이".equals(providerCode)) {
-                provider = PaymentProvider.TOSS;
-            } else if ("카카오페이".equals(providerCode)) {
-                provider = PaymentProvider.KAKAOPAY;
-            }
-        }
+        payment.cancelPayment();
 
-        payment.completePayment(
-                response.approvedAt() != null ? response.approvedAt().toLocalDateTime() : LocalDateTime.now(),
-                PaymentMethod.SIMPLE_PAYMENT,
-                response.paymentKey(),
-                provider
-        );
-
-        log.info("Payment confirmed for OrderID: {}", dto.orderId());
-
-        return new PaymentResponseDTO.PaymentRequestResultDTO(
+        return new PaymentResponseDTO.CancelPaymentResultDTO(
                 payment.getId(),
-                payment.getBooking().getId(),
                 payment.getOrderId(),
-                payment.getAmount(),
-                payment.getRequestedAt());
+                payment.getPaymentKey(),
+                payment.getPaymentStatus().name(),
+                LocalDateTime.now()
+        );
     }
 }
