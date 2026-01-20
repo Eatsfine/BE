@@ -16,3 +16,10 @@ spring:
 payment:
   toss:
     widget-secret-key: test_sk_sample_key_for_testing
+
+cloud:
+  aws:
+    region: ap-northeast-2
+    s3:
+      bucket: eatsfine-images
+      base-url: https://eatsfine-images.s3.ap-northeast-2.amazonaws.com
