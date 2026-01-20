@@ -19,11 +19,16 @@ public record TossPaymentResponse(
                 String lastTransactionKey,
                 Integer suppliedAmount,
                 Integer vat,
-                EasyPay easyPay) {
+                EasyPay easyPay,
+                Receipt receipt) {
 
         public record EasyPay(
                         String provider,
                         Integer amount,
                         Integer discountAmount) {
+        }
+
+        public record Receipt(
+                        String url) {
         }
 }
