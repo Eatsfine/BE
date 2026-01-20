@@ -19,7 +19,7 @@ payment:
 
 cloud:
   aws:
-    region: ap-northeast-2
+    region: test-region
     s3:
-      bucket: eatsfine-images
-      base-url: https://eatsfine-images.s3.ap-northeast-2.amazonaws.com
+      bucket: test-bucket
+      base-url: https://test-bucket.s3.test-region.amazonaws.com
