@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
-@SQLDelete(sql = "UPDATE store_table SET is_deleted = true WHERE id = ?")
+@SQLDelete(sql = "UPDATE store_table SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "store_table")
 public class StoreTable extends BaseEntity {
