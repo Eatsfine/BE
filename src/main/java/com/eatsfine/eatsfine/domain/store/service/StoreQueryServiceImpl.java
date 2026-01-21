@@ -40,7 +40,7 @@ public class StoreQueryServiceImpl implements StoreQueryService {
 
         Page<StoreSearchResult> resultPage = storeRepository.searchStores(
                 cond.getLat(), cond.getLng(), cond.getKeyword(), cond.getCategory(), cond.getSort(),
-                cond.getProvince(), cond.getCity(), cond.getDistrict(), pageable
+                cond.getSido(), cond.getSigungu(), cond.getBname(), pageable
         );
 
         LocalDateTime now = LocalDateTime.now();

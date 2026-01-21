@@ -34,9 +34,9 @@ public class StoreRepositoryImpl implements StoreRepositoryCustom {
             String keyword,
             Category category,
             StoreSortType sort,
-            String province,
-            String city,
-            String district,
+            String sido,
+            String sigungu,
+            String bname,
             Pageable pageable
     ) {
         QStore store = QStore.store;
@@ -59,18 +59,18 @@ public class StoreRepositoryImpl implements StoreRepositoryCustom {
         }
 
         // 시/도 필터
-        if (province != null) {
-            whereClause.and(region.province.eq(province));
+        if (sido != null) {
+            whereClause.and(region.sido.eq(sido));
         }
 
-        // 시도 필터
-        if (city != null) {
-            whereClause.and(region.city.eq(city));
+        // 시/군/구 필터
+        if (sigungu != null) {
+            whereClause.and(region.sigungu.eq(sigungu));
         }
 
-        // 구 필터
-        if (district != null) {
-            whereClause.and(region.district.eq(district));
+        // 법정동 필터
+        if (bname != null) {
+            whereClause.and(region.bname.eq(bname));
         }
 
         // 정렬 조건 생성

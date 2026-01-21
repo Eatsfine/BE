@@ -14,15 +14,15 @@ public class Region {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // 시/도 (예: 서울특별시, 경기도)
+    // 시/도 (예: 서울특별시, 경기도, 세종특별자치시)
     @Column(name = "province", nullable = false)
-    private String province;
+    private String sido;
 
-    // 시/군/구 (예: 강남구, 성남시, 가평군)
+    // 시/군/구 (예: 강남구, 성남시 분당구, "")
     @Column(name = "city", nullable = false)
-    private String city;
+    private String sigungu;
 
-    // 구/읍/면/동 (예: 분당구, 진접읍, 역삼동 ..)
+    // 법정동 (예: 역삼동, 서현동, 어진동)
     @Column(name = "district", nullable = false)
-    private String district;
+    private String bname;
 }

@@ -36,7 +36,9 @@ public class StoreCommandServiceImpl implements StoreCommandService {
     // 가게 등록
     @Override
     public StoreResDto.StoreCreateDto createStore(StoreReqDto.StoreCreateDto dto) {
-        Region region = regionRepository.findById(dto.regionId())
+        Region region = regionRepository.findBySidoAndSigunguAndBname(
+                dto.sido(), dto.sigungu(), dto.bname()
+                )
                 .orElseThrow(() -> new StoreException(RegionErrorStatus._REGION_NOT_FOUND));
 
         // 영업시간 정상 여부 검증
