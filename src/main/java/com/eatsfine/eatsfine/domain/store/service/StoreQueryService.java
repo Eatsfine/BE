@@ -17,6 +17,8 @@ public interface StoreQueryService {
 
     StoreResDto.StoreDetailDto getStoreDetail(Long storeId);
 
+    StoreResDto.GetMainImageDto getMainImage(Long storeId);
+
     boolean isOpenNow(Store store, LocalDateTime now);
 
 }

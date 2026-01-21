@@ -66,7 +66,7 @@ public class Store extends BaseEntity {
     private String address;
 
     @Column(name = "main_image_url")
-    private String mainImageUrl;
+    private String mainImageKey;
 
     @Builder.Default
     @Column(name = "rating", precision = 2, scale = 1, nullable = false)
@@ -95,7 +95,6 @@ public class Store extends BaseEntity {
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TableImage> tableImages = new ArrayList<>();
 
-    // StoreTable이 아닌 TableLayout 엔티티 참조
 
     @Builder.Default
     @OneToMany(mappedBy = "store")
@@ -130,6 +129,11 @@ public class Store extends BaseEntity {
         tableImage.assignStore(null);
     }
 
+    // 가게 메인 이미지 등록
+    public void updateMainImageKey(String mainImageKey) {
+        this.mainImageKey = mainImageKey;
+    }
+
     // 특정 요일의 영업시간 조회 메서드
     public BusinessHours getBusinessHoursByDay(DayOfWeek dayOfWeek) {
         return this.businessHours.stream()
@@ -146,6 +150,7 @@ public class Store extends BaseEntity {
                 .findFirst();
     }
 
+    // 예약금 계산 메서드
     public BigDecimal calculateDepositAmount() {
         return BigDecimal.valueOf(minPrice)
                 .multiply(BigDecimal.valueOf(depositRate.getPercent()))

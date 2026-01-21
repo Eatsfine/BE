@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Store", description = "식당 조회 및 관리 API")
 @RestController
@@ -70,5 +72,31 @@ public class StoreController {
         return ApiResponse.of(StoreSuccessStatus._STORE_UPDATE_SUCCESS, storeCommandService.updateBasicInfo(storeId, dto));
     }
 
+
+    @Operation(
+        summary = "식당 대표 이미지 등록",
+            description = "식당의 대표 이미지를 등록합니다."
+    )
+    @PostMapping(
+            value = "/stores/{storeId}/main-image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ApiResponse<StoreResDto.UploadMainImageDto> uploadMainImage(
+            @RequestPart("mainImage")MultipartFile mainImage,
+            @PathVariable Long storeId
+            ){
+        return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_UPLOAD_SUCCESS, storeCommandService.uploadMainImage(storeId, mainImage));
+    }
+
+    @Operation(
+            summary = "식당 대표 이미지 조회",
+            description = "식당의 대표 이미지를 조회합니다."
+    )
+    @GetMapping("/stores/{storeId}/main-image")
+    public ApiResponse<StoreResDto.GetMainImageDto> getMainImage(
+            @PathVariable Long storeId
+    ) {
+        return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_GET_SUCCESS, storeQueryService.getMainImage(storeId));
+    }
 
 }
