@@ -48,17 +48,38 @@ jobs:
       - name: 도커 이미지 푸시
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
 
-      - name: EC2 배포
+      - name: GitHub Actions 실행자 IP 얻어오기
+        id: GITHUB_ACTIONS_IP
+        uses: haythem/public-ip@v1.3
+
+      - name: AWS CLI 설정
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: GitHub Actions - SSH 포트 임시 오픈
         run: |
-          
+          aws ec2 authorize-security-group-ingress \
+            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+            --ip-permissions \
+            'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
+
+      - name: SSH Key 설정
+        run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/eatsfine-ec2-key.pem
           chmod 600 ~/.ssh/eatsfine-ec2-key.pem
-          
-          ssh -o StrictHostKeyChecking=no \
-            -i <(echo "${{ secrets.EC2_SSH_KEY }}") \
-            ${{ secrets.EC2_USERNAME }}@${{ secrets.LIVE_SERVER_IP }} << 'EOF'
-          
+          echo "Host eatsfine-ec2" >> ~/.ssh/config
+          echo "  HostName ${{ secrets.LIVE_SERVER_IP }}" >> ~/.ssh/config
+          echo "  User ${{ secrets.EC2_USERNAME }}" >> ~/.ssh/config
+          echo "  IdentityFile ~/.ssh/eatsfine-ec2-key.pem" >> ~/.ssh/config
+          echo "  StrictHostKeyChecking no" >> ~/.ssh/config
+
+      - name: EC2 배포
+        run: |
+          ssh eatsfine-ec2 << 'EOF'
             set -e
             cd /home/ec2-user/deploy
           
@@ -69,3 +90,10 @@ jobs:
           
             docker ps
           EOF
+      - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 제거
+        if: always()
+        run: |
+            aws ec2 revoke-security-group-ingress \
+              --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+              --ip-permissions \
+                'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
