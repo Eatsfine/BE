@@ -50,9 +50,14 @@ jobs:
 
       - name: EC2 배포
         run: |
+          
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/eatsfine-ec2-key.pem
+          chmod 600 ~/.ssh/eatsfine-ec2-key.pem
+          
           ssh -o StrictHostKeyChecking=no \
             -i <(echo "${{ secrets.EC2_SSH_KEY }}") \
-            ${{ secrets.EC2_USERNAME }}@${{ secrets.LIVE_SERVER_IP }} << EOF
+            ${{ secrets.EC2_USERNAME }}@${{ secrets.LIVE_SERVER_IP }} << 'EOF'
           
             set -e
             cd /home/ec2-user/deploy
