@@ -1,9 +1,9 @@
 package com.eatsfine.eatsfine.domain.store.dto;
 
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
+import com.eatsfine.eatsfine.domain.businessnumber.dto.BusinessNumberReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
 import com.eatsfine.eatsfine.domain.store.enums.DepositRate;
-import jakarta.persistence.Column;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,9 +20,7 @@ public class StoreReqDto {
             @NotBlank(message = "가게명은 필수입니다.")
             String storeName,
 
-            @NotBlank(message = "사업자번호는 필수입니다.")
-            @Pattern(regexp = "^[0-9]{10}$", message = "사업자번호는 숫자 10자리여야 합니다.")
-            String businessNumber,
+            @Valid BusinessNumberReqDto.BusinessNumberDto businessNumberDto,
 
             @NotBlank(message = "가게 설명은 필수입니다.")
             String description,

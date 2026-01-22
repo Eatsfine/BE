@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.store.service;
 import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConverter;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.businesshours.validator.BusinessHoursValidator;
+import com.eatsfine.eatsfine.domain.businessnumber.service.BusinessNumberValidator;
 import com.eatsfine.eatsfine.domain.image.exception.ImageException;
 import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
@@ -32,10 +33,15 @@ public class StoreCommandServiceImpl implements StoreCommandService {
     private final StoreRepository storeRepository;
     private final RegionRepository regionRepository;
     private final S3Service s3Service;
+    private final BusinessNumberValidator businessNumberValidator;
 
     // 가게 등록
     @Override
     public StoreResDto.StoreCreateDto createStore(StoreReqDto.StoreCreateDto dto) {
+
+        businessNumberValidator.validate(dto.businessNumberDto().businessNumber(), dto.businessNumberDto().startDate(), "홍길동");
+
+
         Region region = regionRepository.findBySidoAndSigunguAndBname(
                 dto.sido(), dto.sigungu(), dto.bname()
                 )
@@ -47,11 +53,13 @@ public class StoreCommandServiceImpl implements StoreCommandService {
         Store store = Store.builder()
                 .owner(null) // User 도메인 머지 후 owner 처리 예정
                 .storeName(dto.storeName())
-                .businessNumber(dto.businessNumber())
+                .businessNumber(dto.businessNumberDto().businessNumber())
                 .description(dto.description())
                 .address(dto.address())
                 .mainImageKey(null) // 별도 API로 구현
                 .region(region)
+                .latitude(dto.latitude())
+                .longitude(dto.longitude())
                 .phoneNumber(dto.phoneNumber())
                 .category(dto.category())
                 .bookingIntervalMinutes(dto.bookingIntervalMinutes())
