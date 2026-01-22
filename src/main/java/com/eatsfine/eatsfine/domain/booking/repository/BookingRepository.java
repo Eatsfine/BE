@@ -19,4 +19,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "and b.bookingTime = :time " +
             "and b.status IN ('CONFIRMED', 'PENDING')")
     List<Long> findReservedTableIds(Long storeId, LocalDate date, LocalTime time);
+
+    @Query("SELECT b.bookingTime FROM BookingTable bt " +
+            "JOIN bt.booking b " +
+            "WHERE bt.storeTable.id = :tableId " +
+            "AND b.bookingDate = :date " +
+            "AND b.status IN ('CONFIRMED', 'PENDING')")
+    List<LocalTime> findBookedTimesByTableAndDate(@Param("tableId") Long tableId, @Param("date") LocalDate date);
 }
