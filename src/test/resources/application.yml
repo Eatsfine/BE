@@ -16,3 +16,10 @@ spring:
 payment:
   toss:
     widget-secret-key: test_sk_sample_key_for_testing
+
+cloud:
+  aws:
+    region: test-region
+    s3:
+      bucket: test-bucket
+      base-url: https://test-bucket.s3.test-region.amazonaws.com
