@@ -10,3 +10,6 @@ cloud:
     s3:
       bucket: ${AWS_S3_BUCKET}
       base-url: ${AWS_S3_BASE_URL}
+
+api:
+  service-key: ${BIZ_API_KEY}
