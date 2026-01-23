@@ -17,6 +17,7 @@ import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class StoreCommandServiceImpl implements StoreCommandService {
 
     private final StoreRepository storeRepository;
@@ -39,7 +41,9 @@ public class StoreCommandServiceImpl implements StoreCommandService {
     @Override
     public StoreResDto.StoreCreateDto createStore(StoreReqDto.StoreCreateDto dto) {
 
+        // TODO: 추후 Security Context 연동 시, 로그인된 사용자의 이름을 가져오도록 수정 예정
         businessNumberValidator.validate(dto.businessNumberDto().businessNumber(), dto.businessNumberDto().startDate(), "홍길동");
+        log.info("사업자 번호 검증 성공: {}", dto.businessNumberDto().businessNumber());
 
 
         Region region = regionRepository.findBySidoAndSigunguAndBname(
