@@ -6,18 +6,20 @@ import com.eatsfine.eatsfine.domain.businessnumber.status.BusinessNumberErrorSta
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.client.RestClient;
 
 import java.util.List;
 import java.util.Map;
 
 @Component
+@Profile("!local & !test")
 @RequiredArgsConstructor
 @Slf4j
 public class RealBusinessNumberValidator implements BusinessNumberValidator {
 
-    private final WebClient businessWebClient;
+    private final RestClient businessWebClient;
 
     @Value("${api.service-key}")
     private String serviceKey;
@@ -47,10 +49,13 @@ public class RealBusinessNumberValidator implements BusinessNumberValidator {
                         .path("/validate")
                         .queryParam("serviceKey", serviceKey)
                         .build())
-                .bodyValue(body)
+                .body(body)
                 .retrieve()
-                .bodyToMono(BusinessNumberResDto.BusinessNumberDto.class)
-                .block();
+                .onStatus(status -> status.isError(), (request, res) -> {
+                    log.error("[BusinessNumber API] 통신 에러 발생: {}", res.getStatusCode());
+                    throw new BusinessNumberException(BusinessNumberErrorStatus._API_COMMUNICATION_ERROR);
+                })
+                .body(BusinessNumberResDto.BusinessNumberDto.class);
 
         if(response == null || response.data() == null || response.data().isEmpty()) {
             log.error("[BusinessNumber API] 응답 데이터가 비어있습니다.");
