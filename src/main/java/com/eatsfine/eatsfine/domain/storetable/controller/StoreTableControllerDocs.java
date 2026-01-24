@@ -7,7 +7,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.time.LocalDate;
 
 public interface StoreTableControllerDocs {
 
@@ -32,5 +36,36 @@ public interface StoreTableControllerDocs {
             @Parameter(description = "가게 ID", required = true, example = "1")
             Long storeId,
             @RequestBody @Valid StoreTableReqDto.TableCreateDto dto
+    );
+
+    @Operation(
+            summary = "테이블 예약 시간대 조회",
+            description = """                                                                                      
+                        특정 테이블의 예약 가능한 시간대를 조회합니다.
+                        - 동적 슬롯 생성 방식을 사용합니다.
+                        - 영업시간을 기준으로 예약 간격(bookingIntervalMinutes)만큼 슬롯을 생성합니다.
+                        - 각 슬롯의 상태는 다음과 같이 결정됩니다:
+                          * BREAK_TIME: 브레이크타임에 해당하는 시간대
+                          * BLOCKED: 사장이 차단한 시간대
+                          * BOOKED: 이미 예약된 시간대
+                          * AVAILABLE: 예약 가능한 시간대
+                        - date 파라미터가 없으면 오늘 날짜로 조회합니다.
+                        - 운영 시간 11:00~22:00, 예약 간격 30분이면 21:30이 마지막 슬롯입니다.
+                        """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "슬롯 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "테이블 또는 영업시간을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "테이블이 해당 가게에 속하지 않음")
+    })
+    ApiResponse<StoreTableResDto.SlotListDto> getTableSlots(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId,
+
+            @Parameter(description = "조회할 날짜 (yyyy-MM-dd 형식, 미입력 시 오늘 날짜)", example = "2026-01-12")
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
     );
 }

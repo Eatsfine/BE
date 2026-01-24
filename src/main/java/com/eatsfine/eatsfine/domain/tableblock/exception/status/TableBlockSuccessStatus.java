@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.storetable.exception.status;
+package com.eatsfine.eatsfine.domain.tableblock.exception.status;
 
 import com.eatsfine.eatsfine.global.apiPayload.code.BaseCode;
 import com.eatsfine.eatsfine.global.apiPayload.code.ReasonDto;
@@ -8,10 +8,8 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum StoreTableSuccessStatus implements BaseCode {
-
-    _TABLE_CREATED(HttpStatus.CREATED, "TABLE201_1", "성공적으로 테이블을 생성했습니다."),
-    _SLOT_LIST_FOUND(HttpStatus.OK, "TABLE200_1", "테이블 시간 슬롯 조회에 성공했습니다."),
+public enum TableBlockSuccessStatus implements BaseCode {
+    _SLOT_STATUS_UPDATED(HttpStatus.OK, "BLOCK200_1", "테이블 슬롯 상태 변경에 성공했습니다."),
     ;
 
     private final HttpStatus httpStatus;
@@ -37,4 +35,3 @@ public enum StoreTableSuccessStatus implements BaseCode {
                 .build();
     }
 }
-
