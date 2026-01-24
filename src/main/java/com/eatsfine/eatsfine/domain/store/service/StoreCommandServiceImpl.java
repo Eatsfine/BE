@@ -3,7 +3,7 @@ package com.eatsfine.eatsfine.domain.store.service;
 import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConverter;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.businesshours.validator.BusinessHoursValidator;
-import com.eatsfine.eatsfine.domain.businessnumber.service.BusinessNumberValidator;
+import com.eatsfine.eatsfine.domain.businessnumber.validator.BusinessNumberValidator;
 import com.eatsfine.eatsfine.domain.image.exception.ImageException;
 import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
 import com.eatsfine.eatsfine.domain.region.entity.Region;

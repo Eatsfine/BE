@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.businessnumber.service;
+package com.eatsfine.eatsfine.domain.businessnumber.validator;
 
 import com.eatsfine.eatsfine.domain.businessnumber.dto.BusinessNumberResDto;
 import com.eatsfine.eatsfine.domain.businessnumber.exception.BusinessNumberException;

@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.businessnumber.service;
+package com.eatsfine.eatsfine.domain.businessnumber.validator;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;

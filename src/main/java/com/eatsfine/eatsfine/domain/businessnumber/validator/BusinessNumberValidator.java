@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.businessnumber.service;
+package com.eatsfine.eatsfine.domain.businessnumber.validator;
 
 public interface BusinessNumberValidator {
 
