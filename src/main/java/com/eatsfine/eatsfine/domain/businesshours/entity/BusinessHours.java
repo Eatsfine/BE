@@ -1,0 +1,63 @@
+package com.eatsfine.eatsfine.domain.businesshours.entity;
+
+import com.eatsfine.eatsfine.domain.store.entity.Store;
+import com.eatsfine.eatsfine.global.entity.BaseEntity;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.DayOfWeek;
+import java.time.LocalTime;
+
+@Entity
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor
+@Builder
+@Getter
+@Table(name = "business_hours")
+public class BusinessHours extends BaseEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private long id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false)
+    private DayOfWeek dayOfWeek;
+
+    @Column(name = "open_time")
+    private LocalTime openTime;
+
+    @Column(name = "close_time")
+    private LocalTime closeTime;
+
+    @Column(name = "break_start_time")
+    private LocalTime breakStartTime;
+
+    @Column(name = "break_end_time")
+    private LocalTime breakEndTime;
+
+    // 휴일 여부 (특정 요일 고정 휴무)
+    @Builder.Default
+    @Column(name = "is_closed", nullable = false)
+    private boolean isClosed = false;
+
+    public void assignStore(Store store){
+        this.store = store;
+    }
+
+    // 영업시간 변경
+    public void update(LocalTime open, LocalTime close, boolean isClosed){
+        this.openTime = open;
+        this.closeTime = close;
+        this.isClosed = isClosed;
+    }
+
+    // 브레이크타임 변경
+    public void updateBreakTime(LocalTime breakStart, LocalTime breakEnd){
+        this.breakStartTime = breakStart;
+        this.breakEndTime = breakEnd;
+    }
+}

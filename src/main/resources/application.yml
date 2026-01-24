@@ -1,0 +1,12 @@
+spring:
+  application:
+    name: Eatsfine
+  profiles:
+    active: local
+
+cloud:
+  aws:
+    region: ${AWS_REGION}
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+      base-url: ${AWS_S3_BASE_URL}
