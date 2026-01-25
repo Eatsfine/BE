@@ -4,6 +4,7 @@ import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.util.SlotCalculator;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class StoreTableConverter {
@@ -38,6 +39,25 @@ public class StoreTableConverter {
                 .totalSlotCount(totalCount)
                 .availableSlotCount(availableCount)
                 .slots(slotDetails)
+                .build();
+    }
+
+    public static StoreTableResDto.TableDetailDto toTableDetailDto(StoreTable table, LocalDate targetDate, int totalSlotCount, int availableSlotCount) {
+        return StoreTableResDto.TableDetailDto.builder()
+                .tableId(table.getId())
+                .minSeatCount(table.getMinSeatCount())
+                .maxSeatCount(table.getMaxSeatCount())
+                .tableImageUrl(table.getTableImageUrl())
+                .rating(table.getRating())
+                .reviewCount(0) // 리뷰 기능 미구현으로 0 반환
+                .seatsType(table.getSeatsType())
+                .reservationStatus(
+                        StoreTableResDto.ReservationStatusDto.builder()
+                                .targetDate(targetDate)
+                                .totalSlotCount(totalSlotCount)
+                                .availableSlotCount(availableSlotCount)
+                                .build()
+                )
                 .build();
     }
 }

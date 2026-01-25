@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -39,5 +40,25 @@ public class StoreTableResDto {
             LocalTime time,
             SlotStatus status,
             boolean isAvailable
+    ) {}
+
+    @Builder
+    public record TableDetailDto(
+            Long tableId,
+            Integer minSeatCount,
+            Integer maxSeatCount,
+            String tableImageUrl,
+            BigDecimal rating,
+            Integer reviewCount,
+            SeatsType seatsType,
+            ReservationStatusDto reservationStatus
+    ) {}
+
+    @Builder
+    public record ReservationStatusDto(
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
+            LocalDate targetDate,
+            Integer totalSlotCount,
+            Integer availableSlotCount
     ) {}
 }
