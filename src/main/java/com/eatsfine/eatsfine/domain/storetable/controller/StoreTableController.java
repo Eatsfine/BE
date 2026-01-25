@@ -38,4 +38,14 @@ public class StoreTableController implements StoreTableControllerDocs {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
         return ApiResponse.of(StoreTableSuccessStatus._SLOT_LIST_FOUND, storeTableQueryService.getTableSlots(storeId, tableId, targetDate));
     }
+
+    @GetMapping("/stores/{storeId}/tables/{tableId}")
+    public ApiResponse<StoreTableResDto.TableDetailDto> getTableDetail(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+    ) {
+        LocalDate targetDate = (date != null) ? date : LocalDate.now();
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_DETAIL_FOUND, storeTableQueryService.getTableDetail(storeId, tableId, targetDate));
+    }
 }

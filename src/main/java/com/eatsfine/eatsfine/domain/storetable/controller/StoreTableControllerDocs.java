@@ -68,4 +68,29 @@ public interface StoreTableControllerDocs {
             @Parameter(description = "조회할 날짜 (yyyy-MM-dd 형식, 미입력 시 오늘 날짜)", example = "2026-01-12")
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
     );
+
+    @Operation(
+            summary = "테이블 상세 조회",
+            description = """                                                                                          
+                  특정 테이블의 상세 정보를 조회합니다.
+                  - 테이블 기본 정보 (최소/최대 인원, 이미지, 평점, 리뷰 수, 테이블 유형)
+                  - 예약 가능 상태 (날짜별 총 슬롯 수, 예약 가능한 슬롯 수)
+                  - date 파라미터가 없으면 오늘 날짜로 조회합니다.
+                  """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "테이블 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "테이블이 가게에 속하지 않음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "테이블을 찾을 수 없음")
+    })
+    ApiResponse<StoreTableResDto.TableDetailDto> getTableDetail(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId,
+
+            @Parameter(description = "조회 날짜 (yyyy-MM-dd)", example = "2026-01-23")
+            LocalDate date
+    );
 }
