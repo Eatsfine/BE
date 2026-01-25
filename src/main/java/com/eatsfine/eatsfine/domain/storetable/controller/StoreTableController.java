@@ -7,6 +7,7 @@ import com.eatsfine.eatsfine.domain.storetable.service.StoreTableCommandService;
 import com.eatsfine.eatsfine.domain.storetable.service.StoreTableQueryService;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -47,5 +48,14 @@ public class StoreTableController implements StoreTableControllerDocs {
     ) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
         return ApiResponse.of(StoreTableSuccessStatus._TABLE_DETAIL_FOUND, storeTableQueryService.getTableDetail(storeId, tableId, targetDate));
+    }
+
+    @PatchMapping("/stores/{storeId}/tables/{tableId}")
+    public ApiResponse<StoreTableResDto.TableUpdateResultDto> updateTable(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId,
+            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto
+    ) {
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_UPDATED, storeTableCommandService.updateTable(storeId, tableId, dto));
     }
 }
