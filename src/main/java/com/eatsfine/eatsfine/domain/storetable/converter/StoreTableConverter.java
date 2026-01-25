@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.storetable.converter;
 
+import com.eatsfine.eatsfine.domain.storetable.dto.req.StoreTableReqDto;
 import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.util.SlotCalculator;
@@ -58,6 +59,33 @@ public class StoreTableConverter {
                                 .availableSlotCount(availableSlotCount)
                                 .build()
                 )
+                .build();
+    }
+
+    public static StoreTableResDto.TableUpdateResultDto toTableUpdateResultDto(List<StoreTable> updatedTables, StoreTableReqDto.TableUpdateDto requestDto) {
+        List<StoreTableResDto.UpdatedTableDto> updatedTableDtoList = updatedTables.stream()
+                .map(table -> {
+                    var builder = StoreTableResDto.UpdatedTableDto.builder()
+                            .tableId(table.getId()); // tableId는 항상 포함
+
+                    // 요청 DTO에 있는 필드만 응답에 포함
+                    if (requestDto.tableNumber() != null) {
+                        builder.tableNumber(table.getTableNumber());
+                    }
+                    if (requestDto.minSeatCount() != null || requestDto.maxSeatCount() != null) {
+                        builder.minSeatCount(table.getMinSeatCount());
+                        builder.maxSeatCount(table.getMaxSeatCount());
+                    }
+                    if (requestDto.seatsType() != null) {
+                        builder.seatsType(table.getSeatsType());
+                    }
+
+                    return builder.build();
+                })
+                .toList();
+
+        return StoreTableResDto.TableUpdateResultDto.builder()
+                .updatedTables(updatedTableDtoList)
                 .build();
     }
 }

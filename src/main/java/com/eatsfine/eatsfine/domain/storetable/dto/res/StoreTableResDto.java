@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.storetable.dto.res;
 import com.eatsfine.eatsfine.domain.storetable.enums.SeatsType;
 import com.eatsfine.eatsfine.domain.tableblock.enums.SlotStatus;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 
 import java.math.BigDecimal;
@@ -60,5 +61,20 @@ public class StoreTableResDto {
             LocalDate targetDate,
             Integer totalSlotCount,
             Integer availableSlotCount
+    ) {}
+
+    @Builder
+    public record TableUpdateResultDto(
+            List<UpdatedTableDto> updatedTables
+    ) {}
+
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public record UpdatedTableDto(
+            Long tableId,
+            String tableNumber,
+            Integer minSeatCount,
+            Integer maxSeatCount,
+            SeatsType seatsType
     ) {}
 }
