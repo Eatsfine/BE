@@ -89,7 +89,6 @@ jobs:
           
             # 불필요한 도커 이미지 및 컨테이너 정리
             docker image prune -f
-            docker container prune -f
           
             docker ps
           EOF
