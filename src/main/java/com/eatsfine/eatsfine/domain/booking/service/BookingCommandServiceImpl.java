@@ -11,7 +11,11 @@ import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.booking.status.BookingErrorStatus;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
+import com.eatsfine.eatsfine.domain.payment.entity.Payment;
+import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
+import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
 import com.eatsfine.eatsfine.domain.payment.service.PaymentService;
+import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
@@ -127,16 +131,11 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
+        // 예약 중 결제 완료된 결제의 결제키 이용 환불 로직 진행
+        PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(dto.reason());
+        paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
 
-        // 이미 취소된 예약인지 최종 확인
-        if(booking.getStatus().equals(BookingStatus.CANCELED)) {
-            throw new BookingException(BookingErrorStatus._ALREADY_CONFIRMED);
-        }
-
-        // TODO 환불 로직
-
-
-        //예약 상태 변경
+        //예약 상태 취소로 변경
         booking.cancel(dto.reason());
 
         return BookingResponseDTO.CancelBookingResultDTO.builder()
