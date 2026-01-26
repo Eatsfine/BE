@@ -3,6 +3,9 @@ package com.eatsfine.eatsfine.domain.booking.entity;
 import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingTable;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.eatsfine.domain.payment.entity.Payment;
+import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
+import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
+import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.user.entity.User;
@@ -83,6 +86,15 @@ public class Booking extends BaseEntity {
     {
         this.status = BookingStatus.CANCELED;
         this.cancelReason = cancelReason;
+    }
+
+    //예약과 관련된 결제 중 결제 완료된 결제키 조회
+    public String getSuccessPaymentKey() {
+        return this.payments.stream()
+                .filter(p -> p.getPaymentStatus() == PaymentStatus.COMPLETED)
+                .map(Payment::getPaymentKey)
+                .findFirst()
+                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
     }
 
 }
