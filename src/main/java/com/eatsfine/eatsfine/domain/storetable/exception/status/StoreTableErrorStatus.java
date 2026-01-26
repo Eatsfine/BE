@@ -19,6 +19,7 @@ public enum StoreTableErrorStatus implements BaseErrorCode {
     _NO_UPDATE_FIELD(HttpStatus.BAD_REQUEST, "TABLE400_5", "수정할 필드가 최소 하나 이상 필요합니다."),
     _SAME_SEAT_COUNT(HttpStatus.BAD_REQUEST, "TABLE400_6", "기존 좌석 수와 동일합니다."),
     _SAME_SEATS_TYPE(HttpStatus.BAD_REQUEST, "TABLE400_7", "기존 좌석 유형과 동일합니다."),
+    _TABLE_HAS_FUTURE_BOOKING(HttpStatus.BAD_REQUEST, "TABLE400_8", "해당 테이블에 존재하는 예약이 있어 삭제할 수 없습니다."),
     ;
 
     private final HttpStatus httpStatus;
