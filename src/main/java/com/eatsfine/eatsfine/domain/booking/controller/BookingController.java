@@ -61,8 +61,9 @@ public class BookingController {
         return ApiResponse.onSuccess(bookingCommandService.createBooking(user, storeId, dto));
     }
 
-    @Operation(summary = "결제 완료 처리",
-            description = "결제 완료 후 결제 정보를 입력받아 예약 상태를 업데이트합니다.")
+    @Operation(summary = "예약 완료 처리",
+            description = "결제 완료 후 결제 정보를 입력받아 예약 상태를 업데이트합니다. 주의) 외부에서 이 API를 호출하지 않고  " +
+                    "POST /api/v1/payments/confirm API 호출 후 내부적으로 이 API의 로직을 실행합니다.")
     @PatchMapping("/bookings/{bookingId}/payments-confirm")
     public ApiResponse<BookingResponseDTO.ConfirmPaymentResultDTO> confirmPayment(
             @PathVariable Long bookingId,
