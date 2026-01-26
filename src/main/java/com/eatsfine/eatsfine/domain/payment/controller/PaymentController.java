@@ -22,7 +22,9 @@ public class PaymentController {
 
     private final PaymentService paymentService;
 
-    @Operation(summary = "결제 요청", description = "예약 ID를 받아 주문 ID를 생성하고 결제 정보를 초기화합니다.")
+    @Operation(summary = "결제 요청", description = "예약 ID를 받아 주문 ID를 생성하고 결제 정보를 초기화합니다." +
+            "주의) 외부에서 이 API를 호출하지 않고 POST /api/v1/stores/{storeId}/bookings API 호출 후 " +
+            "내부적으로 이 API의 로직을 실행합니다.")
     @PostMapping("/request")
     public ApiResponse<PaymentResponseDTO.PaymentRequestResultDTO> requestPayment(
             @RequestBody @Valid PaymentRequestDTO.RequestPaymentDTO dto) {
