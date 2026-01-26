@@ -45,7 +45,9 @@ public class BookingResponseDTO {
             Integer partySize,
             Integer totalDeposit,
             List<BookingResultTableDTO> tables,
-            LocalDateTime createdAt // 예약 생성 시간
+            LocalDateTime createdAt, // 예약 생성 시간
+            Long paymentId,  // 결제 ID
+            String orderId // 주문 ID
     ){}
 
     @Builder
