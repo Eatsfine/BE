@@ -163,4 +163,28 @@ public interface StoreTableControllerDocs {
 
             @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto
     );
+
+    @Operation(
+            summary = "테이블 삭제",
+            description = """
+                      특정 가게의 테이블을 삭제합니다.
+  
+                      **삭제 조건:**
+                      - 현재 시간 이후의 예약(CONFIRMED 또는 PENDING 상태)이 존재하는 테이블은 삭제할 수 없습니다.
+                      - Soft Delete 방식으로 처리되어 실제 데이터는 삭제되지 않고 is_deleted 플래그가 true로 변경됩니다.
+                      - deleted_at 필드에 삭제 시간이 기록됩니다.
+                      - 삭제된 테이블 위치에 새 테이블 생성 시, 겹침 검증 로직에서 삭제된 테이블은 제외됩니다.
+                      """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "테이블 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "테이블에 미래 예약이 존재함"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "테이블 또는 가게를 찾을 수 없음")
+    })
+    ApiResponse<StoreTableResDto.TableDeleteDto> deleteTable(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId
+    );
 }

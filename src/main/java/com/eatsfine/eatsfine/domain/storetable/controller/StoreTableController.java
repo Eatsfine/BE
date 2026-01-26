@@ -58,4 +58,12 @@ public class StoreTableController implements StoreTableControllerDocs {
     ) {
         return ApiResponse.of(StoreTableSuccessStatus._TABLE_UPDATED, storeTableCommandService.updateTable(storeId, tableId, dto));
     }
+
+    @DeleteMapping("/stores/{storeId}/tables/{tableId}")
+    public ApiResponse<StoreTableResDto.TableDeleteDto> deleteTable(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId
+    ) {
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_DELETED, storeTableCommandService.deleteTable(storeId, tableId));
+    }
 }
