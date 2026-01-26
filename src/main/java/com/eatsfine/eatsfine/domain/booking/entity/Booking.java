@@ -60,6 +60,7 @@ public class Booking extends BaseEntity {
     private LocalTime bookingTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
     private BookingStatus status;
 
     public void addBookingTable(StoreTable storeTable) {
@@ -72,8 +73,16 @@ public class Booking extends BaseEntity {
 
     private Integer depositAmount;
 
+    private String cancelReason;
+
     public void confirm() {
         this.status = BookingStatus.CONFIRMED;
+    }
+
+    public void cancel(String cancelReason)
+    {
+        this.status = BookingStatus.CANCELED;
+        this.cancelReason = cancelReason;
     }
 
 }
