@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.domain.store.dto;
 
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
+import com.eatsfine.eatsfine.domain.businessnumber.dto.BusinessNumberReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
 import com.eatsfine.eatsfine.domain.store.enums.DepositRate;
 import jakarta.validation.Valid;
@@ -19,16 +20,28 @@ public class StoreReqDto {
             @NotBlank(message = "가게명은 필수입니다.")
             String storeName,
 
-            @NotBlank(message = "사업자번호는 필수입니다.")
-            String businessNumber,
+            @Valid BusinessNumberReqDto.BusinessNumberDto businessNumberDto,
 
+            @NotBlank(message = "가게 설명은 필수입니다.")
             String description,
 
-            @NotNull(message = "지역은 필수입니다.")
-            Long regionId,
+            @NotBlank(message = "시/도는 필수입니다.")
+            String sido, // ex 경기도, 세종특별자치시
 
-            @NotBlank(message = "주소는 필수입니다.")
+            @NotNull(message = "시/군/구는 필수입니다. (해당 사항 없을 경우 \"\"를 입력해주세요.)")
+            String sigungu, // ex 성남시 분당구, ""
+
+            @NotBlank(message = "법정동은 필수입니다.")
+            String bname, // ex 서현동, 어진동
+
+            @NotBlank(message = "전체 주소는 필수입니다.")
             String address,
+
+            @NotNull(message = "위도는 필수입니다.")
+            double latitude,
+
+            @NotNull(message = "경도는 필수입니다,.")
+            double longitude,
 
             @Pattern(
                     regexp = "^0\\d{1,2}-\\d{3,4}-\\d{4}$",

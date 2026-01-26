@@ -13,9 +13,9 @@ public interface StoreRepositoryCustom {
             String keyword,
             Category category,
             StoreSortType sort,
-            String province,
-            String city,
-            String district,
+            String sido,
+            String sigungu,
+            String bname,
             Pageable pageable
     );
 }

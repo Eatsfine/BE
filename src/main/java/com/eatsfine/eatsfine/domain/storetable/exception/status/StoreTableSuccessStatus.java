@@ -10,7 +10,8 @@ import org.springframework.http.HttpStatus;
 @AllArgsConstructor
 public enum StoreTableSuccessStatus implements BaseCode {
 
-    _TABLE_CREATED(HttpStatus.CREATED, "TABLE201", "성공적으로 테이블을 생성했습니다."),
+    _TABLE_CREATED(HttpStatus.CREATED, "TABLE201_1", "성공적으로 테이블을 생성했습니다."),
+    _SLOT_LIST_FOUND(HttpStatus.OK, "TABLE200_1", "테이블 시간 슬롯 조회에 성공했습니다."),
     ;
 
     private final HttpStatus httpStatus;

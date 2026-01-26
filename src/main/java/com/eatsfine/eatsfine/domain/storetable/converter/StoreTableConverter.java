@@ -2,6 +2,9 @@ package com.eatsfine.eatsfine.domain.storetable.converter;
 
 import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
+import com.eatsfine.eatsfine.domain.storetable.util.SlotCalculator;
+
+import java.util.List;
 
 public class StoreTableConverter {
     // StoreTable Entity를 생성 응답 DTO로 변환
@@ -19,6 +22,22 @@ public class StoreTableConverter {
                 .rating(table.getRating())
                 .reviewCount(0) // 리뷰 기능 미구현으로 0 반환
                 .tableImageUrl(table.getTableImageUrl())
+                .build();
+    }
+
+    public static StoreTableResDto.SlotListDto toSlotListDto(int totalCount, int availableCount, List<SlotCalculator.SlotDto> slots) {
+        List<StoreTableResDto.SlotDetailDto> slotDetails = slots.stream()
+                .map(slot -> StoreTableResDto.SlotDetailDto.builder()
+                        .time(slot.time())
+                        .status(slot.status())
+                        .isAvailable(slot.isAvailable())
+                        .build())
+                .toList();
+
+        return StoreTableResDto.SlotListDto.builder()
+                .totalSlotCount(totalCount)
+                .availableSlotCount(availableCount)
+                .slots(slotDetails)
                 .build();
     }
 }
