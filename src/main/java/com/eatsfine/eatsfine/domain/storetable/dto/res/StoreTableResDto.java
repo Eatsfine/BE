@@ -77,4 +77,9 @@ public class StoreTableResDto {
             Integer maxSeatCount,
             SeatsType seatsType
     ) {}
+
+    @Builder
+    public record TableDeleteDto(
+            Long tableId
+    ) {}
 }

@@ -88,4 +88,10 @@ public class StoreTableConverter {
                 .updatedTables(updatedTableDtoList)
                 .build();
     }
+
+    public static StoreTableResDto.TableDeleteDto toTableDeleteDto(StoreTable table) {
+        return StoreTableResDto.TableDeleteDto.builder()
+                .tableId(table.getId())
+                .build();
+    }
 }
