@@ -100,6 +100,10 @@ public class PaymentService {
                 provider
         );
 
+        // 예약 상태 확정으로 변경
+        Booking booking = payment.getBooking();
+        booking.confirm();
+
         return new PaymentResponseDTO.PaymentRequestResultDTO(
                 payment.getId(),
                 payment.getBooking().getId(),
