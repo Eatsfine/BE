@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.storetable.service;
 
+import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
@@ -20,6 +21,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +34,7 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
     private final StoreRepository storeRepository;
     private final TableLayoutRepository tableLayoutRepository;
     private final StoreTableRepository storeTableRepository;
+    private final BookingRepository bookingRepository;
 
     // 테이블 생성
     @Override
@@ -128,6 +132,32 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
         }
 
         return StoreTableConverter.toTableUpdateResultDto(affectedTables, dto);
+    }
+
+    // 테이블 삭제
+    @Override
+    public StoreTableResDto.TableDeleteDto deleteTable(Long storeId, Long tableId) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        StoreTable table = storeTableRepository.findById(tableId)
+                .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
+
+        StoreTableValidator.validateTableBelongsToStore(table, storeId);
+
+        // 현재 시간 기준 미래 예약 존재 여부 확인
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
+        boolean hasFutureBooking = bookingRepository.existsFutureBookingByTable(tableId, currentDate, currentTime);
+
+        if (hasFutureBooking) {
+            throw new StoreTableException(StoreTableErrorStatus._TABLE_HAS_FUTURE_BOOKING);
+        }
+
+        storeTableRepository.delete(table);
+
+        return StoreTableConverter.toTableDeleteDto(table);
     }
 
     private String generateTableNumber(TableLayout layout) {
