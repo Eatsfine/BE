@@ -38,6 +38,15 @@ public class PaymentService {
         private final BookingRepository bookingRepository;
         private final RestClient tossPaymentClient;
 
+        /**
+         * Create and persist a pending deposit payment for a booking.
+         *
+         * Validates the booking and its deposit amount, generates an order ID, saves a PENDING deposit payment, and returns the saved payment details.
+         *
+         * @param dto the request DTO containing the booking ID for which to create the payment
+         * @return a PaymentRequestResultDTO with the saved payment's id, booking id, orderId, amount, and requestedAt
+         * @throws PaymentException if the booking is not found or the booking's deposit amount is null or not greater than zero
+         */
         @Transactional
         public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto) {
                 Booking booking = bookingRepository.findById(dto.bookingId())
@@ -70,6 +79,14 @@ public class PaymentService {
                                 savedPayment.getRequestedAt());
         }
 
+        /**
+         * Confirms a pending payment by validating the requested amount, verifying the provider response, and completing the payment record.
+         *
+         * @param dto confirmation data containing the orderId and amount to validate
+         * @return a PaymentSuccessResultDTO containing the payment id, status, approval time, order id, amount, method, provider, and receipt URL
+         * @throws PaymentException if the payment is not found or the provided amount does not match the recorded amount
+         * @throws GeneralException if the external payment provider cannot be confirmed or an internal error occurs during confirmation
+         */
         @Transactional(noRollbackFor = GeneralException.class)
         public PaymentResponseDTO.PaymentSuccessResultDTO confirmPayment(PaymentConfirmDTO dto) {
                 Payment payment = paymentRepository.findByOrderId(dto.orderId())
@@ -132,6 +149,15 @@ public class PaymentService {
                                 payment.getReceiptUrl());
         }
 
+        /**
+         * Cancel a Toss payment and update the corresponding local Payment to canceled.
+         *
+         * @param paymentKey the external payment key used by the payment provider
+         * @param dto        the cancellation request payload sent to the Toss API
+         * @return           a result DTO containing the payment id, order id, payment key, current payment status, and cancellation timestamp
+         * @throws PaymentException if no local Payment exists for the given paymentKey
+         * @throws GeneralException if the Toss cancel API call fails or returns a non-canceled status
+         */
         @Transactional(noRollbackFor = GeneralException.class)
         public PaymentResponseDTO.CancelPaymentResultDTO cancelPayment(String paymentKey,
                         PaymentRequestDTO.CancelPaymentDTO dto) {
@@ -166,6 +192,16 @@ public class PaymentService {
                                 LocalDateTime.now());
         }
 
+        /**
+         * Retrieve a paginated list of a user's payments, optionally filtered by payment status.
+         *
+         * @param userId the ID of the user whose payments are requested
+         * @param page   1-based page number; defaults to 1 when null or <= 0
+         * @param limit  number of items per page; defaults to 10 when null
+         * @param status optional payment status name (case-insensitive) to filter results; must match a PaymentStatus enum value
+         * @throws GeneralException if the provided status does not match any PaymentStatus (_BAD_REQUEST)
+         * @return a PaymentListResponseDTO containing a list of payment history entries and pagination metadata
+         */
         @Transactional(readOnly = true)
         public PaymentResponseDTO.PaymentListResponseDTO getPaymentList(Long userId, Integer page, Integer limit,
                         String status) {
