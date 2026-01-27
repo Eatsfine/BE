@@ -31,6 +31,12 @@ public class PaymentController {
         return ApiResponse.onSuccess(paymentService.requestPayment(dto));
     }
 
+    /**
+     * Requests approval for a payment via Toss Payments.
+     *
+     * @param dto the payment confirmation payload required to approve the payment
+     * @return an ApiResponse containing a PaymentSuccessResultDTO with details of the approved payment
+     */
     @Operation(summary = "결제 승인", description = "토스페이먼츠 결제 승인을 요청합니다.")
     @PostMapping("/confirm")
     public ApiResponse<PaymentResponseDTO.PaymentSuccessResultDTO> confirmPayment(

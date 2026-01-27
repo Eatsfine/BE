@@ -48,6 +48,13 @@ public class BookingController {
         return ApiResponse.onSuccess(bookingQueryService.getAvailableTables(storeId, dto));
     }
 
+    /**
+     * Creates a booking for the specified store using the provided booking details.
+     *
+     * @param storeId the ID of the store for which to create the booking
+     * @param dto a CreateBookingDTO containing booking date, time, party size, and table information
+     * @return a CreateBookingResultDTO with the created booking details and result status
+     */
     @Operation(summary = "예약 생성" ,
             description = "가게,날짜,시간,인원,테이블 정보를 입력받아 예약을 생성합니다.")
     @PostMapping("/stores/{storeId}/bookings")

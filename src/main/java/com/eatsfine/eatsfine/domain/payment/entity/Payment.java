@@ -62,6 +62,18 @@ public class Payment extends BaseEntity {
     @Column(name = "receipt_url")
     private String receiptUrl;
 
+    /**
+     * Mark the payment as completed and record approval details.
+     *
+     * Sets the payment status to COMPLETED and updates the approval timestamp, payment method,
+     * provider transaction key, payment provider, and receipt URL.
+     *
+     * @param approvedAt the timestamp when the payment was approved
+     * @param method the payment method used for the approval
+     * @param paymentKey the provider's transaction identifier for this payment
+     * @param provider the payment provider that processed the payment
+     * @param receiptUrl a URL to the payment receipt, if available
+     */
     public void completePayment(LocalDateTime approvedAt, PaymentMethod method, String paymentKey,
             PaymentProvider provider, String receiptUrl) {
         this.paymentStatus = PaymentStatus.COMPLETED;
