@@ -43,12 +43,12 @@ public class StoreTableConverter {
                 .build();
     }
 
-    public static StoreTableResDto.TableDetailDto toTableDetailDto(StoreTable table, LocalDate targetDate, int totalSlotCount, int availableSlotCount) {
+    public static StoreTableResDto.TableDetailDto toTableDetailDto(StoreTable table, LocalDate targetDate, int totalSlotCount, int availableSlotCount, String tableImageUrl) {
         return StoreTableResDto.TableDetailDto.builder()
                 .tableId(table.getId())
                 .minSeatCount(table.getMinSeatCount())
                 .maxSeatCount(table.getMaxSeatCount())
-                .tableImageUrl(table.getTableImageUrl())
+                .tableImageUrl(tableImageUrl)
                 .rating(table.getRating())
                 .reviewCount(0) // 리뷰 기능 미구현으로 0 반환
                 .seatsType(table.getSeatsType())
