@@ -85,4 +85,9 @@ public class StoreTable extends BaseEntity {
     public void updateSeatsType(SeatsType seatsType) {
         this.seatsType = seatsType;
     }
+
+    // 테이블 이미지 업로드
+    public void updateTableImage(String imageKey) {
+        this.tableImageUrl = imageKey;
+    }
 }
