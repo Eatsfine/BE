@@ -81,4 +81,12 @@ public class StoreTableController implements StoreTableControllerDocs {
     ) {
         return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS, storeTableCommandService.uploadTableImage(storeId, tableId, tableImage));
     }
+
+    @DeleteMapping("/stores/{storeId}/tables/{tableId}/table-image")
+    public ApiResponse<StoreTableResDto.DeleteTableImageDto> deleteTableImage(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId
+    ) {
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_DELETE_SUCCESS, storeTableCommandService.deleteTableImage(storeId, tableId));
+    }
 }

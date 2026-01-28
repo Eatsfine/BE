@@ -221,4 +221,27 @@ public interface StoreTableControllerDocs {
             )
             MultipartFile tableImage
     );
+
+    @Operation(
+            summary = "테이블 이미지 삭제",
+            description = """
+                특정 테이블의 이미지를 삭제합니다.
+                
+                - 등록된 이미지가 없는 경우 404 에러가 발생합니다.
+                - S3에서 이미지가 삭제되고, DB의 이미지 URL도 null로 업데이트됩니다.
+                - 삭제 후 다시 이미지를 등록할 수 있습니다.
+                """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "테이블 이미지 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "테이블이 해당 가게에 속하지 않음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가게, 테이블을 찾을 수 없거나 이미지가 등록되지 않음")
+    })
+    ApiResponse<StoreTableResDto.DeleteTableImageDto> deleteTableImage(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId
+    );
 }
