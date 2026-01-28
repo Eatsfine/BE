@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.booking.entity;
 
+import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingMenu;
 import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingTable;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.eatsfine.domain.payment.entity.Payment;
@@ -66,6 +67,17 @@ public class Booking extends BaseEntity {
     @Column(name = "status", length = 20, nullable = false)
     private BookingStatus status;
 
+    @Builder.Default
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BookingMenu> bookingMenus = new ArrayList<>();
+
+    public void addBookingMenu(BookingMenu bookingMenu) {
+        this.bookingMenus.add(bookingMenu);
+        if (bookingMenu.getBooking() != this) {
+            bookingMenu.confirmBooking(this);
+        }
+    }
+
     public void addBookingTable(StoreTable storeTable) {
         BookingTable bookingTable = BookingTable.builder()
                 .booking(this)
@@ -97,4 +109,7 @@ public class Booking extends BaseEntity {
                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
     }
 
+    public void setDepositAmount(int totalDeposit) {
+        this.depositAmount = totalDeposit;
+    }
 }
