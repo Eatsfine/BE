@@ -5,12 +5,15 @@ import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableSuccessStatus;
 import com.eatsfine.eatsfine.domain.storetable.service.StoreTableCommandService;
 import com.eatsfine.eatsfine.domain.storetable.service.StoreTableQueryService;
+import com.eatsfine.eatsfine.domain.tableimage.status.TableImageSuccessStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -65,5 +68,17 @@ public class StoreTableController implements StoreTableControllerDocs {
             @PathVariable Long tableId
     ) {
         return ApiResponse.of(StoreTableSuccessStatus._TABLE_DELETED, storeTableCommandService.deleteTable(storeId, tableId));
+    }
+
+    @PostMapping(
+            value = "/stores/{storeId}/tables/{tableId}/table-image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ApiResponse<StoreTableResDto.UploadTableImageDto> uploadTableImage(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId,
+            @RequestPart("tableImage") MultipartFile tableImage
+    ) {
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS, storeTableCommandService.uploadTableImage(storeId, tableId, tableImage));
     }
 }

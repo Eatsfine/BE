@@ -5,11 +5,14 @@ import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
@@ -186,5 +189,36 @@ public interface StoreTableControllerDocs {
             Long storeId,
             @Parameter(description = "테이블 ID", required = true, example = "1")
             Long tableId
+    );
+
+    @Operation(
+            summary = "테이블 이미지 등록",
+            description = """
+            특정 테이블의 이미지를 등록합니다.
+            
+            - 테이블당 1개의 이미지만 등록 가능합니다.
+            - 기존 이미지가 있는 경우 자동으로 삭제되고 새 이미지로 교체됩니다.
+            - S3 저장 경로: stores/{storeId}/tables/{tableId}/
+            """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "테이블 이미지 등록 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 (빈 파일, 지원하지 않는 파일 형식 등)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가게 또는 테이블을 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "S3 업로드 실패")
+    })
+    ApiResponse<StoreTableResDto.UploadTableImageDto> uploadTableImage(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId,
+
+            @Parameter(
+                    description = "업로드할 테이블 이미지 파일",
+                    required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+            )
+            MultipartFile tableImage
     );
 }
