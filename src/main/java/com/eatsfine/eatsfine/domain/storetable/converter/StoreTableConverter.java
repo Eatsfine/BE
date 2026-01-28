@@ -101,4 +101,10 @@ public class StoreTableConverter {
                 .tableImageUrl(tableImageUrl)
                 .build();
     }
+
+    public static StoreTableResDto.DeleteTableImageDto toDeleteTableImageDto(Long tableId) {
+        return StoreTableResDto.DeleteTableImageDto.builder()
+                .tableId(tableId)
+                .build();
+    }
 }
