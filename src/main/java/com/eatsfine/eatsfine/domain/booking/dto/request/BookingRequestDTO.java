@@ -35,7 +35,13 @@ public class BookingRequestDTO {
             @NotNull @DateTimeFormat(pattern = "HH:mm") LocalTime time,
             @NotNull @Min(1) Integer partySize,
             @NotNull List<Long> tableIds,
-            @NotNull boolean isSplitAccepted
+            @NotNull boolean isSplitAccepted,
+            @NotNull List<MenuOrderDto> menuItems
+    ){}
+
+    public record MenuOrderDto(
+            @NotNull Long menuId,
+            @NotNull @Min(1) Integer quantity
     ){}
 
     public record PaymentConfirmDTO(
