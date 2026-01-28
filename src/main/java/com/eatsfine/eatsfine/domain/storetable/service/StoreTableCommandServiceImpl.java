@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.storetable.service;
 
+import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
@@ -7,6 +8,8 @@ import com.eatsfine.eatsfine.domain.storetable.converter.StoreTableConverter;
 import com.eatsfine.eatsfine.domain.storetable.dto.req.StoreTableReqDto;
 import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
+import com.eatsfine.eatsfine.domain.storetable.exception.StoreTableException;
+import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
 import com.eatsfine.eatsfine.domain.storetable.validator.StoreTableValidator;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
@@ -18,7 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,6 +34,7 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
     private final StoreRepository storeRepository;
     private final TableLayoutRepository tableLayoutRepository;
     private final StoreTableRepository storeTableRepository;
+    private final BookingRepository bookingRepository;
 
     // 테이블 생성
     @Override
@@ -70,6 +78,88 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
         return StoreTableConverter.toTableCreateDto(savedTable);
     }
 
+    // 테이블 정보 수정
+    @Override
+    public StoreTableResDto.TableUpdateResultDto updateTable(Long storeId, Long tableId, StoreTableReqDto.TableUpdateDto dto) {
+        // 최소 하나의 변경사항이 있는지 확인
+        if (!dto.hasAnyUpdate()) {
+            throw new StoreTableException(StoreTableErrorStatus._NO_UPDATE_FIELD);
+        }
+
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        StoreTable table = storeTableRepository.findById(tableId)
+                .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
+
+        StoreTableValidator.validateTableBelongsToStore(table, storeId);
+
+        // 변경된 테이블 리스트
+        List<StoreTable> affectedTables = new ArrayList<>();
+        affectedTables.add(table);
+
+        // 테이블 번호 수정
+        if (dto.tableNumber() != null) {
+            List<StoreTable> swappedTables = updateTableNumber(table, dto.tableNumber());
+            // 스왑된 테이블이 있으면 추가
+            swappedTables.stream()
+                    .filter(t -> !t.getId().equals(table.getId()))
+                    .forEach(affectedTables::add);
+        }
+
+        // 테이블 좌석 수 변경
+        if (dto.minSeatCount() != null || dto.maxSeatCount() != null) {
+            // null인 필드는 기존 값 유지
+            int finalMin = dto.minSeatCount() != null ? dto.minSeatCount() : table.getMinSeatCount();
+            int finalMax = dto.maxSeatCount() != null ? dto.maxSeatCount() : table.getMaxSeatCount();
+
+            // 기존 값과 동일한지 검증
+            if (finalMin == table.getMinSeatCount() && finalMax == table.getMaxSeatCount()) {
+                throw new StoreTableException(StoreTableErrorStatus._SAME_SEAT_COUNT);
+            }
+
+            StoreTableValidator.validateSeatRange(finalMin, finalMax);
+
+            table.updateSeatCount(finalMin, finalMax);
+        }
+
+        // 테이블 유형 변경
+        if (dto.seatsType() != null) {
+            if (table.getSeatsType() == dto.seatsType()) {
+                throw new StoreTableException(StoreTableErrorStatus._SAME_SEATS_TYPE);
+            }
+            table.updateSeatsType(dto.seatsType());
+        }
+
+        return StoreTableConverter.toTableUpdateResultDto(affectedTables, dto);
+    }
+
+    // 테이블 삭제
+    @Override
+    public StoreTableResDto.TableDeleteDto deleteTable(Long storeId, Long tableId) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        StoreTable table = storeTableRepository.findById(tableId)
+                .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
+
+        StoreTableValidator.validateTableBelongsToStore(table, storeId);
+
+        // 현재 시간 기준 미래 예약 존재 여부 확인
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+
+        boolean hasFutureBooking = bookingRepository.existsFutureBookingByTable(tableId, currentDate, currentTime);
+
+        if (hasFutureBooking) {
+            throw new StoreTableException(StoreTableErrorStatus._TABLE_HAS_FUTURE_BOOKING);
+        }
+
+        storeTableRepository.delete(table);
+
+        return StoreTableConverter.toTableDeleteDto(table);
+    }
+
     private String generateTableNumber(TableLayout layout) {
         List<StoreTable> tables = layout.getTables();
 
@@ -89,5 +179,37 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
                 .orElse(0);
 
         return String.format("%d번 테이블", maxNumber + 1);
+    }
+
+    private List<StoreTable> updateTableNumber(StoreTable table, String newNumber) {
+        String newTableNumber = String.format("%s번 테이블", newNumber);
+        String currentTableNumber = table.getTableNumber();
+
+        List<StoreTable> updatedTables = new ArrayList<>();
+        updatedTables.add(table);
+
+        // 기존 번호와 동일하면 변경 불필요
+        if (currentTableNumber.equals(newTableNumber)) {
+            return updatedTables;
+        }
+
+        // 같은 레이아웃에서 새 번호를 가진 테이블이 있는지 확인
+        Optional<StoreTable> existingTable = storeTableRepository
+                .findByTableLayoutAndTableNumberAndIsDeletedFalse(
+                        table.getTableLayout(),
+                        newTableNumber
+                );
+
+        // 중복된 번호를 가진 테이블이 있으면 스왑
+        if (existingTable.isPresent()) {
+            StoreTable conflictTable = existingTable.get();
+            conflictTable.updateTableNumber(currentTableNumber);
+            updatedTables.add(conflictTable);
+        }
+
+        // 대상 테이블의 번호 변경
+        table.updateTableNumber(newTableNumber);
+
+        return updatedTables;
     }
 }
