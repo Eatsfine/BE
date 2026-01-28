@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.storetable.validator;
 
+import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.exception.StoreTableException;
 import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableErrorStatus;
@@ -59,5 +60,13 @@ public class StoreTableValidator {
         boolean yOverlap = (newY <= existY2) && (newY2 >= existY1);
 
         return xOverlap && yOverlap;
+    }
+
+    // 테이블이 해당 가게에 속하는지 검증
+    public static void validateTableBelongsToStore(StoreTable table, Long storeId) {
+        Store store = table.getTableLayout().getStore();
+        if (!store.getId().equals(storeId)) {
+            throw new StoreTableException(StoreTableErrorStatus._TABLE_NOT_BELONGS_TO_STORE);
+        }
     }
 }

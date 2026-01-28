@@ -23,3 +23,6 @@ cloud:
     s3:
       bucket: test-bucket
       base-url: https://test-bucket.s3.test-region.amazonaws.com
+
+api:
+  service-key: dummy-test-key

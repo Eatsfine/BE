@@ -78,7 +78,7 @@ jobs:
 
       - name: EC2 배포
         run: |
-          ssh eatsfine-ec2 << 'EOF'
+          ssh eatsfine-ec2 << EOF
             set -e
             cd /home/ec2-user/deploy
           
@@ -86,6 +86,9 @@ jobs:
           
             docker compose down
             docker compose up -d
+          
+            # 불필요한 도커 이미지 및 컨테이너 정리
+            docker image prune -f
           
             docker ps
           EOF

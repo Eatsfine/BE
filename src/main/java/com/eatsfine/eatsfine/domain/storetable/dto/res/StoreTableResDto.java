@@ -1,9 +1,13 @@
 package com.eatsfine.eatsfine.domain.storetable.dto.res;
 
 import com.eatsfine.eatsfine.domain.storetable.enums.SeatsType;
+import com.eatsfine.eatsfine.domain.tableblock.enums.SlotStatus;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
+import java.util.List;
 
 public class StoreTableResDto {
     @Builder
@@ -20,5 +24,20 @@ public class StoreTableResDto {
             BigDecimal rating,
             Integer reviewCount,
             String tableImageUrl
+    ) {}
+
+    @Builder
+    public record SlotListDto(
+            int totalSlotCount,
+            int availableSlotCount,
+            List<SlotDetailDto> slots
+    ) {}
+
+    @Builder
+    public record SlotDetailDto(
+            @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
+            LocalTime time,
+            SlotStatus status,
+            boolean isAvailable
     ) {}
 }
