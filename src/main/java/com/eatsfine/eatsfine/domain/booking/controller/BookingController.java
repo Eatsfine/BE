@@ -84,4 +84,17 @@ public class BookingController {
             bookingCommandService.cancelBooking(bookingId, dto));
     }
 
+
+    @Operation(summary = "예약 내역 조회",
+            description = "마이페이지에서 나의 예약 내역을 조회합니다.")
+    @GetMapping("/users/bookings")
+    public ApiResponse<BookingResponseDTO.BookingPreviewListDTO> getMyBookings(
+            @RequestParam(name = "status", required = false) String status,
+            @RequestParam(name = "page", defaultValue = "1") Integer page
+    ) {
+        User user = userRepository.findById(1L).orElseThrow(); // 임시로 임의의 유저 사용
+
+        return ApiResponse.of(BookingSuccessStatus._BOOKING_FOUND,
+                bookingQueryService.getBookingList(user, status, page));
+    }
 }
