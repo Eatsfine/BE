@@ -4,11 +4,14 @@ import com.eatsfine.eatsfine.domain.booking.converter.BookingConverter;
 import com.eatsfine.eatsfine.domain.booking.dto.request.BookingRequestDTO;
 import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
 import com.eatsfine.eatsfine.domain.booking.entity.Booking;
+import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingMenu;
 import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingTable;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.eatsfine.domain.booking.exception.BookingException;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.booking.status.BookingErrorStatus;
+import com.eatsfine.eatsfine.domain.menu.entity.Menu;
+import com.eatsfine.eatsfine.domain.menu.repository.MenuRepository;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
 import com.eatsfine.eatsfine.domain.payment.entity.Payment;
@@ -31,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -41,6 +45,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     private final StoreTableRepository storeTableRepository;
     private final BookingRepository bookingRepository;
     private final PaymentService paymentService;
+    private final MenuRepository menuRepository;
 
     @Override
     @Transactional
@@ -59,11 +64,8 @@ public class BookingCommandServiceImpl implements BookingCommandService{
             }
         }
 
-        int totalDeposit =  store.getMinPrice() * store.getDepositRate().getPercent() / 100;  // 자세한 예약금 로직은 추후 수정
-
 
         Booking booking = Booking.builder()
-                .depositAmount(totalDeposit)
                 .bookingDate(dto.date())
                 .bookingTime(dto.time())
                 .partySize(dto.partySize())
@@ -74,6 +76,28 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .build();
 
         selectedTables.forEach(booking::addBookingTable);
+
+
+        // 예약한 메뉴들 저장 및 총 메뉴 가격 계산
+        int totalMenuPrice = 0;
+        for (BookingRequestDTO.MenuOrderDto menuItem : dto.menuItems()) {
+            Menu menu = menuRepository.findById(menuItem.menuId())
+                    .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));//차후 수정
+
+            BookingMenu bookingMenu = BookingMenu.builder()
+                    .quantity(menuItem.quantity())
+                    .menu(menu)
+                    .booking(booking)
+                    .price(menu.getPrice())
+                    .build();
+
+            booking.addBookingMenu(bookingMenu);
+            totalMenuPrice += menu.getPrice() * menuItem.quantity();
+        }
+
+        // 총 예약금 계산 ( 전체 메뉴 가격 * 가게의 예약금 비율 )
+        int totalDeposit = (int)(totalMenuPrice * store.getDepositRate().getPercent() / 100);
+        booking.setDepositAmount(totalDeposit);
 
         Booking savedBooking = bookingRepository.save(booking);
 
