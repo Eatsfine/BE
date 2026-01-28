@@ -82,4 +82,10 @@ public class StoreTableResDto {
     public record TableDeleteDto(
             Long tableId
     ) {}
+
+    @Builder
+    public record UploadTableImageDto(
+            Long tableId,
+            String tableImageUrl
+    ) {}
 }

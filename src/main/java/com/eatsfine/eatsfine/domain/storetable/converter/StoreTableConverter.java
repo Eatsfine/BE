@@ -94,4 +94,11 @@ public class StoreTableConverter {
                 .tableId(table.getId())
                 .build();
     }
+
+    public static StoreTableResDto.UploadTableImageDto toUploadTableImageDto(Long tableId, String tableImageUrl) {
+        return StoreTableResDto.UploadTableImageDto.builder()
+                .tableId(tableId)
+                .tableImageUrl(tableImageUrl)
+                .build();
+    }
 }
