@@ -75,4 +75,29 @@ public class BookingResponseDTO {
             LocalDateTime canceledAt, // 취소 시간
             Integer refundAmount    // 환불 금액
     ){}
+
+    @Builder
+    public record BookingPreviewListDTO(
+            List<BookingPreviewDTO> bookingList,
+            Integer listSize,
+            Integer totalPage,
+            Long totalElements,
+            Boolean isFirst,
+            Boolean isLast
+
+    ){}
+
+    @Builder
+    public record BookingPreviewDTO(
+            Long bookingId,
+            String storeName,
+            String storeAddress,
+            LocalDate bookingDate,
+            LocalTime bookingTime,
+            Integer partySize,
+            String tableNumbers,
+            Integer amount,
+            String paymentMethod,
+            String status
+    ){}
 }
