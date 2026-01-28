@@ -14,6 +14,7 @@ import com.eatsfine.eatsfine.domain.storetable.util.SlotCalculator;
 import com.eatsfine.eatsfine.domain.storetable.validator.StoreTableValidator;
 import com.eatsfine.eatsfine.domain.tableblock.entity.TableBlock;
 import com.eatsfine.eatsfine.domain.tableblock.repository.TableBlockRepository;
+import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,7 @@ public class StoreTableQueryServiceImpl implements StoreTableQueryService{
     private final StoreTableRepository storeTableRepository;
     private final TableBlockRepository tableBlockRepository;
     private final BookingRepository bookingRepository;
+    private final S3Service s3Service;
 
     // 테이블 슬롯 조회
     @Override
@@ -57,6 +59,7 @@ public class StoreTableQueryServiceImpl implements StoreTableQueryService{
         );
     }
 
+    // 테이블 상세 조회
     @Override
     public StoreTableResDto.TableDetailDto getTableDetail(Long storeId, Long tableId, LocalDate targetDate) {
         storeRepository.findById(storeId)
@@ -73,11 +76,15 @@ public class StoreTableQueryServiceImpl implements StoreTableQueryService{
 
         SlotCalculator.SlotCalculationResult result = SlotCalculator.calculateSlots(storeTable, targetDate, tableBlocks, bookedTimes);
 
+        // S3 Key -> Url 변환
+        String tableImageUrl = s3Service.toUrl(storeTable.getTableImageUrl());
+
         return StoreTableConverter.toTableDetailDto(
                 storeTable,
                 targetDate,
                 result.totalSlotCount(),
-                result.availableSlotCount()
+                result.availableSlotCount(),
+                tableImageUrl
         );
     }
 }

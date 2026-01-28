@@ -1,6 +1,8 @@
 package com.eatsfine.eatsfine.domain.storetable.service;
 
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
+import com.eatsfine.eatsfine.domain.image.exception.ImageException;
+import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
@@ -16,9 +18,11 @@ import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.domain.table_layout.exception.TableLayoutException;
 import com.eatsfine.eatsfine.domain.table_layout.exception.status.TableLayoutErrorStatus;
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
+import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -35,6 +39,7 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
     private final TableLayoutRepository tableLayoutRepository;
     private final StoreTableRepository storeTableRepository;
     private final BookingRepository bookingRepository;
+    private final S3Service s3Service;
 
     // 테이블 생성
     @Override
@@ -158,6 +163,58 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
         storeTableRepository.delete(table);
 
         return StoreTableConverter.toTableDeleteDto(table);
+    }
+
+    // 테이블 이미지 업로드
+    @Override
+    public StoreTableResDto.UploadTableImageDto uploadTableImage(Long storeId, Long tableId, MultipartFile tableImage) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        StoreTable table = storeTableRepository.findById(tableId)
+                .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
+
+        StoreTableValidator.validateTableBelongsToStore(table, storeId);
+
+        if (tableImage == null || tableImage.isEmpty()) {
+            throw new ImageException(ImageErrorStatus.EMPTY_FILE);
+        }
+
+        // 기존 이미지가 존재할 경우 삭제
+        if (table.getTableImageUrl() != null && !table.getTableImageUrl().isBlank()) {
+            s3Service.deleteByKey(table.getTableImageUrl());
+        }
+
+        String key = s3Service.upload(tableImage, "stores/" + storeId + "/tables/" + tableId);
+
+        table.updateTableImage(key);
+
+        // URL 변환 및 응답
+        String tableImageUrl = s3Service.toUrl(key);
+
+        return StoreTableConverter.toUploadTableImageDto(tableId, tableImageUrl);
+    }
+
+    @Override
+    public StoreTableResDto.DeleteTableImageDto deleteTableImage(Long storeId, Long tableId) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        StoreTable table = storeTableRepository.findById(tableId)
+                .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
+
+        StoreTableValidator.validateTableBelongsToStore(table, storeId);
+
+        // 이미지가 존재하는지 확인
+        if (table.getTableImageUrl() == null || table.getTableImageUrl().isBlank()) {
+            throw new ImageException(ImageErrorStatus._IMAGE_NOT_FOUND);
+        }
+
+        s3Service.deleteByKey(table.getTableImageUrl());
+
+        table.deleteTableImage();
+
+        return StoreTableConverter.toDeleteTableImageDto(tableId);
     }
 
     private String generateTableNumber(TableLayout layout) {
