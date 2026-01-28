@@ -90,4 +90,9 @@ public class StoreTable extends BaseEntity {
     public void updateTableImage(String imageKey) {
         this.tableImageUrl = imageKey;
     }
+
+    // 테이블 이미지 삭제
+    public void deleteTableImage() {
+        this.tableImageUrl = null;
+    }
 }
