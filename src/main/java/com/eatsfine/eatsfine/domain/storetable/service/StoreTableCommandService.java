@@ -12,4 +12,6 @@ public interface StoreTableCommandService {
     StoreTableResDto.TableDeleteDto deleteTable(Long storeId, Long tableId);
 
     StoreTableResDto.UploadTableImageDto uploadTableImage(Long storeId, Long tableId, MultipartFile tableImage);
+
+    StoreTableResDto.DeleteTableImageDto deleteTableImage(Long storeId, Long tableId);
 }

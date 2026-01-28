@@ -195,6 +195,28 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
         return StoreTableConverter.toUploadTableImageDto(tableId, tableImageUrl);
     }
 
+    @Override
+    public StoreTableResDto.DeleteTableImageDto deleteTableImage(Long storeId, Long tableId) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        StoreTable table = storeTableRepository.findById(tableId)
+                .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
+
+        StoreTableValidator.validateTableBelongsToStore(table, storeId);
+
+        // 이미지가 존재하는지 확인
+        if (table.getTableImageUrl() == null || table.getTableImageUrl().isBlank()) {
+            throw new ImageException(ImageErrorStatus._IMAGE_NOT_FOUND);
+        }
+
+        s3Service.deleteByKey(table.getTableImageUrl());
+
+        table.deleteTableImage();
+
+        return StoreTableConverter.toDeleteTableImageDto(tableId);
+    }
+
     private String generateTableNumber(TableLayout layout) {
         List<StoreTable> tables = layout.getTables();
 
