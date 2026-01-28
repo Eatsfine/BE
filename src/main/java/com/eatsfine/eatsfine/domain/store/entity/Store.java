@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.store.entity;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
 import com.eatsfine.eatsfine.domain.businesshours.status.BusinessHoursErrorStatus;
+import com.eatsfine.eatsfine.domain.menu.entity.Menu;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.store.dto.StoreReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
@@ -15,6 +16,7 @@ import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -92,6 +94,12 @@ public class Store extends BaseEntity {
     private List<BusinessHours> businessHours = new ArrayList<>();
 
     @Builder.Default
+    @BatchSize(size = 100)
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Menu> menus = new ArrayList<>();
+
+
+    @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TableImage> tableImages = new ArrayList<>();
 
@@ -119,6 +127,21 @@ public class Store extends BaseEntity {
 
         businessHours.update(open, close, isClosed);
     }
+
+    // 메뉴 추가
+    public void addMenu(Menu menu) {
+        this.menus.add(menu);
+        menu.assignStore(this);
+    }
+
+    // 메뉴 삭제
+    public void removeMenu(Menu menu) {
+        this.menus.remove(menu);
+        menu.assignStore(null);
+    }
+
+
+
     public void addTableImage(TableImage tableImage) {
         this.tableImages.add(tableImage);
         tableImage.assignStore(this);
