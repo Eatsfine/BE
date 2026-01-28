@@ -1,5 +1,4 @@
 package com.eatsfine.eatsfine.domain.payment.controller;
-
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
@@ -34,7 +33,7 @@ public class PaymentController {
 
     @Operation(summary = "결제 승인", description = "토스페이먼츠 결제 승인을 요청합니다.")
     @PostMapping("/confirm")
-    public ApiResponse<PaymentResponseDTO.PaymentRequestResultDTO> confirmPayment(
+    public ApiResponse<PaymentResponseDTO.PaymentSuccessResultDTO> confirmPayment(
             @RequestBody @Valid PaymentConfirmDTO dto) {
         return ApiResponse.onSuccess(paymentService.confirmPayment(dto));
     }
