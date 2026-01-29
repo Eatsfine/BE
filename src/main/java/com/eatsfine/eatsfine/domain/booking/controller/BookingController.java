@@ -94,7 +94,8 @@ public class BookingController {
     ) {
         User user = userRepository.findById(1L).orElseThrow(); // 임시로 임의의 유저 사용
 
+        // 서비스 호출 시 page - 1을 넘겨서 0-based index로 맞춰줍니다.
         return ApiResponse.of(BookingSuccessStatus._BOOKING_FOUND,
-                bookingQueryService.getBookingList(user, status, page));
+                bookingQueryService.getBookingList(user, status, page-1));
     }
 }
