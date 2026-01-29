@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
+import software.amazon.awssdk.services.s3.model.CopyObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -56,6 +57,23 @@ public class S3Service {
                 .build());
     }
 
+    public void moveObject(String sourceKey, String destinationKey) {
+        if (sourceKey == null || destinationKey == null || sourceKey.isBlank() || destinationKey.isBlank()) {
+            throw new ImageException(ImageErrorStatus._INVALID_IMAGE_KEY);
+        }
+
+        // 1. 객체 복사
+        s3Client.copyObject(CopyObjectRequest.builder()
+                .sourceBucket(bucket)
+                .sourceKey(sourceKey)
+                .destinationBucket(bucket)
+                .destinationKey(destinationKey)
+                .build());
+
+        // 2. 원본(임시) 객체 삭제
+        deleteByKey(sourceKey);
+    }
+
     public String toUrl(String key) {
         if (key == null || key.isBlank()) return null;
         return baseUrl + "/" + key;
@@ -69,7 +87,7 @@ public class S3Service {
         return directory + "/" + UUID.randomUUID() + extension;
     }
 
-    private String extractExtension(String filename) {
+    public String extractExtension(String filename) { // public으로 변경
         if (filename == null || !filename.contains(".")) {
             throw new ImageException(ImageErrorStatus.INVALID_FILE_TYPE);
         }

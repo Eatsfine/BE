@@ -21,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -42,8 +43,22 @@ public class MenuCommandServiceImpl implements MenuCommandService {
                             .description(menuDto.description())
                             .price(menuDto.price())
                             .menuCategory(menuDto.category())
-                            .imageKey(menuDto.imageKey())
                             .build();
+
+                    // 임시 이미지 키가 있는 경우, 영구 경로로 이동하고 키를 설정
+                    String tempImageKey = menuDto.imageKey();
+                    if (tempImageKey != null && !tempImageKey.isBlank()) {
+                        // 1. 새로운 영구 키 생성
+                        String extension = s3Service.extractExtension(tempImageKey);
+                        String permanentImageKey = "stores/" + storeId + "/menus/" + UUID.randomUUID() + extension;
+
+                        // 2. S3에서 객체 이동 (임시 -> 영구)
+                        s3Service.moveObject(tempImageKey, permanentImageKey);
+
+                        // 3. 엔티티에 영구 키 저장
+                        menu.updateImageKey(permanentImageKey);
+                    }
+
                     store.addMenu(menu);
                     return menu;
                 })
@@ -101,12 +116,30 @@ public class MenuCommandServiceImpl implements MenuCommandService {
         Optional.ofNullable(dto.category()).ifPresent(menu::updateCategory);
 
         Optional.ofNullable(dto.imageKey()).ifPresent(newImageKey -> {
-            // 기존 이미지가 있다면 S3에서 삭제
-            if(menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
-                s3Service.deleteByKey(menu.getImageKey());
+            // 1. [Safety] 변경된 내용이 없으면 스킵 (프론트에서 기존 키를 그대로 보낸 경우)
+            if (newImageKey.equals(menu.getImageKey())) {
+                return;
             }
-            // 새로운 이미지 키로 업데이트
-            menu.updateImageKey(newImageKey);
+
+            // 2. 새로운 이미지가 있다면 영구 경로로 이동 (Temp -> Perm)
+            if (newImageKey != null && !newImageKey.isBlank()) {
+                String extension = s3Service.extractExtension(newImageKey);
+                String permanentImageKey = "stores/" + storeId + "/menus/" + UUID.randomUUID() + extension;
+                s3Service.moveObject(newImageKey, permanentImageKey);
+
+                // 3. 이동 성공 후, 기존 이미지가 있다면 삭제 (Old Perm -> Delete)
+                if (menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
+                    s3Service.deleteByKey(menu.getImageKey());
+                }
+
+                menu.updateImageKey(permanentImageKey);
+            } else {
+                // 4. 빈 문자열("")인 경우 -> 이미지 삭제 요청
+                if (menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
+                    s3Service.deleteByKey(menu.getImageKey());
+                }
+                menu.updateImageKey(null);
+            }
         });
 
         return MenuConverter.toUpdateDto(menu);
@@ -135,10 +168,9 @@ public class MenuCommandServiceImpl implements MenuCommandService {
             throw new ImageException(ImageErrorStatus.EMPTY_FILE);
         }
 
-        String path = "stores/" + storeId + "/menus";
-        String key = s3Service.upload(file, path);
-
-        return MenuConverter.toImageUploadDto(key);
+        // 이미지를 항상 임시 경로에 업로드
+        String tempPath = "temp/menus";
+        return MenuConverter.toImageUploadDto(s3Service.upload(file, tempPath));
     }
 
     @Override
