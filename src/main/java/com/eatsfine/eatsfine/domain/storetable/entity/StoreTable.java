@@ -1,6 +1,5 @@
 package com.eatsfine.eatsfine.domain.storetable.entity;
 
-import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.storetable.enums.SeatsType;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
@@ -70,4 +69,20 @@ public class StoreTable extends BaseEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    // 테이블 번호 변경
+    public void updateTableNumber(String tableNumber) {
+        this.tableNumber = tableNumber;
+    }
+
+    // 테이블 좌석 수 변경
+    public void updateSeatCount(int minSeatCount, int maxSeatCount) {
+        this.minSeatCount = minSeatCount;
+        this.maxSeatCount = maxSeatCount;
+    }
+
+    // 테이블 유형 변경
+    public void updateSeatsType(SeatsType seatsType) {
+        this.seatsType = seatsType;
+    }
 }
