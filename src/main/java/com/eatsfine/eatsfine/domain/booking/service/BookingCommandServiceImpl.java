@@ -24,6 +24,7 @@ import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
+import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
@@ -57,6 +58,11 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
         List<StoreTable> selectedTables = storeTableRepository.findAllByIdWithLock(dto.tableIds());
+
+        // 요청한 ID 개수와 조회된 데이터 개수가 다르면, 존재하지 않는 ID가 포함된 것
+        if (selectedTables.size() != dto.tableIds().size()) {
+            throw new StoreException(StoreTableErrorStatus._TABLE_NOT_FOUND);
+        }
 
         //이미 예약된 테이블 있는지 최종 점검
         List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, dto.date(), dto.time());
@@ -96,7 +102,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
             booking.addBookingMenu(bookingMenu);
 
             BigDecimal itemQuantity = BigDecimal.valueOf(menuItem.quantity());
-            itemTotalPrice = menu.getPrice().multiply(itemQuantity);
+            itemTotalPrice = itemTotalPrice.add(menu.getPrice().multiply(itemQuantity));
         }
 
         // 총 예약금 계산 ( 전체 메뉴 가격 * 가게의 예약금 비율 )
@@ -108,6 +114,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         booking.setDepositAmount(totalDeposit);
 
         Booking savedBooking = bookingRepository.save(booking);
+        bookingRepository.flush();
 
         // 결제 대기 데이터 생성 (내부 서비스 호출)
         PaymentRequestDTO.RequestPaymentDTO paymentRequest = new PaymentRequestDTO.RequestPaymentDTO(savedBooking.getId());
