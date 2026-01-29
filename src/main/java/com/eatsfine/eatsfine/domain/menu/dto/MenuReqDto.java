@@ -40,4 +40,15 @@ public class MenuReqDto {
             @Size(min = 1, message = "삭제할 메뉴를 최소 1개 이상 선택해주세요.")
             List<Long> menuIds
     ){}
+
+    public record MenuUpdateDto(
+            @Size(min = 1, message = "메뉴 이름은 1글자 이상이어야 합니다.")
+            String name,
+            @Size(max = 500, message = "설명은 500자 이내여야 합니다.")
+            String description,
+            @Min(value = 0, message = "가격은 0원 이상이어야 합니다.")
+            BigDecimal price,
+            MenuCategory category,
+            String imageKey
+    ){}
 }

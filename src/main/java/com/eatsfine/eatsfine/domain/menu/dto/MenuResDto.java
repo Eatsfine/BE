@@ -40,4 +40,14 @@ public class MenuResDto {
     public record MenuDeleteDto(
             List<Long> deletedMenuIds
     ){}
+
+    @Builder
+    public record MenuUpdateDto(
+            Long menuId,
+            String name,
+            String description,
+            BigDecimal price,
+            MenuCategory category,
+            String imageKey
+    ){}
 }
