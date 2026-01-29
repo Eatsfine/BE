@@ -17,8 +17,8 @@ public enum MenuSuccessStatus implements BaseCode {
 
 
     _MENU_CREATE_SUCCESS(HttpStatus.CREATED, "MENU202", "메뉴 생성 성공"),
-
     _MENU_DELETE_SUCCESS(HttpStatus.OK, "MENU2002", "메뉴 삭제 성공"),
+    _MENU_UPDATE_SUCCESS(HttpStatus.OK, "MENU2003", "메뉴 수정 성공"),
 
     ;
 
