@@ -50,4 +50,20 @@ public class MenuResDto {
             MenuCategory category,
             String imageKey
     ){}
+
+    @Builder
+    public record MenuListDto(
+            List<MenuDetailDto> menus
+    ){}
+
+    @Builder
+    public record MenuDetailDto(
+            Long menuId,
+            String name,
+            String description,
+            BigDecimal price,
+            MenuCategory category,
+            String imageUrl,
+            boolean isSoldOut
+    ){}
 }
