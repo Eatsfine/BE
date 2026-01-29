@@ -52,6 +52,12 @@ public class MenuResDto {
     ){}
 
     @Builder
+    public record SoldOutUpdateDto(
+            Long menuId,
+            boolean isSoldOut
+    ){}
+
+    @Builder
     public record MenuListDto(
             List<MenuDetailDto> menus
     ){}

@@ -51,4 +51,9 @@ public class MenuReqDto {
             MenuCategory category,
             String imageKey
     ){}
+
+    public record SoldOutUpdateDto(
+            @NotNull
+            boolean isSoldOut
+    ){}
 }
