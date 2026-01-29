@@ -1,8 +1,10 @@
 package com.eatsfine.eatsfine.domain.user.dto.request;
 
 import com.eatsfine.eatsfine.global.validator.annotation.PasswordMatch;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,6 +35,18 @@ public class UserRequestDto {
 
         @NotBlank(message = "비밀번호 확인은 필수입니다.")
         private String passwordConfirm;  // 비밀번호 확인
+
+        @NotNull(message = "이용약관에 동의합니다.")
+        @Schema(description = "서비스 이용약관 동의 여부 (필수)", example = "true")
+        private Boolean tosConsent;
+
+        @NotNull(message = "개인정보 처리방침에 동의합니다")
+        @Schema(description = "개인정보 수집 및 이용 동의 여부 (필수)", example = "true")
+        private Boolean privacyConsent;
+
+        @NotNull(message = "마케팅 정보 수신에 동의합니다")
+        @Schema(description = "마케팅 정보 수신 동의 여부 (선택)", example = "false")
+        private Boolean marketingConsent;
 
     }
 
