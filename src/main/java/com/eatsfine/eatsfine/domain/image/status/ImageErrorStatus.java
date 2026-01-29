@@ -25,7 +25,7 @@ public enum ImageErrorStatus implements BaseErrorCode {
     @Override
     public ErrorReasonDto getReason() {
         return ErrorReasonDto.builder()
-                .isSuccess(true)
+                .isSuccess(false)
                 .message(message)
                 .code(code)
                 .build();
@@ -35,7 +35,7 @@ public enum ImageErrorStatus implements BaseErrorCode {
     public ErrorReasonDto getReasonHttpStatus() {
         return ErrorReasonDto.builder()
                 .httpStatus(httpStatus)
-                .isSuccess(true)
+                .isSuccess(false)
                 .code(code)
                 .message(message)
                 .build();
