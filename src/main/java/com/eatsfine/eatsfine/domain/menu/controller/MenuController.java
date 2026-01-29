@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.menu.controller;
 import com.eatsfine.eatsfine.domain.menu.dto.MenuReqDto;
 import com.eatsfine.eatsfine.domain.menu.dto.MenuResDto;
 import com.eatsfine.eatsfine.domain.menu.service.MenuCommandService;
+import com.eatsfine.eatsfine.domain.menu.service.MenuQueryService;
 import com.eatsfine.eatsfine.domain.menu.status.MenuSuccessStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,6 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class MenuController {
 
     private final MenuCommandService menuCommandService;
+    private final MenuQueryService menuQueryService;
 
     @Operation(summary = "메뉴 이미지 선 업로드 API", description = "메뉴 등록 전에 이미지를 먼저 업로드하고 KEY를 반환합니다.")
     @PostMapping(value = "/stores/{storeId}/menus/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -74,4 +76,12 @@ public class MenuController {
         return ApiResponse.of(MenuSuccessStatus._MENU_UPDATE_SUCCESS, menuCommandService.updateMenu(storeId, menuId, dto));
     }
 
+    @Operation(summary = "메뉴 조회 API", description = "가게의 메뉴들을 조회합니다.")
+    @GetMapping("/stores/{storeId}/menus")
+    public ApiResponse<MenuResDto.MenuListDto> getMenus(
+            @PathVariable Long storeId
+    ) {
+        return ApiResponse.of(MenuSuccessStatus._MENU_LIST_SUCCESS, menuQueryService.getMenus(storeId));
+
+    }
 }
