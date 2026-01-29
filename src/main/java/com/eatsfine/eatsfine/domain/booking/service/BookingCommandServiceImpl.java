@@ -171,8 +171,11 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
         // 예약 중 결제 완료된 결제의 결제키 이용 환불 로직 진행
-        PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(dto.reason());
-        paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
+        if(booking.getStatus() == BookingStatus.CONFIRMED) {
+            PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(dto.reason());
+            paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
+        }
+
 
         //예약 상태 취소로 변경
         booking.cancel(dto.reason());
