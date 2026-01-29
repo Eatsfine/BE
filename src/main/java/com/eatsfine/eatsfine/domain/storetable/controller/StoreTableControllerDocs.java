@@ -68,4 +68,123 @@ public interface StoreTableControllerDocs {
             @Parameter(description = "조회할 날짜 (yyyy-MM-dd 형식, 미입력 시 오늘 날짜)", example = "2026-01-12")
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
     );
+
+    @Operation(
+            summary = "테이블 상세 조회",
+            description = """                                                                                          
+                  특정 테이블의 상세 정보를 조회합니다.
+                  - 테이블 기본 정보 (최소/최대 인원, 이미지, 평점, 리뷰 수, 테이블 유형)
+                  - 예약 가능 상태 (날짜별 총 슬롯 수, 예약 가능한 슬롯 수)
+                  - date 파라미터가 없으면 오늘 날짜로 조회합니다.
+                  """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "테이블 상세 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "테이블이 가게에 속하지 않음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "테이블을 찾을 수 없음")
+    })
+    ApiResponse<StoreTableResDto.TableDetailDto> getTableDetail(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId,
+
+            @Parameter(description = "조회 날짜 (yyyy-MM-dd)", example = "2026-01-23")
+            LocalDate date
+    );
+
+    @Operation(
+            summary = "테이블 정보 수정",
+            description = """
+                      특정 테이블의 정보를 수정합니다.
+                      
+                      **통합 API**: 테이블 번호, 좌석 수, 테이블 유형을 하나의 API에서 처리합니다.
+                      
+                      - **선택적 업데이트**: 모든 필드가 Optional이며, 제공된 필드만 업데이트됩니다.
+                      - **최소 하나 필수**: 최소 하나 이상의 필드는 반드시 제공되어야 합니다.
+                      
+                      1. **테이블 번호 (tableNumber)**:
+                         - 숫자 문자열로 전달 (예: "3")
+                         - 자동으로 "N번 테이블" 형식으로 변환
+                         - 중복 시 기존 테이블과 번호 스왑
+                      
+                      2. **좌석 수 (minSeatCount, maxSeatCount)**:
+                         - 둘 중 하나만 제공 시, 다른 값은 기존 값 유지
+                         - 최소 인원 ≤ 최대 인원 검증
+                      
+                      3. **테이블 유형 (seatsType)**:
+                         - GENERAL, WINDOW, ROOM, BAR, OUTDOOR 중 선택
+                      
+                      ### 응답:
+                      - updatedTables: 변경된 테이블 정보만 표시
+                      - 번호 스왑 발생 시 두 테이블 모두 포함
+                      - 스왑 없을 시 요청 테이블만 포함
+                      
+                      ### 예시:
+                      ```json
+                      // Request (모든 필드 수정)
+                      {
+                        "tableNumber": "5",
+                        "minSeatCount": 2,
+                        "maxSeatCount": 4,
+                        "seatsType": "ROOM"
+                      }
+                      
+                      // Request (번호만 수정)
+                      {
+                        "tableNumber": "3"
+                      }
+                      
+                      // Request (좌석 수만 수정)
+                      {
+                        "minSeatCount": 4,
+                        "maxSeatCount": 6
+                      }
+                      
+                      // Request (좌석 유형만 수정)
+                      {
+                        "seatsType": "WINDOW"
+                      }
+                      ```
+                      """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "테이블 수정 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 (수정 필드 없음, 좌석 범위 오류 등)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가게 또는 테이블을 찾을 수 없음")
+    })
+    ApiResponse<StoreTableResDto.TableUpdateResultDto> updateTable(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId,
+
+            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto
+    );
+
+    @Operation(
+            summary = "테이블 삭제",
+            description = """
+                      특정 가게의 테이블을 삭제합니다.
+  
+                      **삭제 조건:**
+                      - 현재 시간 이후의 예약(CONFIRMED 또는 PENDING 상태)이 존재하는 테이블은 삭제할 수 없습니다.
+                      - Soft Delete 방식으로 처리되어 실제 데이터는 삭제되지 않고 is_deleted 플래그가 true로 변경됩니다.
+                      - deleted_at 필드에 삭제 시간이 기록됩니다.
+                      - 삭제된 테이블 위치에 새 테이블 생성 시, 겹침 검증 로직에서 삭제된 테이블은 제외됩니다.
+                      """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "테이블 삭제 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "테이블에 미래 예약이 존재함"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "테이블 또는 가게를 찾을 수 없음")
+    })
+    ApiResponse<StoreTableResDto.TableDeleteDto> deleteTable(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+            @Parameter(description = "테이블 ID", required = true, example = "1")
+            Long tableId
+    );
 }

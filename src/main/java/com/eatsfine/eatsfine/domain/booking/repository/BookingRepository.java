@@ -48,4 +48,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     @Query("Select b from Booking b join fetch b.store where b.user = :user and b.status = :status")
     Page<Booking> findAllByUserAndStatus(@Param("user") User user, @Param("status") BookingStatus status, Pageable pageable);
+    @Query("SELECT COUNT(bt) > 0 FROM BookingTable bt " +
+            "JOIN bt.booking b " +
+            "WHERE bt.storeTable.id = :tableId " +
+            "AND (b.bookingDate > :currentDate " +
+            "     OR (b.bookingDate = :currentDate AND b.bookingTime >= :currentTime)) " +
+            "AND b.status IN ('CONFIRMED', 'PENDING')")
+    boolean existsFutureBookingByTable(@Param("tableId") Long tableId, @Param("currentDate") LocalDate currentDate, @Param("currentTime") LocalTime currentTime);
 }
