@@ -32,10 +32,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         System.out.println("요청 URI: " + uri);
 
         // 인증 없이 통과시킬 경로들
-        if (uri.startsWith("/api/v1/auth/login") ||
-                uri.startsWith("/api/v1/auth/register") ||
-                uri.startsWith("/api/v1/auth/reissue") ||
-                uri.startsWith("/user/reissue") ||
+        if (uri.startsWith("/api/auth/login") ||
+                uri.startsWith("/api/auth/signup") ||
                 uri.startsWith("/oauth2") ||
                 uri.startsWith("/login")) {
             chain.doFilter(request, response);
