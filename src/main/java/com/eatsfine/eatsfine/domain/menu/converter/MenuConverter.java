@@ -44,4 +44,16 @@ public class MenuConverter {
                 .build();
     }
 
+    public static MenuResDto.MenuUpdateDto toUpdateDto(Menu menu){
+        return MenuResDto.MenuUpdateDto.builder()
+                .menuId(menu.getId())
+                .name(menu.getName())
+                .description(menu.getDescription())
+                .price(menu.getPrice())
+                .category(menu.getMenuCategory())
+                .imageKey(menu.getImageKey())
+                .build();
+
+    }
+
 }

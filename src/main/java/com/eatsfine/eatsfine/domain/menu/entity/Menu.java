@@ -58,4 +58,21 @@ public class Menu extends BaseEntity {
         this.imageKey = imageKey;
     }
 
+    // --- 메뉴 정보 수정 메서드 ---
+
+    public void updateName(String name) {
+        this.name = name;
+    }
+
+    public void updateDescription(String description) {
+        this.description = description;
+    }
+
+    public void updatePrice(BigDecimal price) {
+        this.price = price;
+    }
+
+    public void updateCategory(MenuCategory menuCategory) {
+        this.menuCategory = menuCategory;
+    }
 }

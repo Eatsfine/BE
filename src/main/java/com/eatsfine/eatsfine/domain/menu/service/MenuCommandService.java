@@ -9,5 +9,6 @@ public interface MenuCommandService {
     MenuResDto.ImageDeleteDto deleteImage(Long storeId, String imageKey);
     MenuResDto.MenuCreateDto createMenus(Long storeId, MenuReqDto.MenuCreateDto menuCreateDto);
     MenuResDto.MenuDeleteDto deleteMenus(Long storeId, MenuReqDto.MenuDeleteDto menuDeleteDto);
+    MenuResDto.MenuUpdateDto updateMenu(Long storeId, Long menuId, MenuReqDto.MenuUpdateDto menuUpdateDto);
 
 }

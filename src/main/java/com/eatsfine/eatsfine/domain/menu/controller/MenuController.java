@@ -46,7 +46,7 @@ public class MenuController {
         return ApiResponse.of(MenuSuccessStatus._MENU_IMAGE_DELETE_SUCCESS, menuCommandService.deleteImage(storeId,imageKey));
     }
 
-    @Operation(summary = "메뉴 등록 API", description = "가게의 메뉴를 등록합니다.")
+    @Operation(summary = "메뉴 등록 API", description = "가게의 메뉴들을 등록합니다.")
     @PostMapping("/stores/{storeId}/menus")
     public ApiResponse<MenuResDto.MenuCreateDto> createMenus(
             @PathVariable Long storeId,
@@ -55,13 +55,23 @@ public class MenuController {
         return ApiResponse.of(MenuSuccessStatus._MENU_CREATE_SUCCESS, menuCommandService.createMenus(storeId, dto));
     }
 
-    @Operation(summary = "메뉴 삭제 API", description = "가게의 메뉴를 삭제합니다.")
+    @Operation(summary = "메뉴 삭제 API", description = "가게의 메뉴들을 삭제합니다.")
     @DeleteMapping("/stores/{storeId}/menus")
     public ApiResponse<MenuResDto.MenuDeleteDto> deleteMenus(
             @PathVariable Long storeId,
             @RequestBody @Valid MenuReqDto.MenuDeleteDto dto
     ) {
         return ApiResponse.of(MenuSuccessStatus._MENU_DELETE_SUCCESS, menuCommandService.deleteMenus(storeId, dto));
+    }
+
+    @Operation(summary = "메뉴 수정 API", description = "가게의 메뉴를 수정합니다.")
+    @PatchMapping("/stores/{storeId}/menus/{menuId}")
+    public ApiResponse<MenuResDto.MenuUpdateDto> updateMenu(
+            @PathVariable Long storeId,
+            @PathVariable Long menuId,
+            @RequestBody @Valid MenuReqDto.MenuUpdateDto dto
+    ) {
+        return ApiResponse.of(MenuSuccessStatus._MENU_UPDATE_SUCCESS, menuCommandService.updateMenu(storeId, menuId, dto));
     }
 
 }

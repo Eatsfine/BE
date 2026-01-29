@@ -72,6 +72,36 @@ public class MenuCommandServiceImpl implements MenuCommandService {
 
         return MenuConverter.toDeleteDto(menuIds);
     }
+
+    @Override
+    public MenuResDto.MenuUpdateDto updateMenu(Long storeId, Long menuId, MenuReqDto.MenuUpdateDto dto) {
+        Store store = findAndVerifyStore(storeId);
+
+        // TODO: [보안] Spring Security 병합 후, 현재 로그인한 사용자가 이 가게의 주인인지 확인하는 로직 추가
+
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new MenuException(MenuErrorStatus._MENU_NOT_FOUND));
+
+        verifyMenuBelongsToStore(menu, storeId);
+
+        // 이름, 설명, 가격, 카테고리 업데이트
+        Optional.ofNullable(dto.name()).ifPresent(menu::updateName);
+        Optional.ofNullable(dto.description()).ifPresent(menu::updateDescription);
+        Optional.ofNullable(dto.price()).ifPresent(menu::updatePrice);
+        Optional.ofNullable(dto.category()).ifPresent(menu::updateCategory);
+
+        Optional.ofNullable(dto.imageKey()).ifPresent(newImageKey -> {
+            // 기존 이미지가 있다면 S3에서 삭제
+            if(menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
+                s3Service.deleteByKey(menu.getImageKey());
+            }
+            // 새로운 이미지 키로 업데이트
+            menu.updateImageKey(newImageKey);
+        });
+
+        return MenuConverter.toUpdateDto(menu);
+    }
+
     @Override
     public MenuResDto.ImageUploadDto uploadImage(Long storeId, MultipartFile file) {
         Store store = findAndVerifyStore(storeId);
