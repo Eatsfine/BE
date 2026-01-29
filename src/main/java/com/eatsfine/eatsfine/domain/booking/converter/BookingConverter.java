@@ -5,12 +5,13 @@ import com.eatsfine.eatsfine.domain.booking.entity.Booking;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public class BookingConverter {
 
     public static BookingResponseDTO.CreateBookingResultDTO toCreateBookingResultDTO(
-            Booking booking, Store store, int totalDeposit,
+            Booking booking, Store store, BigDecimal totalDeposit,
             List<BookingResponseDTO.BookingResultTableDTO> resultTableDTOS,
             PaymentResponseDTO.PaymentRequestResultDTO paymentInfo) {
 

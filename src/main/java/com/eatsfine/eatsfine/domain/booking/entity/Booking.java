@@ -14,6 +14,7 @@ import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -86,7 +87,7 @@ public class Booking extends BaseEntity {
         this.bookingTables.add(bookingTable);
     }
 
-    private Integer depositAmount;
+    private BigDecimal depositAmount;
 
     private String cancelReason;
 
@@ -109,7 +110,7 @@ public class Booking extends BaseEntity {
                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
     }
 
-    public void setDepositAmount(int totalDeposit) {
+    public void setDepositAmount(BigDecimal totalDeposit) {
         this.depositAmount = totalDeposit;
     }
 }

@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.booking.dto.response;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import lombok.Builder;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -43,7 +44,7 @@ public class BookingResponseDTO {
             LocalDate date,
             LocalTime time,
             Integer partySize,
-            Integer totalDeposit,
+            BigDecimal totalDeposit,
             List<BookingResultTableDTO> tables,
             LocalDateTime createdAt, // 예약 생성 시간
             Long paymentId,  // 결제 ID
@@ -64,7 +65,7 @@ public class BookingResponseDTO {
             Long bookingId,
             String status,         // CONFIRMED
             String paymentKey,     // PG사 결제 키
-            Integer amount        // 최종 결제 금액
+            BigDecimal amount        // 최종 결제 금액
     ){}
 
     @Builder
@@ -73,7 +74,7 @@ public class BookingResponseDTO {
             String status,         // CANCELED
             String cancelReason,   // 취소 사유
             LocalDateTime canceledAt, // 취소 시간
-            Integer refundAmount    // 환불 금액
+            BigDecimal refundAmount    // 환불 금액
     ){}
 
     @Builder
@@ -96,7 +97,7 @@ public class BookingResponseDTO {
             LocalTime bookingTime,
             Integer partySize,
             String tableNumbers,
-            Integer amount,
+            BigDecimal amount,
             String paymentMethod,
             String status
     ){}

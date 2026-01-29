@@ -31,6 +31,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -79,7 +81,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
 
         // 예약한 메뉴들 저장 및 총 메뉴 가격 계산
-        int totalMenuPrice = 0;
+        BigDecimal itemTotalPrice = BigDecimal.ZERO;
         for (BookingRequestDTO.MenuOrderDto menuItem : dto.menuItems()) {
             Menu menu = menuRepository.findById(menuItem.menuId())
                     .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));//차후 수정
@@ -92,11 +94,17 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                     .build();
 
             booking.addBookingMenu(bookingMenu);
-            totalMenuPrice += menu.getPrice() * menuItem.quantity();
+
+            BigDecimal itemQuantity = BigDecimal.valueOf(menuItem.quantity());
+            itemTotalPrice = menu.getPrice().multiply(itemQuantity);
         }
 
         // 총 예약금 계산 ( 전체 메뉴 가격 * 가게의 예약금 비율 )
-        int totalDeposit = (int)(totalMenuPrice * store.getDepositRate().getPercent() / 100);
+        BigDecimal depositRate = BigDecimal.valueOf(store.getDepositRate().getPercent());
+        BigDecimal hundred = BigDecimal.valueOf(100);
+        BigDecimal totalDeposit = itemTotalPrice
+                .multiply(depositRate)
+                .divide(hundred, 0, RoundingMode.HALF_UP);
         booking.setDepositAmount(totalDeposit);
 
         Booking savedBooking = bookingRepository.save(booking);

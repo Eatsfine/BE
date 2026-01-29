@@ -5,6 +5,8 @@ import com.eatsfine.eatsfine.domain.menu.entity.Menu;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Entity
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
@@ -17,7 +19,7 @@ public class BookingMenu {
 
     private Integer quantity;
 
-    private Integer price;
+    private BigDecimal price;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Booking booking;
