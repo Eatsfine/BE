@@ -46,7 +46,9 @@ public class S3Service {
     }
 
     public void deleteByKey(String key) {
-        if (key == null || key.isBlank()) return;
+        if (key == null || key.isBlank()) {
+            throw new ImageException(ImageErrorStatus._INVALID_IMAGE_KEY);
+        }
 
         s3Client.deleteObject(DeleteObjectRequest.builder()
                 .bucket(bucket)
@@ -61,7 +63,7 @@ public class S3Service {
 
     private String generateKey(MultipartFile file, String directory) {
         if(directory == null || directory.isBlank()) {
-            throw new IllegalArgumentException("S3 디렉토리는 비어있을 수 없습니다.");
+            throw new ImageException(ImageErrorStatus._INVALID_S3_DIRECTORY);
         }
         String extension = extractExtension(file.getOriginalFilename());
         return directory + "/" + UUID.randomUUID() + extension;
