@@ -103,6 +103,21 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     }
 
     @Override
+    public MenuResDto.SoldOutUpdateDto updateSoldOutStatus(Long storeId, Long menuId, boolean isSoldOut) {
+        findAndVerifyStore(storeId);
+
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new MenuException(MenuErrorStatus._MENU_NOT_FOUND));
+
+        verifyMenuBelongsToStore(menu, storeId);
+
+        menu.updateSoldOut(isSoldOut);
+
+        return MenuConverter.toSoldOutUpdateDto(menu);
+
+    }
+
+    @Override
     public MenuResDto.ImageUploadDto uploadImage(Long storeId, MultipartFile file) {
         Store store = findAndVerifyStore(storeId);
 

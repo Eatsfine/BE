@@ -10,5 +10,6 @@ public interface MenuCommandService {
     MenuResDto.MenuCreateDto createMenus(Long storeId, MenuReqDto.MenuCreateDto menuCreateDto);
     MenuResDto.MenuDeleteDto deleteMenus(Long storeId, MenuReqDto.MenuDeleteDto menuDeleteDto);
     MenuResDto.MenuUpdateDto updateMenu(Long storeId, Long menuId, MenuReqDto.MenuUpdateDto menuUpdateDto);
+    MenuResDto.SoldOutUpdateDto updateSoldOutStatus(Long storeId, Long menuId, boolean isSoldOut);
 
 }

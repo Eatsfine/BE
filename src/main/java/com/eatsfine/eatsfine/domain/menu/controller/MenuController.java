@@ -76,6 +76,16 @@ public class MenuController {
         return ApiResponse.of(MenuSuccessStatus._MENU_UPDATE_SUCCESS, menuCommandService.updateMenu(storeId, menuId, dto));
     }
 
+    @Operation(summary = "품절 여부 변경 API", description = "메뉴의 품절 여부를 변경합니다.")
+    @PatchMapping("/stores/{storeId}/menus/{menuId}/sold-out")
+    public ApiResponse<MenuResDto.SoldOutUpdateDto> updateSoldOutStatus(
+            @PathVariable Long storeId,
+            @PathVariable Long menuId,
+            @RequestBody @Valid MenuReqDto.SoldOutUpdateDto dto
+    ){
+        return ApiResponse.of(MenuSuccessStatus._SOLD_OUT_UPDATE_SUCCESS, menuCommandService.updateSoldOutStatus(storeId, menuId, dto.isSoldOut()));
+    }
+
     @Operation(summary = "메뉴 조회 API", description = "가게의 메뉴들을 조회합니다.")
     @GetMapping("/stores/{storeId}/menus")
     public ApiResponse<MenuResDto.MenuListDto> getMenus(

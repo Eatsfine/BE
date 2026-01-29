@@ -56,4 +56,11 @@ public class MenuConverter {
 
     }
 
+    public static MenuResDto.SoldOutUpdateDto toSoldOutUpdateDto(Menu menu){
+        return MenuResDto.SoldOutUpdateDto.builder()
+                .menuId(menu.getId())
+                .isSoldOut(menu.isSoldOut())
+                .build();
+    }
+
 }
