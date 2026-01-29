@@ -2,7 +2,18 @@ package com.eatsfine.eatsfine.domain.store.repository;
 
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+import java.util.Optional;
 
 
 public interface StoreRepository extends JpaRepository<Store, Long>, StoreRepositoryCustom {
+
+    @Query("""
+    select s from Store s left join fetch s.menus where s.id = :id
+
+""")
+    Optional<Store> findByIdWithMenus(@Param("id") Long id);
+
 }

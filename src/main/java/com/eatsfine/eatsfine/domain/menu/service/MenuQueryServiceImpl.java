@@ -22,7 +22,7 @@ public class MenuQueryServiceImpl implements  MenuQueryService {
 
     @Override
     public MenuResDto.MenuListDto getMenus(Long storeId) {
-        Store store = storeRepository.findById(storeId)
+        Store store = storeRepository.findByIdWithMenus(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
         List<MenuResDto.MenuDetailDto> menuDtos = store.getMenus().stream()
