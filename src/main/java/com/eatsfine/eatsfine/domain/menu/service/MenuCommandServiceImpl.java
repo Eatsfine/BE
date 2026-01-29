@@ -63,9 +63,21 @@ public class MenuCommandServiceImpl implements MenuCommandService {
                     return menu;
                 })
                 .toList();
-        menuRepository.saveAll(menus);
 
-        return MenuConverter.toCreateDto(menus);
+        List<Menu> savedMenus = menuRepository.saveAll(menus);
+
+        List<MenuResDto.MenuDto> menuDtos = savedMenus.stream().map(
+                menu -> MenuResDto.MenuDto.builder()
+                        .menuId(menu.getId())
+                        .name(menu.getName())
+                        .description(menu.getDescription())
+                        .price(menu.getPrice())
+                        .category(menu.getMenuCategory())
+                        .imageUrl(s3Service.toUrl(menu.getImageKey()))
+                        .build())
+                .toList();
+
+        return MenuConverter.toCreateDto(menuDtos);
     }
 
     @Override
@@ -142,7 +154,9 @@ public class MenuCommandServiceImpl implements MenuCommandService {
             }
         });
 
-        return MenuConverter.toUpdateDto(menu);
+        String updatedImageUrl = s3Service.toUrl(menu.getImageKey());
+
+        return MenuConverter.toUpdateDto(menu, updatedImageUrl);
     }
 
     @Override
@@ -170,7 +184,9 @@ public class MenuCommandServiceImpl implements MenuCommandService {
 
         // 이미지를 항상 임시 경로에 업로드
         String tempPath = "temp/menus";
-        return MenuConverter.toImageUploadDto(s3Service.upload(file, tempPath));
+        String imageKey = s3Service.upload(file, tempPath);
+
+        return MenuConverter.toImageUploadDto(imageKey, s3Service.toUrl(imageKey));
     }
 
     @Override

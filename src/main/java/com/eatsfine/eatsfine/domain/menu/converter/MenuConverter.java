@@ -8,9 +8,10 @@ import java.util.List;
 public class MenuConverter {
 
 
-    public static MenuResDto.ImageUploadDto toImageUploadDto(String imageKey){
+    public static MenuResDto.ImageUploadDto toImageUploadDto(String imageKey, String imageUrl){
         return MenuResDto.ImageUploadDto.builder()
                 .imageKey(imageKey)
+                .imageUrl(imageUrl)
                 .build();
     }
 
@@ -20,19 +21,8 @@ public class MenuConverter {
                 .build();
     }
 
-    public static MenuResDto.MenuCreateDto toCreateDto(List<Menu> menus){
-        List<MenuResDto.MenuDto> menuDtos = menus.stream()
-                .map(menu -> MenuResDto.MenuDto.builder()
-                        .menuId(menu.getId())
-                        .name(menu.getName())
-                        .description(menu.getDescription())
-                        .price(menu.getPrice())
-                        .category(menu.getMenuCategory())
-                        .imageKey(menu.getImageKey())
-                        .build()
-                )
-                .toList();
 
+    public static MenuResDto.MenuCreateDto toCreateDto(List<MenuResDto.MenuDto> menuDtos) {
         return MenuResDto.MenuCreateDto.builder()
                 .menus(menuDtos)
                 .build();
@@ -44,14 +34,14 @@ public class MenuConverter {
                 .build();
     }
 
-    public static MenuResDto.MenuUpdateDto toUpdateDto(Menu menu){
+    public static MenuResDto.MenuUpdateDto toUpdateDto(Menu menu, String updatedImageUrl){
         return MenuResDto.MenuUpdateDto.builder()
                 .menuId(menu.getId())
                 .name(menu.getName())
                 .description(menu.getDescription())
                 .price(menu.getPrice())
                 .category(menu.getMenuCategory())
-                .imageKey(menu.getImageKey())
+                .imageUrl(updatedImageUrl)
                 .build();
 
     }

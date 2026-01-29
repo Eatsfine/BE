@@ -11,7 +11,8 @@ public class MenuResDto {
 
     @Builder
     public record ImageUploadDto(
-            String imageKey
+            String imageKey, // 메뉴 등록/수정 시 서버에 다시 보낼 키
+            String imageUrl  // 프론트엔드에서 즉시 미리보기를 위한 전체 URL
     ){}
 
 
@@ -32,8 +33,7 @@ public class MenuResDto {
             String description,
             BigDecimal price,
             MenuCategory category,
-            String imageKey
-
+            String imageUrl
     ){}
 
     @Builder
@@ -48,7 +48,7 @@ public class MenuResDto {
             String description,
             BigDecimal price,
             MenuCategory category,
-            String imageKey
+            String imageUrl
     ){}
 
     @Builder

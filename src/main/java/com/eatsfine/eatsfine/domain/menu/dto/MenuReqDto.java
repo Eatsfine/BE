@@ -54,6 +54,6 @@ public class MenuReqDto {
 
     public record SoldOutUpdateDto(
             @NotNull
-            boolean isSoldOut
+            Boolean isSoldOut
     ){}
 }
