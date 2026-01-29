@@ -11,7 +11,10 @@ import java.util.Optional;
 public interface StoreRepository extends JpaRepository<Store, Long>, StoreRepositoryCustom {
 
     @Query("""
-    select s from Store s left join fetch s.menus where s.id = :id
+    select s from Store s 
+    left join fetch s.menus m
+    where s.id = :id
+    and m.deletedAt IS NULL
 
 """)
     Optional<Store> findByIdWithMenus(@Param("id") Long id);
