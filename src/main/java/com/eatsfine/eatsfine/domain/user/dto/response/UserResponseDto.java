@@ -23,6 +23,7 @@ public class UserResponseDto {
     public static class LoginResponseDto{
         private Long id;
         private String accessToken;
+        private String refreshToken;
     }
 
     @Builder

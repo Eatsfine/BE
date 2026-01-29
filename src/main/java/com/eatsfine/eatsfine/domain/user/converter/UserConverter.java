@@ -20,10 +20,11 @@ public class UserConverter {
 
 
      //로그인 응답 변환
-    public static UserResponseDto.LoginResponseDto toLoginResponse(User user, String accessToken, String refreshToken) {
+    public static UserResponseDto.LoginResponseDto toLoginResponse(User user, String accessToken) {
         return UserResponseDto.LoginResponseDto.builder()
                 .id(user.getId())
                 .accessToken(accessToken)
+                .refreshToken(null)
                 .build();
     }
 
