@@ -195,20 +195,27 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     }
 
     @Override
-    public MenuResDto.ImageDeleteDto deleteImage(Long storeId, String imageKey) {
-        // TODO: [보안] Spring Security 병합 후, 현재 로그인한 사용자가 이 메뉴가 속한 가게의 주인인지 확인
+    public MenuResDto.ImageDeleteDto deleteMenuImage(Long storeId, Long menuId) {
+        findAndVerifyStore(storeId);
 
-        // imageKey로 DB에서 메뉴 찾아봄
-        Optional<Menu> menuOptional = menuRepository.findByImageKey(imageKey);
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new MenuException(MenuErrorStatus._MENU_NOT_FOUND));
 
-        // 이미 등록 완료된 사진인 경우에는 db에서 null처리
-        menuOptional.ifPresent(menu -> {
-            verifyMenuBelongsToStore(menu, storeId);
-            menu.updateImageKey(null);
-        });
+        verifyMenuBelongsToStore(menu, storeId);
 
+        String imageKey = menu.getImageKey();
+
+        if (imageKey == null || imageKey.isBlank()) {
+            // 이미지가 없는 메뉴에 삭제 요청이 온 경우, 예외
+            throw new ImageException(ImageErrorStatus._IMAGE_NOT_FOUND);
+        }
+
+        // 1. S3에서 파일 삭제
         s3Service.deleteByKey(imageKey);
-        return MenuConverter.toImageDeleteDto(imageKey);
+        // 2. DB에서 imageKey를 null로 업데이트 (Dirty Checking)
+        menu.updateImageKey(null);
+
+        return MenuConverter.toImageDeleteDto(imageKey); // 삭제된 이미지의 키를 반환
     }
 
     private Store findAndVerifyStore(Long storeId) {

@@ -32,22 +32,6 @@ public class MenuController {
         return ApiResponse.of(MenuSuccessStatus._MENU_IMAGE_UPLOAD_SUCCESS, menuCommandService.uploadImage(storeId, file));
     }
 
-
-    @Operation(summary = "메뉴 이미지 삭제 API", description = """ 
-            메뉴 이미지를 삭제합니다. 이 API는 아래 두가지 시나리오 모두 처리합니다.
-            1. 메뉴 등록 전: 메뉴 등록하다가 업로드만 된 이미지(고아 이미지)를 S3에서 삭제합니다. (가게 등록 전 이미지를 먼저 업로드하기 때문)
-            2. 메뉴 등록 후: DB에 연결된 메뉴의 이미지를 S3에서 삭제하고, DB의 imageKey도 null로 업데이트합니다.
-            
-            """)
-    @DeleteMapping("/stores/{storeId}/menus/images")
-    public ApiResponse<MenuResDto.ImageDeleteDto> deleteImage(
-            @PathVariable Long storeId,
-            @RequestParam("key") String imageKey
-    ) {
-
-        return ApiResponse.of(MenuSuccessStatus._MENU_IMAGE_DELETE_SUCCESS, menuCommandService.deleteImage(storeId,imageKey));
-    }
-
     @Operation(summary = "메뉴 등록 API", description = "가게의 메뉴들을 등록합니다.")
     @PostMapping("/stores/{storeId}/menus")
     public ApiResponse<MenuResDto.MenuCreateDto> createMenus(
@@ -84,6 +68,15 @@ public class MenuController {
             @RequestBody @Valid MenuReqDto.SoldOutUpdateDto dto
     ){
         return ApiResponse.of(MenuSuccessStatus._SOLD_OUT_UPDATE_SUCCESS, menuCommandService.updateSoldOutStatus(storeId, menuId, dto.isSoldOut()));
+    }
+
+    @Operation(summary = "등록된 메뉴 이미지 삭제 API", description = "이미 등록된 메뉴의 이미지를 삭제합니다.")
+    @DeleteMapping("/stores/{storeId}/menus/{menuId}/image")
+    public ApiResponse<MenuResDto.ImageDeleteDto> deleteMenuImage(
+            @PathVariable Long storeId,
+            @PathVariable Long menuId
+    ) {
+        return ApiResponse.of(MenuSuccessStatus._MENU_IMAGE_DELETE_SUCCESS, menuCommandService.deleteMenuImage(storeId, menuId));
     }
 
     @Operation(summary = "메뉴 조회 API", description = "가게의 메뉴들을 조회합니다.")
