@@ -168,6 +168,11 @@ public class MenuCommandServiceImpl implements MenuCommandService {
 
         verifyMenuBelongsToStore(menu, storeId);
 
+        // 기존 값과 동일하다면 바로 리턴
+        if(menu.isSoldOut() == isSoldOut) {
+            return MenuConverter.toSoldOutUpdateDto(menu);
+        }
+
         menu.updateSoldOut(isSoldOut);
 
         return MenuConverter.toSoldOutUpdateDto(menu);
