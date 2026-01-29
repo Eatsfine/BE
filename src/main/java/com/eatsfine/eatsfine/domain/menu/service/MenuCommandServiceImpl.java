@@ -64,11 +64,21 @@ public class MenuCommandServiceImpl implements MenuCommandService {
             throw new MenuException(MenuErrorStatus._MENU_NOT_FOUND);
         }
 
-        // 모든 메뉴가 해당 가게 소유인지 확인하고, 부모 컬렉션에서 제거
+        // 1. 모든 메뉴가 해당 가게 소유인지 확인하고, S3 이미지 삭제
         menusToDelete.forEach(menu -> {
             verifyMenuBelongsToStore(menu, storeId);
-            store.removeMenu(menu);
+            // Soft Delete 시 연결된 S3 이미지도 함께 삭제
+            if (menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
+                s3Service.deleteByKey(menu.getImageKey());
+            }
         });
+
+        // 2. DB에서 Soft Delete 실행
+        // Menu 엔티티의 @SQLDelete 어노테이션 덕분에 deleteAll이 UPDATE로 동작함
+        menuRepository.deleteAll(menusToDelete);
+
+        // 3. Store 컬렉션에서 제거
+        store.getMenus().removeAll(menusToDelete);
 
         return MenuConverter.toDeleteDto(menuIds);
     }

@@ -95,7 +95,7 @@ public class Store extends BaseEntity {
 
     @Builder.Default
     @BatchSize(size = 100)
-    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<Menu> menus = new ArrayList<>();
 
 
