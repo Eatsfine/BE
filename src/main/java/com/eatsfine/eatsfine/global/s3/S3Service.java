@@ -62,6 +62,10 @@ public class S3Service {
             throw new ImageException(ImageErrorStatus._INVALID_IMAGE_KEY);
         }
 
+        if (sourceKey.equals(destinationKey)) {
+            throw new ImageException(ImageErrorStatus._INVALID_IMAGE_KEY);
+        }
+
         // 1. 객체 복사
         s3Client.copyObject(CopyObjectRequest.builder()
                 .sourceBucket(bucket)
