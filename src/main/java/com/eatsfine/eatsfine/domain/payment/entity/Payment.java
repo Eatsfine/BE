@@ -63,10 +63,6 @@ public class Payment extends BaseEntity {
     @Column(name = "receipt_url")
     private String receiptUrl;
 
-    public void setPaymentKey(String paymentKey) {
-        this.paymentKey = paymentKey;
-    }
-
     public void completePayment(LocalDateTime approvedAt, PaymentMethod method, String paymentKey,
             PaymentProvider provider, String receiptUrl) {
         this.paymentStatus = PaymentStatus.COMPLETED;

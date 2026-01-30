@@ -1,7 +1,5 @@
 package com.eatsfine.eatsfine.domain.payment.dto.response;
 
-import com.eatsfine.eatsfine.domain.payment.enums.PaymentMethod;
-import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -28,8 +26,8 @@ public class PaymentResponseDTO {
     public record PaymentHistoryResultDTO(
             Long paymentId,
             Long bookingId,
-            String restaurantName,
-            BigDecimal amount,
+            String storeName,
+            Integer amount,
             String paymentType,
             String paymentMethod,
             String paymentProvider,
@@ -51,7 +49,7 @@ public class PaymentResponseDTO {
     public record PaymentDetailResultDTO(
             Long paymentId,
             Long bookingId,
-            String restaurantName,
+            String storeName,
             String paymentMethod,
             String paymentProvider,
             BigDecimal amount,
@@ -61,5 +59,16 @@ public class PaymentResponseDTO {
             LocalDateTime approvedAt,
             String receiptUrl,
             String refundInfo) {
+    }
+
+    public record PaymentSuccessResultDTO(
+            Long paymentId,
+            String status,
+            LocalDateTime approvedAt,
+            String orderId,
+            Integer amount,
+            String paymentMethod,
+            String paymentProvider,
+            String receiptUrl) {
     }
 }
