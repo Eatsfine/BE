@@ -27,7 +27,7 @@ public class PaymentResponseDTO {
             Long paymentId,
             Long bookingId,
             String storeName,
-            Integer amount,
+            BigDecimal amount,
             String paymentType,
             String paymentMethod,
             String paymentProvider,
@@ -66,7 +66,7 @@ public class PaymentResponseDTO {
             String status,
             LocalDateTime approvedAt,
             String orderId,
-            Integer amount,
+            BigDecimal amount,
             String paymentMethod,
             String paymentProvider,
             String receiptUrl) {
