@@ -14,7 +14,7 @@ public interface StoreRepository extends JpaRepository<Store, Long>, StoreReposi
     select s from Store s 
     left join fetch s.menus m
     where s.id = :id
-    and m.deletedAt IS NULL
+    and (m.deletedAt IS NULL or m.id IS NULL)
 
 """)
     Optional<Store> findByIdWithMenus(@Param("id") Long id);
