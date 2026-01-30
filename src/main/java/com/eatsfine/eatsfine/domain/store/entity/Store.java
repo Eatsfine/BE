@@ -173,14 +173,6 @@ public class Store extends BaseEntity {
                 .findFirst();
     }
 
-    // 예약금 계산 메서드
-    public BigDecimal calculateDepositAmount() {
-        return BigDecimal.valueOf(minPrice)
-                .multiply(BigDecimal.valueOf(depositRate.getPercent()))
-                .divide(BigDecimal.valueOf(100), 0, RoundingMode.DOWN);
-    }
-
-    // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
 
     // 가게 기본 정보 변경 메서드
     public void updateBasicInfo(StoreReqDto.StoreUpdateDto dto) {

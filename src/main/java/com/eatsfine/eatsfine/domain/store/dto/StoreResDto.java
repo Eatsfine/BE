@@ -54,7 +54,6 @@ public class StoreResDto {
             Category category,
             BigDecimal rating,
             Long reviewCount,
-            BigDecimal depositAmount,
             String mainImageUrl,
             List<String> tableImageUrls,
             List<BusinessHoursResDto.Summary> businessHours,

@@ -48,7 +48,6 @@ public class StoreConverter {
                 .reviewCount(null) // reviewCount는 추후 리뷰 로직 구현 시 추가 예정
                 .mainImageUrl(store.getMainImageKey())
                 .tableImageUrls(Collections.emptyList()) // tableImages는 추후 사진 등록 API 구현 시 추가 예정
-                .depositAmount(store.calculateDepositAmount())
                 .businessHours(
                         store.getBusinessHours().stream()
                                 .map(BusinessHoursConverter::toSummary)
