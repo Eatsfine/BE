@@ -15,8 +15,12 @@ import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Transaction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -26,6 +30,7 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class MenuCommandServiceImpl implements MenuCommandService {
 
     private final S3Service s3Service;
@@ -53,7 +58,17 @@ public class MenuCommandServiceImpl implements MenuCommandService {
                         String permanentImageKey = "stores/" + storeId + "/menus/" + UUID.randomUUID() + extension;
 
                         // 2. S3에서 객체 이동 (임시 -> 영구)
-                        s3Service.moveObject(tempImageKey, permanentImageKey);
+                        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit(){
+                            try{
+                                s3Service.moveObject(tempImageKey, permanentImageKey);
+                            } catch (Exception e) {
+                                log.error("temp에서 영구로 이동 실패. Source: {}, Dest: {}", tempImageKey, permanentImageKey);
+                            }
+                        }
+
+                        });
 
                         // 3. 엔티티에 영구 키 저장
                         menu.updateImageKey(permanentImageKey);
@@ -96,7 +111,13 @@ public class MenuCommandServiceImpl implements MenuCommandService {
             verifyMenuBelongsToStore(menu, storeId);
             // Soft Delete 시 연결된 S3 이미지도 함께 삭제
             if (menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
-                s3Service.deleteByKey(menu.getImageKey());
+                String imageKey = menu.getImageKey();
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        s3Service.deleteByKey(imageKey);
+                    }
+                });
             }
         });
 
@@ -133,22 +154,39 @@ public class MenuCommandServiceImpl implements MenuCommandService {
                 return;
             }
 
-            // 2. 새로운 이미지가 있다면 영구 경로로 이동 (Temp -> Perm)
+            // 새로운 이미지가 있다면 영구 경로로 이동 (Temp -> Perm)
             if (newImageKey != null && !newImageKey.isBlank()) {
                 String extension = s3Service.extractExtension(newImageKey);
                 String permanentImageKey = "stores/" + storeId + "/menus/" + UUID.randomUUID() + extension;
-                s3Service.moveObject(newImageKey, permanentImageKey);
+                String oldImageKey = menu.getImageKey();
 
-                // 3. 이동 성공 후, 기존 이미지가 있다면 삭제 (Old Perm -> Delete)
-                if (menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
-                    s3Service.deleteByKey(menu.getImageKey());
-                }
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            s3Service.moveObject(newImageKey, permanentImageKey);
+                            if (oldImageKey != null && !oldImageKey.isBlank()) {
+                                s3Service.deleteByKey(oldImageKey);
+                            }
+                        }
+                        catch (Exception e) {
+                            log.error("메뉴 이미지를 s3에 업데이트하는 데에 실패했습니다.", e);
+                        }
+                    }
+                });
 
                 menu.updateImageKey(permanentImageKey);
+
             } else {
-                // 4. 빈 문자열("")인 경우 -> 이미지 삭제 요청
+                // 빈 문자열("")인 경우 -> 이미지 삭제 요청
                 if (menu.getImageKey() != null && !menu.getImageKey().isBlank()) {
-                    s3Service.deleteByKey(menu.getImageKey());
+                    String oldImageKey = menu.getImageKey();
+                    TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            s3Service.deleteByKey(oldImageKey);
+                        }
+                    });
                 }
                 menu.updateImageKey(null);
             }
@@ -211,7 +249,13 @@ public class MenuCommandServiceImpl implements MenuCommandService {
         }
 
         // 1. S3에서 파일 삭제
-        s3Service.deleteByKey(imageKey);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                s3Service.deleteByKey(imageKey);
+            }
+        });
+
         // 2. DB에서 imageKey를 null로 업데이트 (Dirty Checking)
         menu.updateImageKey(null);
 
