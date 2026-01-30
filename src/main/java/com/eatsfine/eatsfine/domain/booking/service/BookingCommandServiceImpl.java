@@ -1,18 +1,30 @@
 package com.eatsfine.eatsfine.domain.booking.service;
 
+import com.eatsfine.eatsfine.domain.booking.converter.BookingConverter;
 import com.eatsfine.eatsfine.domain.booking.dto.request.BookingRequestDTO;
 import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
 import com.eatsfine.eatsfine.domain.booking.entity.Booking;
+import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingMenu;
 import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingTable;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.eatsfine.domain.booking.exception.BookingException;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.booking.status.BookingErrorStatus;
+import com.eatsfine.eatsfine.domain.menu.entity.Menu;
+import com.eatsfine.eatsfine.domain.menu.repository.MenuRepository;
+import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
+import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
+import com.eatsfine.eatsfine.domain.payment.entity.Payment;
+import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
+import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
+import com.eatsfine.eatsfine.domain.payment.service.PaymentService;
+import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
+import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
@@ -20,9 +32,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Service
@@ -32,6 +47,8 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     private final StoreRepository storeRepository;
     private final StoreTableRepository storeTableRepository;
     private final BookingRepository bookingRepository;
+    private final PaymentService paymentService;
+    private final MenuRepository menuRepository;
 
     @Override
     @Transactional
@@ -42,6 +59,11 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
         List<StoreTable> selectedTables = storeTableRepository.findAllByIdWithLock(dto.tableIds());
 
+        // 요청한 ID 개수와 조회된 데이터 개수가 다르면, 존재하지 않는 ID가 포함된 것
+        if (selectedTables.size() != dto.tableIds().size()) {
+            throw new StoreException(StoreTableErrorStatus._TABLE_NOT_FOUND);
+        }
+
         //이미 예약된 테이블 있는지 최종 점검
         List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, dto.date(), dto.time());
         for (StoreTable storeTable : selectedTables) {
@@ -50,11 +72,8 @@ public class BookingCommandServiceImpl implements BookingCommandService{
             }
         }
 
-        int totalDeposit = store.getMinPrice() * dto.partySize();  // 자세한 예약금 로직은 추후 수정
-
 
         Booking booking = Booking.builder()
-                .depositAmount(totalDeposit)
                 .bookingDate(dto.date())
                 .bookingTime(dto.time())
                 .partySize(dto.partySize())
@@ -66,7 +85,40 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
         selectedTables.forEach(booking::addBookingTable);
 
+
+        // 예약한 메뉴들 저장 및 총 메뉴 가격 계산
+        BigDecimal itemTotalPrice = BigDecimal.ZERO;
+        for (BookingRequestDTO.MenuOrderDto menuItem : dto.menuItems()) {
+            Menu menu = menuRepository.findById(menuItem.menuId())
+                    .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));//차후 수정
+
+            BookingMenu bookingMenu = BookingMenu.builder()
+                    .quantity(menuItem.quantity())
+                    .menu(menu)
+                    .booking(booking)
+                    .price(menu.getPrice())
+                    .build();
+
+            booking.addBookingMenu(bookingMenu);
+
+            BigDecimal itemQuantity = BigDecimal.valueOf(menuItem.quantity());
+            itemTotalPrice = itemTotalPrice.add(menu.getPrice().multiply(itemQuantity));
+        }
+
+        // 총 예약금 계산 ( 전체 메뉴 가격 * 가게의 예약금 비율 )
+        BigDecimal depositRate = BigDecimal.valueOf(store.getDepositRate().getPercent());
+        BigDecimal hundred = BigDecimal.valueOf(100);
+        BigDecimal totalDeposit = itemTotalPrice
+                .multiply(depositRate)
+                .divide(hundred, 0, RoundingMode.HALF_UP);
+        booking.setDepositAmount(totalDeposit);
+
         Booking savedBooking = bookingRepository.save(booking);
+        bookingRepository.flush();
+
+        // 결제 대기 데이터 생성 (내부 서비스 호출)
+        PaymentRequestDTO.RequestPaymentDTO paymentRequest = new PaymentRequestDTO.RequestPaymentDTO(savedBooking.getId());
+        PaymentResponseDTO.PaymentRequestResultDTO paymentInfo = paymentService.requestPayment(paymentRequest);
 
 
         //BookingResponseDTO.BookingResultTableDTO로 변환
@@ -80,17 +132,8 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                         .build())
                 .toList();
 
-        return BookingResponseDTO.CreateBookingResultDTO.builder()
-                .bookingId(savedBooking.getId())
-                .storeName(store.getStoreName())
-                .date(savedBooking.getBookingDate())
-                .time(savedBooking.getBookingTime())
-                .partySize(savedBooking.getPartySize())
-                .status(savedBooking.getStatus().name())
-                .totalDeposit(totalDeposit)
-                .createdAt(savedBooking.getCreatedAt())
-                .tables(resultTableDTOS)
-                .build();
+
+        return BookingConverter.toCreateBookingResultDTO(savedBooking,store,totalDeposit, resultTableDTOS,paymentInfo);
     }
 
     @Override
@@ -113,12 +156,34 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         //예약 상태 확정으로 변경
         booking.confirm();
 
-
         return BookingResponseDTO.ConfirmPaymentResultDTO.builder()
                 .bookingId(booking.getId())
                 .status(booking.getStatus().name())
                 .paymentKey(dto.paymentKey())
                 .amount(booking.getDepositAmount())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
+
+        // 예약 중 결제 완료된 결제의 결제키 이용 환불 로직 진행
+        if(booking.getStatus() == BookingStatus.CONFIRMED) {
+            PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(dto.reason());
+            paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
+        }
+
+
+        //예약 상태 취소로 변경
+        booking.cancel(dto.reason());
+
+        return BookingResponseDTO.CancelBookingResultDTO.builder()
+                .bookingId(booking.getId())
+                .status(booking.getStatus().name())
+                .refundAmount(booking.getDepositAmount())
                 .build();
     }
 }

@@ -13,6 +13,12 @@ public enum BookingSuccessStatus implements BaseCode {
     _BOOKING_FOUND(HttpStatus.OK, "BOOKING200", "성공적으로 예약을 조회 했습니다."),
 
     _BOOKING_DETAIL_FOUND(HttpStatus.FOUND, "BOOKING_DETAIL200", "성공적으로 예약 상세 내역을 조회했습니다."),
+
+    _BOOKING_CREATED(HttpStatus.CREATED, "BOOKING201", "성공적으로 예약이 생성되었습니다."),
+
+    _BOOKING_CONFIRMED(HttpStatus.OK, "BOOKING2001", "성공적으로 예약이 확정되었습니다."),
+
+    _BOOKING_CANCELED(HttpStatus.OK, "BOOKING2002", "성공적으로 예약이 취소되었습니다.")
     ;
 
     private final HttpStatus httpStatus;

@@ -23,6 +23,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
+
+import java.math.BigDecimal;
 import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -47,7 +49,7 @@ public class PaymentService {
                 String orderId = UUID.randomUUID().toString();
 
                 // 예약금 검증
-                if (booking.getDepositAmount() == null || booking.getDepositAmount() <= 0) {
+                if (booking.getDepositAmount() == null || booking.getDepositAmount().compareTo(BigDecimal.ZERO) <= 0) {
                         throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_DEPOSIT);
                 }
 
@@ -75,11 +77,10 @@ public class PaymentService {
                 Payment payment = paymentRepository.findByOrderId(dto.orderId())
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
-                if (!payment.getAmount().equals(dto.amount())) {
+                if (payment.getAmount().compareTo(dto.amount()) != 0) {
                         payment.failPayment();
                         throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_AMOUNT);
                 }
-
                 // 토스 API 호출
                 TossPaymentResponse response;
                 try {

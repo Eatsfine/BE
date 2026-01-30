@@ -2,17 +2,25 @@ package com.eatsfine.eatsfine.domain.booking.service;
 
 import com.eatsfine.eatsfine.domain.booking.dto.request.BookingRequestDTO;
 import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
+import com.eatsfine.eatsfine.domain.booking.entity.Booking;
+import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.eatsfine.domain.booking.exception.BookingException;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.booking.status.BookingErrorStatus;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.payment.entity.Payment;
+import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
+import com.eatsfine.eatsfine.domain.user.entity.User;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +134,57 @@ public class BookingQueryServiceImpl implements BookingQueryService {
                 .rows(activeTableLayout.getLows())
                 .cols(activeTableLayout.getCols())
                 .tables(availableTables)
+                .build();
+    }
+
+    @Override
+    public BookingResponseDTO.BookingPreviewListDTO getBookingList(User user, String status, Integer page) {
+        PageRequest pageRequest = PageRequest.of(page, 10, Sort.by("bookingDate").descending());
+
+        Page<Booking> bookingPage;
+
+        if(status == null || status.equals("ALL")) {
+            bookingPage = bookingRepository.findAllByUser(user, pageRequest);
+        } else {
+            BookingStatus bookingStatus = BookingStatus.valueOf(status);
+            bookingPage = bookingRepository.findAllByUserAndStatus(user, bookingStatus, pageRequest);
+        }
+
+        List<BookingResponseDTO.BookingPreviewDTO> bookingPreviewDTOList = bookingPage.getContent().stream()
+                .map(booking -> {
+
+                    // 성공한 결제 정보 추출 (1:N 대응)
+                    Payment successPayment = booking.getPayments().stream()
+                            .filter(p -> p.getPaymentStatus() == PaymentStatus.COMPLETED || p.getPaymentStatus() == PaymentStatus.REFUNDED)
+                            .findFirst()
+                            .orElse(null);
+
+                    // 테이블 번호들을 하나의 문자열로 합치기
+                    String tableNumbers = booking.getBookingTables().stream()
+                            .map(bt -> bt.getStoreTable().getTableNumber().toString())
+                            .collect(Collectors.joining(", "));
+
+                    return BookingResponseDTO.BookingPreviewDTO.builder()
+                            .bookingId(booking.getId())
+                            .storeName(booking.getStore().getStoreName())
+                            .storeAddress(booking.getStore().getAddress())
+                            .bookingDate(booking.getBookingDate())
+                            .bookingTime(booking.getBookingTime())
+                            .partySize(booking.getPartySize())
+                            .tableNumbers(tableNumbers + "번")
+                            .amount(successPayment != null ? successPayment.getAmount() : booking.getDepositAmount())
+                            .paymentMethod(successPayment != null ? successPayment.getPaymentMethod().name() : "미결제")
+                            .status(booking.getStatus().name())
+                            .build();
+                }).collect(Collectors.toList());
+
+        return BookingResponseDTO.BookingPreviewListDTO.builder()
+                .isLast(bookingPage.isLast())
+                .isFirst(bookingPage.isFirst())
+                .totalPage(bookingPage.getTotalPages())
+                .totalElements(bookingPage.getTotalElements())
+                .listSize(bookingPreviewDTOList.size())
+                .bookingList(bookingPreviewDTOList)
                 .build();
     }
 }

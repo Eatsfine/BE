@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.domain.payment.dto.response;
 
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,7 +11,7 @@ public class PaymentResponseDTO {
             Long paymentId,
             Long bookingId,
             String orderId,
-            Integer amount,
+            BigDecimal amount,
             LocalDateTime requestedAt) {
     }
 
@@ -26,7 +27,7 @@ public class PaymentResponseDTO {
             Long paymentId,
             Long bookingId,
             String storeName,
-            Integer amount,
+            BigDecimal amount,
             String paymentType,
             String paymentMethod,
             String paymentProvider,
@@ -51,7 +52,7 @@ public class PaymentResponseDTO {
             String storeName,
             String paymentMethod,
             String paymentProvider,
-            Integer amount,
+            BigDecimal amount,
             String paymentType,
             String status,
             LocalDateTime requestedAt,
@@ -65,7 +66,7 @@ public class PaymentResponseDTO {
             String status,
             LocalDateTime approvedAt,
             String orderId,
-            Integer amount,
+            BigDecimal amount,
             String paymentMethod,
             String paymentProvider,
             String receiptUrl) {
