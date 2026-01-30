@@ -82,9 +82,6 @@ public class Store extends BaseEntity {
     @Column(name = "booking_interval_minutes", nullable = false)
     private int bookingIntervalMinutes = 30;
 
-    @Column(name = "min_price", nullable = false)
-    private int minPrice;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "deposit_rate", nullable = false)
     private DepositRate depositRate;
@@ -95,7 +92,7 @@ public class Store extends BaseEntity {
 
     @Builder.Default
     @BatchSize(size = 100)
-    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
     private List<Menu> menus = new ArrayList<>();
 
 
@@ -134,14 +131,6 @@ public class Store extends BaseEntity {
         menu.assignStore(this);
     }
 
-    // 메뉴 삭제
-    public void removeMenu(Menu menu) {
-        this.menus.remove(menu);
-        menu.assignStore(null);
-    }
-
-
-
     public void addTableImage(TableImage tableImage) {
         this.tableImages.add(tableImage);
         tableImage.assignStore(this);
@@ -173,14 +162,6 @@ public class Store extends BaseEntity {
                 .findFirst();
     }
 
-    // 예약금 계산 메서드
-    public BigDecimal calculateDepositAmount() {
-        return BigDecimal.valueOf(minPrice)
-                .multiply(BigDecimal.valueOf(depositRate.getPercent()))
-                .divide(BigDecimal.valueOf(100), 0, RoundingMode.DOWN);
-    }
-
-    // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
 
     // 가게 기본 정보 변경 메서드
     public void updateBasicInfo(StoreReqDto.StoreUpdateDto dto) {
@@ -200,9 +181,6 @@ public class Store extends BaseEntity {
             this.category = dto.category();
         }
 
-        if(dto.minPrice() != null) {
-            this.minPrice = dto.minPrice();
-        }
 
         if(dto.depositRate() != null) {
             this.depositRate = dto.depositRate();

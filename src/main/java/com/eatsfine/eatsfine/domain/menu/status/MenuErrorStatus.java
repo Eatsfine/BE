@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.store.status;
+package com.eatsfine.eatsfine.domain.menu.status;
 
 import com.eatsfine.eatsfine.global.apiPayload.code.BaseErrorCode;
 import com.eatsfine.eatsfine.global.apiPayload.code.ErrorReasonDto;
@@ -8,14 +8,10 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum StoreErrorStatus implements BaseErrorCode {
+public enum MenuErrorStatus implements BaseErrorCode {
 
-    _STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE404", "해당하는 가게를 찾을 수 없습니다."),
+    _MENU_NOT_FOUND(HttpStatus.NOT_FOUND, "MENU404", "메뉴를 찾을 수 없습니다."),
 
-    _STORE_DETAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_DETAIL404", "가게 상세 정보를 찾을 수 없습니다."),
-    _STORE_NOT_OPEN_ON_DAY(HttpStatus.NOT_FOUND,"STORE4041" , "해당 영업시간 정보를 찾을 수 없습니다."),
-
-    _STORE_NOT_OWNER(HttpStatus.FORBIDDEN, "STORE403", "해당 가게의 주인이 아닙니다."),
     ;
 
 
@@ -27,18 +23,18 @@ public enum StoreErrorStatus implements BaseErrorCode {
     public ErrorReasonDto getReason() {
         return ErrorReasonDto.builder()
                 .isSuccess(false)
-                .code(code)
                 .message(message)
+                .code(code)
                 .build();
     }
 
     @Override
     public ErrorReasonDto getReasonHttpStatus() {
         return ErrorReasonDto.builder()
-                .httpStatus(httpStatus)
                 .isSuccess(false)
-                .code(code)
+                .httpStatus(httpStatus)
                 .message(message)
+                .code(code)
                 .build();
     }
 }
