@@ -50,7 +50,7 @@ public class BookingController {
 
     @Operation(summary = "예약 생성" ,
             description = "가게,날짜,시간,인원,테이블 정보를 입력받아 예약을 생성합니다.")
-    @PostMapping("stores/{storeId}/bookings")
+    @PostMapping("/stores/{storeId}/bookings")
     public ApiResponse<BookingResponseDTO.CreateBookingResultDTO> createBooking(
             @PathVariable Long storeId,
             @RequestBody @Valid BookingRequestDTO.CreateBookingDTO dto
