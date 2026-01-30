@@ -43,12 +43,12 @@ public class StoreTableConverter {
                 .build();
     }
 
-    public static StoreTableResDto.TableDetailDto toTableDetailDto(StoreTable table, LocalDate targetDate, int totalSlotCount, int availableSlotCount) {
+    public static StoreTableResDto.TableDetailDto toTableDetailDto(StoreTable table, LocalDate targetDate, int totalSlotCount, int availableSlotCount, String tableImageUrl) {
         return StoreTableResDto.TableDetailDto.builder()
                 .tableId(table.getId())
                 .minSeatCount(table.getMinSeatCount())
                 .maxSeatCount(table.getMaxSeatCount())
-                .tableImageUrl(table.getTableImageUrl())
+                .tableImageUrl(tableImageUrl)
                 .rating(table.getRating())
                 .reviewCount(0) // 리뷰 기능 미구현으로 0 반환
                 .seatsType(table.getSeatsType())
@@ -92,6 +92,19 @@ public class StoreTableConverter {
     public static StoreTableResDto.TableDeleteDto toTableDeleteDto(StoreTable table) {
         return StoreTableResDto.TableDeleteDto.builder()
                 .tableId(table.getId())
+                .build();
+    }
+
+    public static StoreTableResDto.UploadTableImageDto toUploadTableImageDto(Long tableId, String tableImageUrl) {
+        return StoreTableResDto.UploadTableImageDto.builder()
+                .tableId(tableId)
+                .tableImageUrl(tableImageUrl)
+                .build();
+    }
+
+    public static StoreTableResDto.DeleteTableImageDto toDeleteTableImageDto(Long tableId) {
+        return StoreTableResDto.DeleteTableImageDto.builder()
+                .tableId(tableId)
                 .build();
     }
 }
