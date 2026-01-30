@@ -82,9 +82,6 @@ public class Store extends BaseEntity {
     @Column(name = "booking_interval_minutes", nullable = false)
     private int bookingIntervalMinutes = 30;
 
-    @Column(name = "min_price", nullable = false)
-    private int minPrice;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "deposit_rate", nullable = false)
     private DepositRate depositRate;
@@ -192,9 +189,6 @@ public class Store extends BaseEntity {
             this.category = dto.category();
         }
 
-        if(dto.minPrice() != null) {
-            this.minPrice = dto.minPrice();
-        }
 
         if(dto.depositRate() != null) {
             this.depositRate = dto.depositRate();

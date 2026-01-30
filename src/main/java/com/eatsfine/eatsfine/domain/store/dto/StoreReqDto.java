@@ -53,9 +53,6 @@ public class StoreReqDto {
             @NotNull(message = "카테고리는 필수입니다.")
             Category category,
 
-            @NotNull(message = "최소 메뉴 가격은 필수입니다.")
-            int minPrice,
-
             @NotNull(message = "예약금 비율은 필수입니다.")
             DepositRate depositRate,
 
@@ -78,8 +75,6 @@ public class StoreReqDto {
             String phoneNumber,
 
             Category category,
-
-            Integer minPrice,
 
             DepositRate depositRate,
 
