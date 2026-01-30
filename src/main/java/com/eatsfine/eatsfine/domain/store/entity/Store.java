@@ -131,14 +131,6 @@ public class Store extends BaseEntity {
         menu.assignStore(this);
     }
 
-    // 메뉴 삭제
-    public void removeMenu(Menu menu) {
-        this.menus.remove(menu);
-        menu.assignStore(null);
-    }
-
-
-
     public void addTableImage(TableImage tableImage) {
         this.tableImages.add(tableImage);
         tableImage.assignStore(this);
