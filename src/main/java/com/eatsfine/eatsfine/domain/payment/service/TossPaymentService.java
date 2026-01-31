@@ -33,7 +33,7 @@ public class TossPaymentService {
     public TossPaymentResponse cancel(String paymentKey, PaymentRequestDTO.CancelPaymentDTO dto) {
         try {
             return tossPaymentClient.post()
-                    .uri("/v1/payments/" + paymentKey + "/cancel")
+                    .uri("/v1/payments/{paymentKey}/cancel", paymentKey)
                     .body(dto)
                     .retrieve()
                     .body(TossPaymentResponse.class);
