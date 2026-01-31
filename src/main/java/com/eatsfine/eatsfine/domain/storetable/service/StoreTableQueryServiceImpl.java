@@ -34,6 +34,9 @@ public class StoreTableQueryServiceImpl implements StoreTableQueryService{
     private final TableBlockRepository tableBlockRepository;
     private final BookingRepository bookingRepository;
     private final S3Service s3Service;
+    private final StoreTableRepository storeTableRepository;
+    private final TableBlockRepository tableBlockRepository;
+    private final BookingRepository bookingRepository;
 
     // 테이블 슬롯 조회
     @Override

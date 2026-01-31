@@ -17,6 +17,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
+import java.time.LocalDate;
+
 @Tag(name = "StoreTable", description = "가게 테이블 관리 API")
 @RestController
 @RequiredArgsConstructor
