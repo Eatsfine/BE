@@ -81,7 +81,13 @@ public class PaymentService {
                         throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_AMOUNT);
                 }
                 // 토스 API 호출
-                TossPaymentResponse response = tossPaymentService.confirm(dto);
+                TossPaymentResponse response;
+                try {
+                        response = tossPaymentService.confirm(dto);
+                } catch (Exception e) {
+                        payment.failPayment();
+                        throw e;
+                }
 
                 if (response == null || !"DONE".equals(response.status())) {
                         log.error("Toss Payment Confirmation Failed: Status is not DONE");
