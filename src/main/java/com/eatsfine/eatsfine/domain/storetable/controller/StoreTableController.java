@@ -35,6 +35,14 @@ public class StoreTableController implements StoreTableControllerDocs {
         return ApiResponse.of(StoreTableSuccessStatus._TABLE_CREATED, storeTableCommandService.createTable(storeId, dto));
     }
 
+    @PostMapping(value = "/stores/{storeId}/tables/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ApiResponse<StoreTableResDto.ImageUploadDto> uploadTableImageTemp(
+            @PathVariable Long storeId,
+            @RequestPart("image") MultipartFile file
+    ) {
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS, storeTableCommandService.uploadTableImageTemp(storeId, file));
+    }
+
     @GetMapping("/stores/{storeId}/tables/{tableId}/slots")
     public ApiResponse<StoreTableResDto.SlotListDto> getTableSlots(
             @PathVariable Long storeId,

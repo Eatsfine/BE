@@ -44,6 +44,34 @@ public interface StoreTableControllerDocs {
     );
 
     @Operation(
+            summary = "테이블 이미지 선 업로드",
+            description = """
+                테이블 생성 전에 이미지를 먼저 업로드하고 KEY를 반환합니다.
+                
+                - 이미지를 임시 경로(temp/tables/)에 저장합니다.
+                - 반환된 imageKey를 테이블 생성 시 사용합니다.
+                - imageUrl은 프론트엔드에서 즉시 미리보기에 사용할 수 있습니다.
+                - 테이블 생성 시 영구 경로(stores/{storeId}/tables/{tableId}/)로 자동 이동됩니다.
+                """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "이미지 업로드 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 (빈 파일, 지원하지 않는 형식 등)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가게를 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "S3 업로드 실패")
+    })
+    ApiResponse<StoreTableResDto.ImageUploadDto> uploadTableImageTemp(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+            @Parameter(
+                    description = "업로드할 이미지 파일",
+                    required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+            )
+            MultipartFile file
+    );
+
+    @Operation(
             summary = "테이블 예약 시간대 조회",
             description = """                                                                                      
                         특정 테이블의 예약 가능한 시간대를 조회합니다.
