@@ -22,7 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +37,7 @@ public class PaymentService {
 
         private final PaymentRepository paymentRepository;
         private final BookingRepository bookingRepository;
-        private final RestClient tossPaymentClient;
+        private final TossPaymentService tossPaymentService;
 
         @Transactional
         public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto) {
@@ -82,21 +81,10 @@ public class PaymentService {
                         throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_AMOUNT);
                 }
                 // 토스 API 호출
-                TossPaymentResponse response;
-                try {
-                        response = tossPaymentClient.post()
-                                        .uri("/v1/payments/confirm")
-                                        .body(dto)
-                                        .retrieve()
-                                        .body(TossPaymentResponse.class);
+                TossPaymentResponse response = tossPaymentService.confirm(dto);
 
-                        if (response == null || !"DONE".equals(response.status())) {
-                                log.error("Toss Payment Confirmation Failed: Status is not DONE");
-                                payment.failPayment();
-                                throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
-                        }
-                } catch (Exception e) {
-                        log.error("Toss Payment API Error", e);
+                if (response == null || !"DONE".equals(response.status())) {
+                        log.error("Toss Payment Confirmation Failed: Status is not DONE");
                         payment.failPayment();
                         throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
                 }
@@ -140,20 +128,10 @@ public class PaymentService {
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
                 // 토스 결제 취소 API 호출
-                TossPaymentResponse response;
-                try {
-                        response = tossPaymentClient.post()
-                                        .uri("/v1/payments/" + paymentKey + "/cancel")
-                                        .body(dto)
-                                        .retrieve()
-                                        .body(TossPaymentResponse.class);
+                TossPaymentResponse response = tossPaymentService.cancel(paymentKey, dto);
 
-                        if (response == null || !"CANCELED".equals(response.status())) {
-                                log.error("Toss Payment Cancel Failed: {}", response);
-                                throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
-                        }
-                } catch (Exception e) {
-                        log.error("Toss Payment Cancel API Error", e);
+                if (response == null || !"CANCELED".equals(response.status())) {
+                        log.error("Toss Payment Cancel Failed: {}", response);
                         throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
                 }
 
