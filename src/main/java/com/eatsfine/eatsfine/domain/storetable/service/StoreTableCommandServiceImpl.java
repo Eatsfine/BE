@@ -208,6 +208,19 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
             throw new StoreTableException(StoreTableErrorStatus._TABLE_HAS_FUTURE_BOOKING);
         }
 
+        // 이미지가 존재하면, S3 이미지 삭제
+        String imageKey = table.getTableImageUrl();
+
+        if (imageKey != null && !imageKey.isBlank()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            s3Service.deleteByKey(imageKey);
+                        }
+                    }
+            );
+        }
+
         storeTableRepository.delete(table);
 
         return StoreTableConverter.toTableDeleteDto(table);
