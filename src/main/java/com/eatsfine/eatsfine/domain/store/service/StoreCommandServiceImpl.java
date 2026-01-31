@@ -67,7 +67,6 @@ public class StoreCommandServiceImpl implements StoreCommandService {
                 .phoneNumber(dto.phoneNumber())
                 .category(dto.category())
                 .bookingIntervalMinutes(dto.bookingIntervalMinutes())
-                .minPrice(dto.minPrice())
                 .depositRate(dto.depositRate())
                 .build();
 
@@ -101,7 +100,6 @@ public class StoreCommandServiceImpl implements StoreCommandService {
         if (dto.description() != null) updated.add("description");
         if (dto.phoneNumber() != null) updated.add("phoneNumber");
         if (dto.category() != null) updated.add("category");
-        if (dto.minPrice() != null) updated.add("minPrice");
         if (dto.depositRate() != null) updated.add("depositRate");
         if (dto.bookingIntervalMinutes() != null) updated.add("bookingIntervalMinutes");
 

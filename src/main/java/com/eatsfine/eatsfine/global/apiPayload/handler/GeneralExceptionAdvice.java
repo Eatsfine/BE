@@ -4,11 +4,13 @@ import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.apiPayload.code.BaseErrorCode;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
+import jakarta.validation.ConstraintViolationException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.ServletWebRequest;
@@ -32,6 +34,26 @@ public class GeneralExceptionAdvice extends ResponseEntityExceptionHandler {
         log.error("Unhandled Exception 발생: ", e);
         // 시스템 전체 공통 에러인 _INTERNAL_SERVER_ERROR를 사용합니다.
         return handleExceptionInternalFalse(e, ErrorStatus._INTERNAL_SERVER_ERROR, HttpHeaders.EMPTY, ErrorStatus._INTERNAL_SERVER_ERROR.getHttpStatus(), request, e.getMessage());
+    }
+
+    // @Valid 유효성 검사 실패 시 (RequestBody)
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException e,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request
+    ) {
+        String errorMessage = e.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, headers, status, request, errorMessage);
+    }
+
+    // @RequestParam, @PathVariable 유효성 검사 실패 시 (ConstraintViolationException)
+    @ExceptionHandler
+    public ResponseEntity<Object> validation(ConstraintViolationException e, WebRequest request) {
+        // 첫 번째 에러 메시지만 추출
+        String errorMessage = e.getConstraintViolations().iterator().next().getMessage();
+        return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, HttpHeaders.EMPTY, ErrorStatus._BAD_REQUEST.getHttpStatus(), request, errorMessage);
     }
 
     // 3. 커스텀 예외용 내부 응답 생성 메서드

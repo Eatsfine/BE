@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.store.entity;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
 import com.eatsfine.eatsfine.domain.businesshours.status.BusinessHoursErrorStatus;
+import com.eatsfine.eatsfine.domain.menu.entity.Menu;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.store.dto.StoreReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
@@ -15,6 +16,7 @@ import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
 import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -80,9 +82,6 @@ public class Store extends BaseEntity {
     @Column(name = "booking_interval_minutes", nullable = false)
     private int bookingIntervalMinutes = 30;
 
-    @Column(name = "min_price", nullable = false)
-    private int minPrice;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "deposit_rate", nullable = false)
     private DepositRate depositRate;
@@ -90,6 +89,12 @@ public class Store extends BaseEntity {
     @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BusinessHours> businessHours = new ArrayList<>();
+
+    @Builder.Default
+    @BatchSize(size = 100)
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
+    private List<Menu> menus = new ArrayList<>();
+
 
     @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -119,6 +124,13 @@ public class Store extends BaseEntity {
 
         businessHours.update(open, close, isClosed);
     }
+
+    // 메뉴 추가
+    public void addMenu(Menu menu) {
+        this.menus.add(menu);
+        menu.assignStore(this);
+    }
+
     public void addTableImage(TableImage tableImage) {
         this.tableImages.add(tableImage);
         tableImage.assignStore(this);
@@ -150,14 +162,6 @@ public class Store extends BaseEntity {
                 .findFirst();
     }
 
-    // 예약금 계산 메서드
-    public BigDecimal calculateDepositAmount() {
-        return BigDecimal.valueOf(minPrice)
-                .multiply(BigDecimal.valueOf(depositRate.getPercent()))
-                .divide(BigDecimal.valueOf(100), 0, RoundingMode.DOWN);
-    }
-
-    // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
 
     // 가게 기본 정보 변경 메서드
     public void updateBasicInfo(StoreReqDto.StoreUpdateDto dto) {
@@ -177,9 +181,6 @@ public class Store extends BaseEntity {
             this.category = dto.category();
         }
 
-        if(dto.minPrice() != null) {
-            this.minPrice = dto.minPrice();
-        }
 
         if(dto.depositRate() != null) {
             this.depositRate = dto.depositRate();

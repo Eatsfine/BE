@@ -24,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
+import java.math.BigDecimal;
+import org.springframework.data.domain.PageRequest;
 import java.time.LocalDateTime;
 import java.util.UUID;
 import java.util.List;
@@ -47,7 +49,7 @@ public class PaymentService {
                 String orderId = UUID.randomUUID().toString();
 
                 // 예약금 검증
-                if (booking.getDepositAmount() == null || booking.getDepositAmount() <= 0) {
+                if (booking.getDepositAmount() == null || booking.getDepositAmount().compareTo(BigDecimal.ZERO) <= 0) {
                         throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_DEPOSIT);
                 }
 
@@ -71,15 +73,14 @@ public class PaymentService {
         }
 
         @Transactional(noRollbackFor = GeneralException.class)
-        public PaymentResponseDTO.PaymentRequestResultDTO confirmPayment(PaymentConfirmDTO dto) {
+        public PaymentResponseDTO.PaymentSuccessResultDTO confirmPayment(PaymentConfirmDTO dto) {
                 Payment payment = paymentRepository.findByOrderId(dto.orderId())
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
-                if (!payment.getAmount().equals(dto.amount())) {
+                if (payment.getAmount().compareTo(dto.amount()) != 0) {
                         payment.failPayment();
                         throw new PaymentException(PaymentErrorStatus._PAYMENT_INVALID_AMOUNT);
                 }
-
                 // 토스 API 호출
                 TossPaymentResponse response;
                 try {
@@ -121,12 +122,15 @@ public class PaymentService {
 
                 log.info("Payment confirmed for OrderID: {}", dto.orderId());
 
-                return new PaymentResponseDTO.PaymentRequestResultDTO(
+                return new PaymentResponseDTO.PaymentSuccessResultDTO(
                                 payment.getId(),
-                                payment.getBooking().getId(),
+                                payment.getPaymentStatus().name(),
+                                payment.getApprovedAt(),
                                 payment.getOrderId(),
                                 payment.getAmount(),
-                                payment.getRequestedAt());
+                                payment.getPaymentMethod() != null ? payment.getPaymentMethod().name() : null,
+                                payment.getPaymentProvider() != null ? payment.getPaymentProvider().name() : null,
+                                payment.getReceiptUrl());
         }
 
         @Transactional(noRollbackFor = GeneralException.class)
@@ -171,7 +175,7 @@ public class PaymentService {
                 // page 기본값 처리 (만약 null이면 1, 0보다 작으면 1로 보정). Spring Data는 0-based index이므로 -1
                 int pageNumber = (page != null && page > 0) ? page - 1 : 0;
 
-                Pageable pageable = org.springframework.data.domain.PageRequest.of(pageNumber, size);
+                Pageable pageable = PageRequest.of(pageNumber, size);
 
                 Page<Payment> paymentPage;
                 if (status != null && !status.isEmpty()) {
@@ -197,7 +201,8 @@ public class PaymentService {
                                                 payment.getPaymentType().name(),
                                                 payment.getPaymentMethod() != null ? payment.getPaymentMethod().name()
                                                                 : null,
-                                                payment.getPaymentProvider() != null ? payment.getPaymentProvider().name()
+                                                payment.getPaymentProvider() != null
+                                                                ? payment.getPaymentProvider().name()
                                                                 : null,
                                                 payment.getPaymentStatus().name(),
                                                 payment.getApprovedAt()))

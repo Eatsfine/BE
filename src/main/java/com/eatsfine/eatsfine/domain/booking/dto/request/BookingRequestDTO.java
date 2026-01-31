@@ -35,12 +35,23 @@ public class BookingRequestDTO {
             @NotNull @DateTimeFormat(pattern = "HH:mm") LocalTime time,
             @NotNull @Min(1) Integer partySize,
             @NotNull List<Long> tableIds,
-            @NotNull boolean isSplitAccepted
+            @NotNull boolean isSplitAccepted,
+            @NotNull List<MenuOrderDto> menuItems
+    ){}
+
+    public record MenuOrderDto(
+            @NotNull Long menuId,
+            @NotNull @Min(1) Integer quantity
     ){}
 
     public record PaymentConfirmDTO(
             @NotBlank String paymentKey, //결제 고유 키
             @NotNull Integer amount //실제 결제 금액
+    ){}
+
+    public record CancelBookingDTO(
+            @NotBlank String reason //예약 취소 사유
+
     ){}
 
 }

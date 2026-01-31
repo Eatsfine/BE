@@ -9,6 +9,7 @@ import com.eatsfine.eatsfine.global.entity.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,7 +33,7 @@ public class Payment extends BaseEntity {
     private String orderId;
 
     @Column(name = "amount", nullable = false)
-    private Integer amount;
+    private BigDecimal amount;
 
     @Column(name = "payment_key")
     private String paymentKey;
@@ -61,10 +62,6 @@ public class Payment extends BaseEntity {
 
     @Column(name = "receipt_url")
     private String receiptUrl;
-
-    public void setPaymentKey(String paymentKey) {
-        this.paymentKey = paymentKey;
-    }
 
     public void completePayment(LocalDateTime approvedAt, PaymentMethod method, String paymentKey,
             PaymentProvider provider, String receiptUrl) {
