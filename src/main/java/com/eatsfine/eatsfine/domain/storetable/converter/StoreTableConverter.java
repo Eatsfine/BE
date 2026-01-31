@@ -27,6 +27,13 @@ public class StoreTableConverter {
                 .build();
     }
 
+    public static StoreTableResDto.ImageUploadDto toImageUploadDto(String imageKey, String imageUrl) {
+        return StoreTableResDto.ImageUploadDto.builder()
+                .imageKey(imageKey)
+                .imageUrl(imageUrl)
+                .build();
+    }
+
     public static StoreTableResDto.SlotListDto toSlotListDto(int totalCount, int availableCount, List<SlotCalculator.SlotDto> slots) {
         List<StoreTableResDto.SlotDetailDto> slotDetails = slots.stream()
                 .map(slot -> StoreTableResDto.SlotDetailDto.builder()
