@@ -20,8 +20,11 @@ import com.eatsfine.eatsfine.domain.table_layout.exception.status.TableLayoutErr
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -30,10 +33,12 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class StoreTableCommandServiceImpl implements StoreTableCommandService {
     private final StoreRepository storeRepository;
     private final TableLayoutRepository tableLayoutRepository;
@@ -62,6 +67,31 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
         // 테이블 번호 자동 생성
         String tableNumber = generateTableNumber(layout);
 
+        // 이미지 처리 temp → permanent
+        String permanentImageKey = null;
+        String tempImageKey = dto.tableImageKey();
+
+        if (tempImageKey != null && !tempImageKey.isBlank()) {
+            String extension = s3Service.extractExtension(tempImageKey);
+            permanentImageKey = "stores/" + storeId + "/tables/" + UUID.randomUUID() + extension;
+
+            String finalPermanentKey = permanentImageKey;
+
+            // 트랜잭션 커밋 후 S3 이동
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                s3Service.moveObject(tempImageKey, finalPermanentKey);
+                            } catch (Exception e) {
+                                log.error("temp에서 영구로 이동 실패. Source: {}, Dest: {}", tempImageKey, finalPermanentKey);
+                            }
+                        }
+                    }
+            );
+        }
+
         // 테이블 생성
         StoreTable newTable = StoreTable.builder()
                 .tableNumber(tableNumber)
@@ -74,13 +104,15 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
                 .maxSeatCount(dto.maxSeatCount())
                 .seatsType(dto.seatsType())
                 .rating(BigDecimal.ZERO)
-                .tableImageUrl(dto.tableImageUrl())
+                .tableImageUrl(permanentImageKey)
                 .isDeleted(false)
                 .build();
 
         StoreTable savedTable = storeTableRepository.save(newTable);
 
-        return StoreTableConverter.toTableCreateDto(savedTable);
+        String tableImageUrl = s3Service.toUrl(savedTable.getTableImageUrl());
+
+        return StoreTableConverter.toTableCreateDto(savedTable, tableImageUrl);
     }
 
     @Override

@@ -10,7 +10,7 @@ import java.util.List;
 
 public class StoreTableConverter {
     // StoreTable Entity를 생성 응답 DTO로 변환
-    public static StoreTableResDto.TableCreateDto toTableCreateDto(StoreTable table) {
+    public static StoreTableResDto.TableCreateDto toTableCreateDto(StoreTable table, String tableImageUrl) {
         return StoreTableResDto.TableCreateDto.builder()
                 .tableId(table.getId())
                 .tableNumber(table.getTableNumber())
@@ -23,7 +23,7 @@ public class StoreTableConverter {
                 .seatsType(table.getSeatsType())
                 .rating(table.getRating())
                 .reviewCount(0) // 리뷰 기능 미구현으로 0 반환
-                .tableImageUrl(table.getTableImageUrl())
+                .tableImageUrl(tableImageUrl)
                 .build();
     }
 
