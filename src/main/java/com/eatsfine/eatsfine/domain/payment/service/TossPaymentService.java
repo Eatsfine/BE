@@ -5,17 +5,20 @@ import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.TossPaymentResponse;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class TossPaymentService {
 
     private final RestClient tossPaymentClient;
+
+    public TossPaymentService(@Qualifier("tossPaymentClient") RestClient tossPaymentClient) {
+        this.tossPaymentClient = tossPaymentClient;
+    }
 
     public TossPaymentResponse confirm(PaymentConfirmDTO dto) {
         try {
