@@ -83,6 +83,22 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
         return StoreTableConverter.toTableCreateDto(savedTable);
     }
 
+    @Override
+    public StoreTableResDto.ImageUploadDto uploadTableImageTemp(Long storeId, MultipartFile file) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        if (file.isEmpty()) {
+            throw new ImageException(ImageErrorStatus.EMPTY_FILE);
+        }
+
+        // 임시 경로에 업로드
+        String tempPath = "temp/tables";
+        String imageKey = s3Service.upload(file, tempPath);
+
+        return StoreTableConverter.toImageUploadDto(imageKey, s3Service.toUrl(imageKey));
+    }
+
     // 테이블 정보 수정
     @Override
     public StoreTableResDto.TableUpdateResultDto updateTable(Long storeId, Long tableId, StoreTableReqDto.TableUpdateDto dto) {
