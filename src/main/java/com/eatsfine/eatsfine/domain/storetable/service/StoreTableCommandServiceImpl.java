@@ -67,13 +67,33 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
         // 테이블 번호 자동 생성
         String tableNumber = generateTableNumber(layout);
 
+        // 테이블 생성
+        StoreTable newTable = StoreTable.builder()
+                .tableNumber(tableNumber)
+                .tableLayout(layout)
+                .gridX(dto.gridX())
+                .gridY(dto.gridY())
+                .widthSpan(1)
+                .heightSpan(1)
+                .minSeatCount(dto.minSeatCount())
+                .maxSeatCount(dto.maxSeatCount())
+                .seatsType(dto.seatsType())
+                .rating(BigDecimal.ZERO)
+                .tableImageUrl(null)
+                .isDeleted(false)
+                .build();
+
+        StoreTable savedTable = storeTableRepository.save(newTable);
+
         // 이미지 처리 temp → permanent
         String permanentImageKey = null;
         String tempImageKey = dto.tableImageKey();
 
         if (tempImageKey != null && !tempImageKey.isBlank()) {
+            Long tableId = savedTable.getId();
             String extension = s3Service.extractExtension(tempImageKey);
-            permanentImageKey = "stores/" + storeId + "/tables/" + UUID.randomUUID() + extension;
+
+            permanentImageKey = "stores/" + storeId + "/tables/" + tableId + "/" + UUID.randomUUID() + extension;
 
             String finalPermanentKey = permanentImageKey;
 
@@ -90,25 +110,8 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
                         }
                     }
             );
+            savedTable.updateTableImage(permanentImageKey);
         }
-
-        // 테이블 생성
-        StoreTable newTable = StoreTable.builder()
-                .tableNumber(tableNumber)
-                .tableLayout(layout)
-                .gridX(dto.gridX())
-                .gridY(dto.gridY())
-                .widthSpan(1)
-                .heightSpan(1)
-                .minSeatCount(dto.minSeatCount())
-                .maxSeatCount(dto.maxSeatCount())
-                .seatsType(dto.seatsType())
-                .rating(BigDecimal.ZERO)
-                .tableImageUrl(permanentImageKey)
-                .isDeleted(false)
-                .build();
-
-        StoreTable savedTable = storeTableRepository.save(newTable);
 
         String tableImageUrl = s3Service.toUrl(savedTable.getTableImageUrl());
 
