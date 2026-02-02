@@ -32,6 +32,12 @@ public class StoreTableResDto {
     ) {}
 
     @Builder
+    public record ImageUploadDto(
+            String imageKey,  // 테이블 생성/수정 시 서버에 다시 보낼 키
+            String imageUrl   // 프론트엔드에서 즉시 미리보기를 위한 전체 URL
+    ) {}
+
+    @Builder
     public record SlotListDto(
             int totalSlotCount,
             int availableSlotCount,

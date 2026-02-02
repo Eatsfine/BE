@@ -7,6 +7,8 @@ import org.springframework.web.multipart.MultipartFile;
 public interface StoreTableCommandService {
     StoreTableResDto.TableCreateDto createTable(Long storeId, StoreTableReqDto.TableCreateDto dto);
 
+    StoreTableResDto.ImageUploadDto uploadTableImageTemp(Long storeId, MultipartFile file);
+
     StoreTableResDto.TableUpdateResultDto updateTable(Long storeId, Long tableId, StoreTableReqDto.TableUpdateDto dto);
 
     StoreTableResDto.TableDeleteDto deleteTable(Long storeId, Long tableId);

@@ -20,8 +20,11 @@ import com.eatsfine.eatsfine.domain.table_layout.exception.status.TableLayoutErr
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -30,10 +33,12 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class StoreTableCommandServiceImpl implements StoreTableCommandService {
     private final StoreRepository storeRepository;
     private final TableLayoutRepository tableLayoutRepository;
@@ -74,13 +79,59 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
                 .maxSeatCount(dto.maxSeatCount())
                 .seatsType(dto.seatsType())
                 .rating(BigDecimal.ZERO)
-                .tableImageUrl(dto.tableImageUrl())
+                .tableImageUrl(null)
                 .isDeleted(false)
                 .build();
 
         StoreTable savedTable = storeTableRepository.save(newTable);
 
-        return StoreTableConverter.toTableCreateDto(savedTable);
+        // 이미지 처리 temp → permanent
+        String permanentImageKey = null;
+        String tempImageKey = dto.tableImageKey();
+
+        if (tempImageKey != null && !tempImageKey.isBlank()) {
+            Long tableId = savedTable.getId();
+            String extension = s3Service.extractExtension(tempImageKey);
+
+            permanentImageKey = "stores/" + storeId + "/tables/" + tableId + "/" + UUID.randomUUID() + extension;
+
+            String finalPermanentKey = permanentImageKey;
+
+            // 트랜잭션 커밋 후 S3 이동
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                s3Service.moveObject(tempImageKey, finalPermanentKey);
+                            } catch (Exception e) {
+                                log.error("temp에서 영구로 이동 실패. Source: {}, Dest: {}", tempImageKey, finalPermanentKey);
+                            }
+                        }
+                    }
+            );
+            savedTable.updateTableImage(permanentImageKey);
+        }
+
+        String tableImageUrl = s3Service.toUrl(savedTable.getTableImageUrl());
+
+        return StoreTableConverter.toTableCreateDto(savedTable, tableImageUrl);
+    }
+
+    @Override
+    public StoreTableResDto.ImageUploadDto uploadTableImageTemp(Long storeId, MultipartFile file) {
+        storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        if (file.isEmpty()) {
+            throw new ImageException(ImageErrorStatus.EMPTY_FILE);
+        }
+
+        // 임시 경로에 업로드
+        String tempPath = "temp/tables";
+        String imageKey = s3Service.upload(file, tempPath);
+
+        return StoreTableConverter.toImageUploadDto(imageKey, s3Service.toUrl(imageKey));
     }
 
     // 테이블 정보 수정
@@ -158,6 +209,19 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
 
         if (hasFutureBooking) {
             throw new StoreTableException(StoreTableErrorStatus._TABLE_HAS_FUTURE_BOOKING);
+        }
+
+        // 이미지가 존재하면, S3 이미지 삭제
+        String imageKey = table.getTableImageUrl();
+
+        if (imageKey != null && !imageKey.isBlank()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            s3Service.deleteByKey(imageKey);
+                        }
+                    }
+            );
         }
 
         storeTableRepository.delete(table);
