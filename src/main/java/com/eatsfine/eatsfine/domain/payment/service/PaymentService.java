@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.payment.service;
 
 import com.eatsfine.eatsfine.domain.booking.entity.Booking;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
+import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentWebhookDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
@@ -219,5 +220,41 @@ public class PaymentService {
                                 payment.getReceiptUrl(),
                                 null // 환불 상세 정보는 현재 null 처리
                 );
+        }
+
+        @Transactional
+        public void processWebhook(PaymentWebhookDTO dto) {
+                Payment payment = paymentRepository.findByOrderId(dto.orderId())
+                                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
+
+                PaymentStatus targetStatus = null;
+                if ("DONE".equals(dto.status())) {
+                        targetStatus = PaymentStatus.COMPLETED;
+                } else if ("CANCELED".equals(dto.status())) {
+                        targetStatus = PaymentStatus.REFUNDED;
+                }
+
+                if (targetStatus == null) {
+                        log.info("Webhook skipped: Unknown or unhandled status {}", dto.status());
+                        return;
+                }
+
+                if (payment.getPaymentStatus() == targetStatus) {
+                        log.info("Webhook skipped: Payment {} already in status {}", dto.orderId(), targetStatus);
+                        return;
+                }
+
+                if (targetStatus == PaymentStatus.COMPLETED) {
+                        payment.completePayment(
+                                        LocalDateTime.now(),
+                                        PaymentMethod.SIMPLE_PAYMENT,
+                                        dto.paymentKey(),
+                                        null,
+                                        null);
+                        log.info("Webhook processed: Payment {} status updated to COMPLETED", dto.orderId());
+                } else if (targetStatus == PaymentStatus.REFUNDED) {
+                        payment.cancelPayment();
+                        log.info("Webhook processed: Payment {} status updated to REFUNDED", dto.orderId());
+                }
         }
 }
