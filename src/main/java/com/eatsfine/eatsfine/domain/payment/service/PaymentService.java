@@ -224,37 +224,50 @@ public class PaymentService {
 
         @Transactional
         public void processWebhook(PaymentWebhookDTO dto) {
-                Payment payment = paymentRepository.findByOrderId(dto.orderId())
+                PaymentWebhookDTO.PaymentData data = dto.data();
+
+                Payment payment = paymentRepository.findByOrderId(data.orderId())
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
                 PaymentStatus targetStatus = null;
-                if ("DONE".equals(dto.status())) {
+                if ("DONE".equals(data.status())) {
                         targetStatus = PaymentStatus.COMPLETED;
-                } else if ("CANCELED".equals(dto.status())) {
+                } else if ("CANCELED".equals(data.status())) {
                         targetStatus = PaymentStatus.REFUNDED;
                 }
 
                 if (targetStatus == null) {
-                        log.info("Webhook skipped: Unknown or unhandled status {}", dto.status());
+                        log.info("Webhook skipped: Unknown or unhandled status {}", data.status());
                         return;
                 }
 
                 if (payment.getPaymentStatus() == targetStatus) {
-                        log.info("Webhook skipped: Payment {} already in status {}", dto.orderId(), targetStatus);
+                        log.info("Webhook skipped: Payment {} already in status {}", data.orderId(), targetStatus);
                         return;
                 }
 
                 if (targetStatus == PaymentStatus.COMPLETED) {
+                        // Provider 파싱
+                        PaymentProvider provider = null;
+                        if (data.easyPay() != null) {
+                                String providerCode = data.easyPay().provider();
+                                if ("토스페이".equals(providerCode)) {
+                                        provider = PaymentProvider.TOSS;
+                                } else if ("카카오페이".equals(providerCode)) {
+                                        provider = PaymentProvider.KAKAOPAY;
+                                }
+                        }
+
                         payment.completePayment(
                                         LocalDateTime.now(),
                                         PaymentMethod.SIMPLE_PAYMENT,
-                                        dto.paymentKey(),
-                                        null,
+                                        data.paymentKey(),
+                                        provider,
                                         null);
-                        log.info("Webhook processed: Payment {} status updated to COMPLETED", dto.orderId());
+                        log.info("Webhook processed: Payment {} status updated to COMPLETED", data.orderId());
                 } else if (targetStatus == PaymentStatus.REFUNDED) {
                         payment.cancelPayment();
-                        log.info("Webhook processed: Payment {} status updated to REFUNDED", dto.orderId());
+                        log.info("Webhook processed: Payment {} status updated to REFUNDED", data.orderId());
                 }
         }
 }

@@ -64,7 +64,7 @@ public class PaymentWebhookController {
             return ResponseEntity.badRequest().body("Validation failed: " + sb.toString());
         }
 
-        log.info("Webhook received: orderId={}, status={}", dto.orderId(), dto.status());
+        log.info("Webhook received: orderId={}, status={}", dto.data().orderId(), dto.data().status());
         paymentService.processWebhook(dto);
         return ResponseEntity.ok("Received");
     }
