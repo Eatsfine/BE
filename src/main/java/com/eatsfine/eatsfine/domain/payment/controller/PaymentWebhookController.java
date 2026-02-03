@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.payment.controller;
 
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentWebhookDTO;
 import com.eatsfine.eatsfine.domain.payment.service.PaymentService;
+import jakarta.validation.Valid;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class PaymentWebhookController {
 
     @Operation(summary = "Toss Payments 웹훅 수신", description = "Toss Payments 서버로부터 결제/취소 결과(PaymentKey, Status 등)를 수신하여 서버 상태를 동기화합니다.")
     @PostMapping
-    public ResponseEntity<String> handleWebhook(@RequestBody PaymentWebhookDTO dto) {
+    public ResponseEntity<String> handleWebhook(@RequestBody @Valid PaymentWebhookDTO dto) {
         log.info("Webhook received: orderId={}, status={}", dto.orderId(), dto.status());
         paymentService.processWebhook(dto);
         return ResponseEntity.ok("Received");
