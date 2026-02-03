@@ -63,7 +63,6 @@ public class UserRequestDto {
     @Getter
     @Setter
     public static class UpdateDto {
-        private String profileImage;
         private String email;
         private String nickName;
         private String phoneNumber;
