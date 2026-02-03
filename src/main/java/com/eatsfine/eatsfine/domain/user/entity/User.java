@@ -40,9 +40,11 @@ public class User extends BaseEntity {
     @Column(name = "social_type")
     private SocialType socialType;
 
-    @Setter
     @Column(nullable = true)
     private String profileImage;
+
+    @Column(length = 500)
+    private String refreshToken;
 
     public void updateNickname(String nickName){
         this.nickName = nickName;
@@ -59,4 +61,6 @@ public class User extends BaseEntity {
     public void updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
+
+    public void updateRefreshToken(String refreshToken){this.refreshToken = refreshToken;}
 }
