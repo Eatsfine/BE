@@ -224,6 +224,12 @@ public class PaymentService {
 
         @Transactional
         public void processWebhook(PaymentWebhookDTO dto) {
+                // 이벤트 타입 검증
+                if (!"PAYMENT_STATUS_CHANGED".equals(dto.eventType())) {
+                        log.info("Webhook skipped: Unhandled event type {}", dto.eventType());
+                        return;
+                }
+
                 PaymentWebhookDTO.PaymentData data = dto.data();
 
                 Payment payment = paymentRepository.findByOrderId(data.orderId())

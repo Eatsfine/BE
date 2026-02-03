@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public record PaymentWebhookDTO(
-                String eventType,
+                @NotBlank String eventType,
                 @Valid @NotNull PaymentData data) {
         @JsonIgnoreProperties(ignoreUnknown = true)
         public record PaymentData(
