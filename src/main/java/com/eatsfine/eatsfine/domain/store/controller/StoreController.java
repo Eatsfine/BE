@@ -12,7 +12,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @Tag(name = "Store", description = "식당 조회 및 관리 API")
 @RestController
@@ -55,6 +57,46 @@ public class StoreController {
     @GetMapping("/stores/{storeId}")
     public ApiResponse<StoreResDto.StoreDetailDto> getStoreDetail(@PathVariable Long storeId) {
         return ApiResponse.of(StoreSuccessStatus._STORE_DETAIL_FOUND, storeQueryService.getStoreDetail(storeId));
+    }
+
+    @Operation(
+            summary = "가게 기본 정보 수정",
+            description = "가게 기본 정보(영업시간, 브레이크타임 제외)를 수정합니다. " +
+                    "영업시간, 브레이크타임, 이미지는 별도 엔티티/컬렉션이므로 개별 API로 분리"
+    )
+    @PatchMapping("/stores/{storeId}")
+    public ApiResponse<StoreResDto.StoreUpdateDto> updateStoreBasicInfo(
+            @PathVariable Long storeId,
+            @Valid @RequestBody StoreReqDto.StoreUpdateDto dto
+            ) {
+        return ApiResponse.of(StoreSuccessStatus._STORE_UPDATE_SUCCESS, storeCommandService.updateBasicInfo(storeId, dto));
+    }
+
+
+    @Operation(
+        summary = "식당 대표 이미지 등록",
+            description = "식당의 대표 이미지를 등록합니다."
+    )
+    @PostMapping(
+            value = "/stores/{storeId}/main-image",
+            consumes = MediaType.MULTIPART_FORM_DATA_VALUE
+    )
+    public ApiResponse<StoreResDto.UploadMainImageDto> uploadMainImage(
+            @RequestPart("mainImage")MultipartFile mainImage,
+            @PathVariable Long storeId
+            ){
+        return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_UPLOAD_SUCCESS, storeCommandService.uploadMainImage(storeId, mainImage));
+    }
+
+    @Operation(
+            summary = "식당 대표 이미지 조회",
+            description = "식당의 대표 이미지를 조회합니다."
+    )
+    @GetMapping("/stores/{storeId}/main-image")
+    public ApiResponse<StoreResDto.GetMainImageDto> getMainImage(
+            @PathVariable Long storeId
+    ) {
+        return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_GET_SUCCESS, storeQueryService.getMainImage(storeId));
     }
 
 }

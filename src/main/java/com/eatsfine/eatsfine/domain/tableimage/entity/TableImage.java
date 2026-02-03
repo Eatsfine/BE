@@ -22,7 +22,10 @@ public class TableImage extends BaseEntity {
     private Store store;
 
     @Column(name = "table_image_url", nullable = false)
-    private String tableImageUrl;
+    private String tableImageKey;
+
+    @Column(name = "image_order", nullable = false)
+    private int imageOrder;
 
     public void assignStore(Store store) {
         this.store = store;

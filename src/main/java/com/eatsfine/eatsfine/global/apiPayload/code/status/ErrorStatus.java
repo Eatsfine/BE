@@ -13,10 +13,7 @@ public enum ErrorStatus implements BaseErrorCode {
     _BAD_REQUEST(HttpStatus.BAD_REQUEST, "COMMON400", "잘못된 요청입니다."),
     _UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "COMMON401", "인증이 필요합니다."),
     _FORBIDDEN(HttpStatus.FORBIDDEN, "COMMON403", "금지된 요청입니다."),
-    _NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON404", "존재하지 않는 요청입니다."),
-
-    // 예약금 관련 에러
-    PAYMENT_INVALID_DEPOSIT(HttpStatus.BAD_REQUEST, "PAYMENT4001", "예약금이 유효하지 않습니다.");
+    _NOT_FOUND(HttpStatus.NOT_FOUND, "COMMON404", "존재하지 않는 요청입니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

@@ -2,7 +2,6 @@ name: Deploy
 on:
   push:
     branches:
-      - develop
       - main
 
 jobs:
@@ -43,7 +42,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
 
       - name: 도커 이미지 빌드
-        run: docker build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be .
+        run: docker build --platform linux/amd64 -t ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest .
 
       - name: 도커 이미지 푸시
         run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
@@ -64,7 +63,7 @@ jobs:
           aws ec2 authorize-security-group-ingress \
             --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
             --ip-permissions \
-              'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
+            'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
 
       - name: SSH Key 설정
         run: |
@@ -77,93 +76,26 @@ jobs:
           echo "  IdentityFile ~/.ssh/eatsfine-ec2-key.pem" >> ~/.ssh/config
           echo "  StrictHostKeyChecking no" >> ~/.ssh/config
 
-      - name: 배포 대상 판단 (nginx 기준)
+      - name: EC2 배포
         run: |
-          CURRENT=$(ssh -T eatsfine-ec2 << 'EOF' | tail -n 1
-            if docker ps --format '{{.Names}}' | grep -q '^blue$'; then
-              echo blue
-            else
-              echo green
-            fi
-          EOF
-          )
-    
-    
-          echo "CURRENT_UPSTREAM=$CURRENT" >> $GITHUB_ENV
-            
-          if [ "$CURRENT" = "blue" ]; then
-            echo "TARGET_UPSTREAM=green" >> $GITHUB_ENV
-            echo "TARGET_PORT=${{ secrets.GREEN_PORT }}" >> $GITHUB_ENV
-          else
-            echo "TARGET_UPSTREAM=blue" >> $GITHUB_ENV
-            echo "TARGET_PORT=${{ secrets.BLUE_PORT }}" >> $GITHUB_ENV
-          fi
-
-      - name: GitHub Actions - TARGET 컨테이너 포트 오픈
-        run: |
-          aws ec2 authorize-security-group-ingress \
-            --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
-            --ip-permissions \
-              'IpProtocol=tcp,FromPort=${{ env.TARGET_PORT }},ToPort=${{ env.TARGET_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
-    
-    
-
-      - name: 도커 이미지 풀링 및 컨테이너 실행
-        run: |
-          ssh eatsfine-ec2 << 'EOF'
+          ssh eatsfine-ec2 << EOF
             set -e
-          
-            CONFIG_DIR=/home/ec2-user/config/eatsfine
-            DEPLOY_DIR=/home/ec2-user/deploy
-          
-            # 필요한 프로필 파일을 서버로 복사합니다.
-            if [ "${{ env.TARGET_UPSTREAM }}" = "blue" ]; then
-              echo "${{ secrets.APPLICATION_BLUE_YML }}" | base64 --decode > ${CONFIG_DIR}/application-blue.yml
-            else
-              echo "${{ secrets.APPLICATION_GREEN_YML }}" | base64 --decode > ${CONFIG_DIR}/application-green.yml
-            fi
+            cd /home/ec2-user/deploy
           
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
-            docker compose -f /home/ec2-user/deploy/docker-compose-${{ env.TARGET_UPSTREAM }}.yml up -d
-            
+          
+            docker compose down
+            docker compose up -d
+          
+            # 불필요한 도커 이미지 및 컨테이너 정리
+            docker image prune -f
+          
             docker ps
-          EOF
-
-      - name: 컨테이너 기동 대기
-        run: sleep 10
-
-      - name: 새로 실행한 서버 컨테이너 헬스 체크
-        uses: jtalk/url-health-check-action@v3
-        with:
-          url: http://${{ secrets.LIVE_SERVER_IP }}:${{ env.TARGET_PORT }}/api/v1/deploy/health-check
-          max-attempts: 10
-          retry-delay: 10s
-
-      - name: Nginx 의 대상 서버를 새로 실행한 컨테이너쪽으로 전환
-        run: |
-          ssh eatsfine-ec2 << 'EOF'
-            set -e
-            # 컨테이너 내부의 파일에 직접 쓰기 (sh 사용, 경로 이슈 해결)
-            docker exec -i nginx sh -c 'echo "set \$service_url ${{ env.TARGET_UPSTREAM }};" > /etc/nginx/conf.d/service-env.inc && nginx -s reload'
-          EOF
-      - name: 기존 배포 컨테이너 정지
-        run: |
-          ssh eatsfine-ec2 << 'EOF'
-            set -e
-            for C in blue green; do
-              if docker ps -a --format '{{.Names}}' | grep -q "^$C$"; then
-                if [ "$C" != "${{ env.TARGET_UPSTREAM }}" ]; then
-                  docker stop "$C" || true
-                  docker rm "$C" || true
-                fi
-              fi
-            done
           EOF
       - name: GitHub Actions - SSH 및 컨테이너 실제 포트 접근 권한 제거
         if: always()
         run: |
-          aws ec2 revoke-security-group-ingress \
-          --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
-          --ip-permissions \
-            'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]' \
-            'IpProtocol=tcp,FromPort=${{env.TARGET_PORT}},ToPort=${{env.TARGET_PORT}},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'
+            aws ec2 revoke-security-group-ingress \
+              --group-id ${{ secrets.EC2_SECURITY_GROUP_ID }} \
+              --ip-permissions \
+                'IpProtocol=tcp,FromPort=${{ secrets.EC2_SSH_PORT }},ToPort=${{ secrets.EC2_SSH_PORT }},IpRanges=[{CidrIp=${{ steps.GITHUB_ACTIONS_IP.outputs.ipv4 }}/32}]'

@@ -13,7 +13,10 @@ public enum StoreErrorStatus implements BaseErrorCode {
     _STORE_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE404", "해당하는 가게를 찾을 수 없습니다."),
 
     _STORE_DETAIL_NOT_FOUND(HttpStatus.NOT_FOUND, "STORE_DETAIL404", "가게 상세 정보를 찾을 수 없습니다."),
-    _STORE_NOT_OPEN_ON_DAY(HttpStatus.NOT_FOUND,"STORE4041" , "해당 영업시간 정보를 찾을 수 없습니다."),;
+    _STORE_NOT_OPEN_ON_DAY(HttpStatus.NOT_FOUND,"STORE4041" , "해당 영업시간 정보를 찾을 수 없습니다."),
+
+    _STORE_NOT_OWNER(HttpStatus.FORBIDDEN, "STORE403", "해당 가게의 주인이 아닙니다."),
+    ;
 
 
     private final HttpStatus httpStatus;

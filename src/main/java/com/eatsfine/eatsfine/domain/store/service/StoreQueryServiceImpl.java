@@ -5,16 +5,16 @@ import com.eatsfine.eatsfine.domain.store.converter.StoreConverter;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.dto.projection.StoreSearchResult;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
-import com.eatsfine.eatsfine.domain.store.enums.Category;
-import com.eatsfine.eatsfine.domain.store.enums.StoreSortType;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDateTime;
@@ -23,9 +23,11 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class StoreQueryServiceImpl implements StoreQueryService {
 
     private final StoreRepository storeRepository;
+    private final S3Service s3Service;
 
     // 식당 검색
     @Override
@@ -38,7 +40,7 @@ public class StoreQueryServiceImpl implements StoreQueryService {
 
         Page<StoreSearchResult> resultPage = storeRepository.searchStores(
                 cond.getLat(), cond.getLng(), cond.getKeyword(), cond.getCategory(), cond.getSort(),
-                cond.getProvince(), cond.getCity(), cond.getDistrict(), pageable
+                cond.getSido(), cond.getSigungu(), cond.getBname(), pageable
         );
 
         LocalDateTime now = LocalDateTime.now();
@@ -73,6 +75,15 @@ public class StoreQueryServiceImpl implements StoreQueryService {
         return StoreConverter.toDetailDto(store, isOpenNow(store, LocalDateTime.now()));
     }
 
+    // 식당 대표 이미지 조회
+    @Override
+    public StoreResDto.GetMainImageDto getMainImage(Long storeId) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        return StoreConverter.toGetMainImageDto(storeId, s3Service.toUrl(store.getMainImageKey()));
+    }
+
     // 현재 영업 여부 계산 (실시간 계산)
     @Override
     public boolean isOpenNow(Store store, LocalDateTime now) {
@@ -81,7 +92,7 @@ public class StoreQueryServiceImpl implements StoreQueryService {
 
         return store.findBusinessHoursByDay(dayOfWeek)
                 .map(bh -> {
-                    if (bh.isHoliday()) return false;
+                    if (bh.isClosed()) return false;
 
                     if ((bh.getBreakStartTime() != null && bh.getBreakEndTime() != null)) {
                         if (!time.isBefore(bh.getBreakStartTime()) && (time.isBefore(bh.getBreakEndTime()))) {

@@ -3,6 +3,9 @@ package com.eatsfine.eatsfine.domain.store.service;
 import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConverter;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.businesshours.validator.BusinessHoursValidator;
+import com.eatsfine.eatsfine.domain.businessnumber.validator.BusinessNumberValidator;
+import com.eatsfine.eatsfine.domain.image.exception.ImageException;
+import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.region.repository.RegionRepository;
 import com.eatsfine.eatsfine.domain.region.status.RegionErrorStatus;
@@ -12,38 +15,58 @@ import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
-import jakarta.transaction.Transactional;
+import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.ArrayList;
+import java.util.List;
+import com.eatsfine.eatsfine.global.s3.S3Service;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class StoreCommandServiceImpl implements StoreCommandService {
 
     private final StoreRepository storeRepository;
     private final RegionRepository regionRepository;
+    private final S3Service s3Service;
+    private final BusinessNumberValidator businessNumberValidator;
 
+    // 가게 등록
     @Override
     public StoreResDto.StoreCreateDto createStore(StoreReqDto.StoreCreateDto dto) {
-        Region region = regionRepository.findById(dto.regionId())
+
+        // TODO: 추후 Security Context 연동 시, 로그인된 사용자의 이름을 가져오도록 수정 예정
+        businessNumberValidator.validate(dto.businessNumberDto().businessNumber(), dto.businessNumberDto().startDate(), "홍길동");
+        log.info("사업자 번호 검증 성공: {}", dto.businessNumberDto().businessNumber());
+
+
+        Region region = regionRepository.findBySidoAndSigunguAndBname(
+                dto.sido(), dto.sigungu(), dto.bname()
+                )
                 .orElseThrow(() -> new StoreException(RegionErrorStatus._REGION_NOT_FOUND));
 
         // 영업시간 정상 여부 검증
-        BusinessHoursValidator.validate(dto.businessHours());
+        BusinessHoursValidator.validateForCreate(dto.businessHours());
 
         Store store = Store.builder()
                 .owner(null) // User 도메인 머지 후 owner 처리 예정
                 .storeName(dto.storeName())
-                .businessNumber(dto.businessNumber())
+                .businessNumber(dto.businessNumberDto().businessNumber())
                 .description(dto.description())
                 .address(dto.address())
-                .mainImageUrl(null) // 별도 API로 구현
+                .mainImageKey(null) // 별도 API로 구현
                 .region(region)
+                .latitude(dto.latitude())
+                .longitude(dto.longitude())
                 .phoneNumber(dto.phoneNumber())
                 .category(dto.category())
                 .bookingIntervalMinutes(dto.bookingIntervalMinutes())
-                .minPrice(dto.minPrice())
                 .depositRate(dto.depositRate())
                 .build();
 
@@ -55,6 +78,54 @@ public class StoreCommandServiceImpl implements StoreCommandService {
         Store savedStore = storeRepository.save(store);
 
         return StoreConverter.toCreateDto(savedStore);
+    }
+
+    // 가게 기본 정보 수정 (필드)
+    @Override
+    public StoreResDto.StoreUpdateDto updateBasicInfo(Long storeId, StoreReqDto.StoreUpdateDto dto) {
+        Store store = storeRepository.findById(storeId)
+                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        store.updateBasicInfo(dto);
+        List<String> updatedFields = extractUpdatedFields(dto);
+
+        return StoreConverter.toUpdateDto(storeId, updatedFields);
+    }
+
+    // 수정된 필드 목록
+    public List<String> extractUpdatedFields(StoreReqDto.StoreUpdateDto dto) {
+        List<String> updated = new ArrayList<>();
+
+        if (dto.storeName() != null) updated.add("storeName");
+        if (dto.description() != null) updated.add("description");
+        if (dto.phoneNumber() != null) updated.add("phoneNumber");
+        if (dto.category() != null) updated.add("category");
+        if (dto.depositRate() != null) updated.add("depositRate");
+        if (dto.bookingIntervalMinutes() != null) updated.add("bookingIntervalMinutes");
+
+        return updated;
+    }
+    // 가게 메인 이미지 등록
+    @Override
+    public StoreResDto.UploadMainImageDto uploadMainImage(Long storeId, MultipartFile file) {
+        Store store = storeRepository.findById(storeId).orElseThrow(
+                () -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND)
+        );
+
+        if(file.isEmpty()) {
+            throw new ImageException(ImageErrorStatus.EMPTY_FILE);
+        }
+
+        if(store.getMainImageKey() != null) {
+            s3Service.deleteByKey(store.getMainImageKey());
+        }
+
+        String key = s3Service.upload(file, "stores/" + storeId + "/main");
+        store.updateMainImageKey(key);
+
+        String mainImageUrl = s3Service.toUrl(store.getMainImageKey());
+
+        return StoreConverter.toUploadMainImageDto(store.getId(), mainImageUrl);
     }
 
 }

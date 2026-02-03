@@ -1,14 +1,19 @@
 package com.eatsfine.eatsfine.domain.booking.entity;
 
+import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingMenu;
 import com.eatsfine.eatsfine.domain.booking.entity.mapping.BookingTable;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.eatsfine.domain.payment.entity.Payment;
+import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
+import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
+import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -59,7 +64,19 @@ public class Booking extends BaseEntity {
     private LocalTime bookingTime;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 20, nullable = false)
     private BookingStatus status;
+
+    @Builder.Default
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<BookingMenu> bookingMenus = new ArrayList<>();
+
+    public void addBookingMenu(BookingMenu bookingMenu) {
+        this.bookingMenus.add(bookingMenu);
+        if (bookingMenu.getBooking() != this) {
+            bookingMenu.confirmBooking(this);
+        }
+    }
 
     public void addBookingTable(StoreTable storeTable) {
         BookingTable bookingTable = BookingTable.builder()
@@ -69,10 +86,30 @@ public class Booking extends BaseEntity {
         this.bookingTables.add(bookingTable);
     }
 
-    private Integer depositAmount;
+    private BigDecimal depositAmount;
+
+    private String cancelReason;
 
     public void confirm() {
         this.status = BookingStatus.CONFIRMED;
     }
 
+    public void cancel(String cancelReason)
+    {
+        this.status = BookingStatus.CANCELED;
+        this.cancelReason = cancelReason;
+    }
+
+    //예약과 관련된 결제 중 결제 완료된 결제키 조회
+    public String getSuccessPaymentKey() {
+        return this.payments.stream()
+                .filter(p -> p.getPaymentStatus() == PaymentStatus.COMPLETED)
+                .map(Payment::getPaymentKey)
+                .findFirst()
+                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
+    }
+
+    public void setDepositAmount(BigDecimal totalDeposit) {
+        this.depositAmount = totalDeposit;
+    }
 }

@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Getter
-@SQLDelete(sql = "UPDATE store_table SET is_deleted = true WHERE id = ?")
+@SQLDelete(sql = "UPDATE store_table SET is_deleted = true, deleted_at = CURRENT_TIMESTAMP WHERE id = ?")
 @SQLRestriction("is_deleted = false")
 @Table(name = "store_table")
 public class StoreTable extends BaseEntity {
@@ -69,4 +69,30 @@ public class StoreTable extends BaseEntity {
 
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
+
+    // 테이블 번호 변경
+    public void updateTableNumber(String tableNumber) {
+        this.tableNumber = tableNumber;
+    }
+
+    // 테이블 좌석 수 변경
+    public void updateSeatCount(int minSeatCount, int maxSeatCount) {
+        this.minSeatCount = minSeatCount;
+        this.maxSeatCount = maxSeatCount;
+    }
+
+    // 테이블 유형 변경
+    public void updateSeatsType(SeatsType seatsType) {
+        this.seatsType = seatsType;
+    }
+
+    // 테이블 이미지 업로드
+    public void updateTableImage(String imageKey) {
+        this.tableImageUrl = imageKey;
+    }
+
+    // 테이블 이미지 삭제
+    public void deleteTableImage() {
+        this.tableImageUrl = null;
+    }
 }

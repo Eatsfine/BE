@@ -9,6 +9,7 @@ import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -32,13 +33,13 @@ public class Payment extends BaseEntity {
     private String orderId;
 
     @Column(name = "amount", nullable = false)
-    private Integer amount;
+    private BigDecimal amount;
 
     @Column(name = "payment_key")
     private String paymentKey;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "payment_provider", nullable = false)
+    @Column(name = "payment_provider")
     private PaymentProvider paymentProvider;
 
     @Enumerated(EnumType.STRING)
@@ -59,14 +60,24 @@ public class Payment extends BaseEntity {
     @Column(name = "payment_type", nullable = false)
     private PaymentType paymentType;
 
-    public void setPaymentKey(String paymentKey) {
-        this.paymentKey = paymentKey;
-    }
+    @Column(name = "receipt_url")
+    private String receiptUrl;
 
-    public void completePayment(LocalDateTime approvedAt, PaymentMethod method, String paymentKey) {
+    public void completePayment(LocalDateTime approvedAt, PaymentMethod method, String paymentKey,
+            PaymentProvider provider, String receiptUrl) {
         this.paymentStatus = PaymentStatus.COMPLETED;
         this.approvedAt = approvedAt;
         this.paymentMethod = method;
         this.paymentKey = paymentKey;
+        this.paymentProvider = provider;
+        this.receiptUrl = receiptUrl;
+    }
+
+    public void failPayment() {
+        this.paymentStatus = PaymentStatus.FAILED;
+    }
+
+    public void cancelPayment() {
+        this.paymentStatus = PaymentStatus.REFUNDED;
     }
 }
