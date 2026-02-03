@@ -1,6 +1,8 @@
 package com.eatsfine.eatsfine.domain.user.service;
 
 
+import com.eatsfine.eatsfine.domain.image.exception.ImageException;
+import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
 import com.eatsfine.eatsfine.domain.user.converter.UserConverter;
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
@@ -9,19 +11,25 @@ import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
+import com.eatsfine.eatsfine.global.s3.S3Service;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final S3Service s3Service;
 
     @Override
     public UserResponseDto.JoinResultDto signup(UserRequestDto.JoinDto joinDto) {
@@ -73,23 +81,65 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
+    @Transactional
     public String updateMemberInfo(UserRequestDto.UpdateDto updateDto,
                                    MultipartFile profileImage,
                                    HttpServletRequest request) {
+
         User user = getCurrentUser(request);
 
+        //닉네임/전화번호 부분 수정
         if (updateDto.getNickName() != null && !updateDto.getNickName().isBlank()) {
             user.updateNickname(updateDto.getNickName());
         }
         if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
             user.updatePhoneNumber(updateDto.getPhoneNumber());
         }
-        if (profileImage != null && !profileImage.isEmpty()) {
-            throw new UserException(UserErrorStatus.PROFILE_IMAGE_UPLOAD_NOT_SUPPORTED);
-        }
 
+        //프로필 이미지 부분 수정 (파일이 들어온 경우에만)
+        if (profileImage != null && !profileImage.isEmpty()) {
+
+            validateProfileImage(profileImage);
+
+            String oldKey = user.getProfileImage();
+
+            String directory = "users/profile/" + user.getId();
+
+            String newKey = s3Service.upload(profileImage, directory);
+
+            user.updateProfileImage(newKey);
+
+            // 기존 이미지가 있었으면 삭제
+            if (oldKey != null && !oldKey.isBlank()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCommit() {
+                        try {
+                            s3Service.deleteByKey(oldKey);
+                        } catch (Exception e) {
+                            log.warn("이전 프로필 이미지를 삭제하는 데 실패했습니다. oldKey={}", oldKey, e);
+                        }
+                    }
+                });
+            }
+        }
         return "회원 정보가 수정되었습니다.";
     }
+
+    private void validateProfileImage(MultipartFile file) {
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            throw new ImageException(ImageErrorStatus.INVALID_FILE_TYPE);
+        }
+
+        // 용량 제한 (5MB)
+        long maxBytes = 5L * 1024 * 1024;
+        if (file.getSize() > maxBytes) {
+            throw new ImageException(ImageErrorStatus.FILE_TOO_LARGE);
+        }
+    }
+
+
 
     @Override
     public void withdraw(HttpServletRequest request) {
