@@ -15,6 +15,7 @@ public enum ImageErrorStatus implements BaseErrorCode {
     _IMAGE_NOT_FOUND(HttpStatus.NOT_FOUND, "IMAGE404", "해당하는 이미지가 존재하지 않습니다."),
     _INVALID_IMAGE_KEY(HttpStatus.BAD_REQUEST, "IMAGE4003", "유효하지 않은 이미지 키입니다."),
     _INVALID_S3_DIRECTORY(HttpStatus.BAD_REQUEST, "IMAGE4004", "유효하지 않은 S3 디렉토리입니다."),
+    FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, "IMAGE4005", "첨부하는 이미지의 크기가 너무 큽니다.")
     ;
 
 
