@@ -88,26 +88,28 @@ public class UserServiceImpl implements UserService{
 
         User user = getCurrentUser(request);
 
+        boolean changed = false;
+
         //닉네임/전화번호 부분 수정
         if (updateDto.getNickName() != null && !updateDto.getNickName().isBlank()) {
             user.updateNickname(updateDto.getNickName());
+            changed = true;
         }
         if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
             user.updatePhoneNumber(updateDto.getPhoneNumber());
+            changed = true;
         }
 
         //프로필 이미지 부분 수정 (파일이 들어온 경우에만)
         if (profileImage != null && !profileImage.isEmpty()) {
-
             validateProfileImage(profileImage);
 
             String oldKey = user.getProfileImage();
-
             String directory = "users/profile/" + user.getId();
-
             String newKey = s3Service.upload(profileImage, directory);
 
             user.updateProfileImage(newKey);
+            changed = true;
 
             // 기존 이미지가 있었으면 삭제
             if (oldKey != null && !oldKey.isBlank()) {
@@ -123,6 +125,21 @@ public class UserServiceImpl implements UserService{
                 });
             }
         }
+
+        if (!changed) {
+            log.info("[Service] No changes detected. userId={}", user.getId());
+            return "변경된 내용이 없습니다.";
+        }
+
+        userRepository.save(user);
+        userRepository.flush();
+        
+        log.info("[Service] Updated userId={}, nickname={}, phone={}, profileKey={}",
+                user.getId(),
+                user.getNickName(),
+                user.getPhoneNumber(),
+                user.getProfileImage());
+
         return "회원 정보가 수정되었습니다.";
     }
 

@@ -10,7 +10,10 @@ import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,6 +26,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+
+@Tag(name = "User", description = "회원 관리 API")
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class UserController {
@@ -69,20 +75,35 @@ public class UserController {
         return ApiResponse.onSuccess(userService.getMemberInfo(request));
     }
 
-    @PutMapping(value = "/api/v1/member/info", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/api/v1/member/info")
     @Operation(
-            summary = "회원 정보 수정 API - 인증 필요",
-            description = "회원 정보를 수정하는 API입니다. (프로필 이미지 포함)",
+            summary = "닉네임/전화번호 수정 API - 인증 필요",
+            description = "닉네임/전화번호만 수정합니다. (JSON)",
             security = {@SecurityRequirement(name = "JWT")}
     )
-    public ResponseEntity<ApiResponse<String>> updateMyInfo(
-            @RequestPart("updateDto") @Valid UserRequestDto.UpdateDto updateDto,
-            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage,
+    public ResponseEntity<ApiResponse<String>> updateMyInfoText(
+            @RequestBody @Valid UserRequestDto.UpdateDto updateDto, HttpServletRequest request
+    ) {
+        String result = userService.updateMemberInfo(updateDto, null, request);
+        return ResponseEntity.ok(ApiResponse.onSuccess(result));
+    }
+
+    @PutMapping(
+            value = "/api/v1/member/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Operation(
+            summary = "프로필 이미지 수정 API - 인증 필요",
+            description = "프로필 이미지만 수정합니다. (multipart/form-data)",
+            security = {@SecurityRequirement(name = "JWT")}
+    )
+    public ResponseEntity<ApiResponse<String>> updateProfileImage(
+            @RequestPart(value = "profileImage") MultipartFile profileImage,
             HttpServletRequest request
     ) {
-        userService.updateMemberInfo(updateDto, profileImage, request);
-        return ResponseEntity.ok(ApiResponse.onSuccess("회원 정보가 수정되었습니다."));
+        String result = userService.updateMemberInfo(null, profileImage, request);
+        return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
+
+
 
     @DeleteMapping("/api/auth/withdraw")
     @Operation(
