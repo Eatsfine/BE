@@ -1,7 +1,11 @@
 package com.eatsfine.eatsfine.domain.store.entity;
 
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
+import com.eatsfine.eatsfine.domain.businesshours.status.BusinessHoursErrorStatus;
+import com.eatsfine.eatsfine.domain.menu.entity.Menu;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
+import com.eatsfine.eatsfine.domain.store.dto.StoreReqDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
 import com.eatsfine.eatsfine.domain.store.enums.DepositRate;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
@@ -9,13 +13,16 @@ import com.eatsfine.eatsfine.domain.tableimage.entity.TableImage;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
-import com.eatsfine.eatsfine.global.entity.BaseEntity;
+
+import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.DayOfWeek;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -62,7 +69,7 @@ public class Store extends BaseEntity {
     private String address;
 
     @Column(name = "main_image_url")
-    private String mainImageUrl;
+    private String mainImageKey;
 
     @Builder.Default
     @Column(name = "rating", precision = 2, scale = 1, nullable = false)
@@ -76,9 +83,6 @@ public class Store extends BaseEntity {
     @Column(name = "booking_interval_minutes", nullable = false)
     private int bookingIntervalMinutes = 30;
 
-    @Column(name = "min_price", nullable = false)
-    private int minPrice;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "deposit_rate", nullable = false)
     private DepositRate depositRate;
@@ -88,12 +92,15 @@ public class Store extends BaseEntity {
     private List<BusinessHours> businessHours = new ArrayList<>();
 
     @Builder.Default
+    @BatchSize(size = 100)
+    @OneToMany(mappedBy = "store", cascade = CascadeType.ALL)
+    private List<Menu> menus = new ArrayList<>();
+
+
+    @Builder.Default
     @OneToMany(mappedBy = "store", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TableImage> tableImages = new ArrayList<>();
 
-    // StoreTable이 아닌 TableLayout 엔티티 참조
-//    @OneToMany(mappedBy = "store")
-//    private List<StoreTable> storeTables = new ArrayList<>();
 
     @Builder.Default
     @OneToMany(mappedBy = "store")
@@ -109,6 +116,22 @@ public class Store extends BaseEntity {
         businessHours.assignStore(null);
     }
 
+    // 영업시간 변경
+    public void updateBusinessHours(DayOfWeek dayOfWeek, LocalTime open, LocalTime close, boolean isClosed) {
+        BusinessHours businessHours = this.businessHours.stream()
+                .filter(bh -> bh.getDayOfWeek() == dayOfWeek)
+                .findFirst()
+                .orElseThrow(() -> new BusinessHoursException(BusinessHoursErrorStatus._BUSINESS_HOURS_DAY_NOT_FOUND));
+
+        businessHours.update(open, close, isClosed);
+    }
+
+    // 메뉴 추가
+    public void addMenu(Menu menu) {
+        this.menus.add(menu);
+        menu.assignStore(this);
+    }
+
     public void addTableImage(TableImage tableImage) {
         this.tableImages.add(tableImage);
         tableImage.assignStore(this);
@@ -117,6 +140,11 @@ public class Store extends BaseEntity {
     public void removeTableImage(TableImage tableImage) {
         this.tableImages.remove(tableImage);
         tableImage.assignStore(null);
+    }
+
+    // 가게 메인 이미지 등록
+    public void updateMainImageKey(String mainImageKey) {
+        this.mainImageKey = mainImageKey;
     }
 
     // 특정 요일의 영업시간 조회 메서드
@@ -135,12 +163,33 @@ public class Store extends BaseEntity {
                 .findFirst();
     }
 
-    public BigDecimal calculateDepositAmount() {
-        return BigDecimal.valueOf(minPrice)
-                .multiply(BigDecimal.valueOf(depositRate.getPercent()))
-                .divide(BigDecimal.valueOf(100), 0, RoundingMode.DOWN);
-    }
 
-    // StoreTable에 대한 연관관계 편의 메서드는 추후 추가 예정
+    // 가게 기본 정보 변경 메서드
+    public void updateBasicInfo(StoreReqDto.StoreUpdateDto dto) {
+        if(dto.storeName() != null) {
+            this.storeName = dto.storeName();
+        }
+
+        if(dto.description() != null) {
+            this.description = dto.description();
+        }
+
+        if(dto.phoneNumber() != null) {
+            this.phoneNumber = dto.phoneNumber();
+        }
+
+        if(dto.category() != null) {
+            this.category = dto.category();
+        }
+
+
+        if(dto.depositRate() != null) {
+            this.depositRate = dto.depositRate();
+        }
+
+        if(dto.bookingIntervalMinutes() != null) {
+            this.bookingIntervalMinutes = dto.bookingIntervalMinutes();
+        }
+    }
 
 }
