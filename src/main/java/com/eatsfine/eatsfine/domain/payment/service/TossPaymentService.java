@@ -9,12 +9,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
+import org.springframework.beans.factory.annotation.Value;
 
 @Slf4j
 @Service
 public class TossPaymentService {
 
     private final RestClient tossPaymentClient;
+
+    @Value("${payment.toss.widget-secret-key}")
+    private String widgetSecretKey;
 
     public TossPaymentService(@Qualifier("tossPaymentClient") RestClient tossPaymentClient) {
         this.tossPaymentClient = tossPaymentClient;
@@ -44,5 +48,21 @@ public class TossPaymentService {
             log.error("Toss Payment Cancel API Error", e);
             throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
         }
+    }
+
+    public void verifyWebhookSignature(String jsonBody, String signature, String timestamp) throws Exception {
+        String payload = timestamp + "." + jsonBody;
+        String calculatedSignature = hmacSha256(payload, widgetSecretKey);
+
+        if (!signature.contains("v1:" + calculatedSignature)) {
+            throw new SecurityException("Signature verification failed");
+        }
+    }
+
+    private String hmacSha256(String data, String key) throws Exception {
+        javax.crypto.Mac sha256_HMAC = javax.crypto.Mac.getInstance("HmacSHA256");
+        javax.crypto.spec.SecretKeySpec secret_key = new javax.crypto.spec.SecretKeySpec(key.getBytes(java.nio.charset.StandardCharsets.UTF_8), "HmacSHA256");
+        sha256_HMAC.init(secret_key);
+        return java.util.Base64.getEncoder().encodeToString(sha256_HMAC.doFinal(data.getBytes(java.nio.charset.StandardCharsets.UTF_8)));
     }
 }
