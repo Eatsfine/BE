@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.domain.payment.controller;
 
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentWebhookDTO;
+import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
 import com.eatsfine.eatsfine.domain.payment.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -65,7 +66,19 @@ public class PaymentWebhookController {
         }
 
         log.info("Webhook received: orderId={}, status={}", dto.data().orderId(), dto.data().status());
-        paymentService.processWebhook(dto);
+
+        try {
+            paymentService.processWebhook(dto);
+        } catch (PaymentException e) {
+            // 비즈니스 로직 오류(결제 없음 등)는 재시도해도 해결되지 않으므로 200 OK 반환하여 재시도 중단
+            log.error("Webhook processing failed (Business Logic): {}", e.getMessage());
+            return ResponseEntity.ok("Ignored: " + e.getMessage());
+        } catch (Exception e) {
+            // 시스템 오류(DB 접속 불가 등)는 재시도 필요하므로 500 반환
+            log.error("Webhook processing failed (System Error)", e);
+            return ResponseEntity.internalServerError().body("Internal Server Error");
+        }
+
         return ResponseEntity.ok("Received");
     }
 
