@@ -3,14 +3,13 @@ package com.eatsfine.eatsfine.domain.store.entity;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.region.entity.Region;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
-import com.eatsfine.eatsfine.domain.store.enums.StoreApprovalStatus;
-import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.domain.tableimage.entity.TableImage;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
-import com.eatsfine.eatsfine.global.entity.BaseEntity;
+import com.eatsfine.eatsfine.global.common.BaseEntity;
+
 import jakarta.persistence.*;
 import lombok.*;
 
