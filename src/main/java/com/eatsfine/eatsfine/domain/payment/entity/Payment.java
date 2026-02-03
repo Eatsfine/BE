@@ -25,6 +25,10 @@ public class Payment extends BaseEntity {
     @Column(name = "payment_id")
     private Long id;
 
+    // 낙관적 락을 위한 버전 필드
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)
     private Booking booking;
