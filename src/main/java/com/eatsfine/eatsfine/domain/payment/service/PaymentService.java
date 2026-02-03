@@ -247,6 +247,14 @@ public class PaymentService {
                 }
 
                 if (targetStatus == PaymentStatus.COMPLETED) {
+                        // 금액 검증
+                        if (data.totalAmount() == null || payment.getAmount().compareTo(data.totalAmount()) != 0) {
+                                log.error("Webhook amount verification failed for OrderID: {}. Expected: {}, Received: {}",
+                                                data.orderId(), payment.getAmount(), data.totalAmount());
+                                payment.failPayment();
+                                return;
+                        }
+
                         // Provider 파싱
                         PaymentProvider provider = null;
                         if (data.easyPay() != null) {
