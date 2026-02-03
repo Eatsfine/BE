@@ -252,6 +252,19 @@ public class PaymentService {
                         return;
                 }
 
+                // 상태 전환 유효성 검사
+                // COMPLETED 완료 처리는 오직 PENDING 상태에서만 가능
+                if (targetStatus == PaymentStatus.COMPLETED && payment.getPaymentStatus() != PaymentStatus.PENDING) {
+                        log.warn("Webhook skipped: Invalid state transition from {} to {} for OrderID {}",
+                                        payment.getPaymentStatus(), targetStatus, data.orderId());
+                        return;
+                }
+                if (targetStatus == PaymentStatus.REFUNDED && payment.getPaymentStatus() != PaymentStatus.COMPLETED) {
+                        log.warn("Webhook skipped: Invalid state transition from {} to {} for OrderID {}",
+                                        payment.getPaymentStatus(), targetStatus, data.orderId());
+                        return;
+                }
+
                 if (targetStatus == PaymentStatus.COMPLETED) {
                         // 금액 검증
                         if (data.totalAmount() == null || payment.getAmount().compareTo(data.totalAmount()) != 0) {
