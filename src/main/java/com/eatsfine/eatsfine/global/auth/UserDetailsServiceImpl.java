@@ -25,7 +25,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         String password = user.getPassword();
         if (password == null) {
-            password = "";
+            throw new UsernameNotFoundException("비밀번호 기반 로그인 대상이 아닙니다.");
         }
 
         return new User(user.getEmail(), password, List.of());
