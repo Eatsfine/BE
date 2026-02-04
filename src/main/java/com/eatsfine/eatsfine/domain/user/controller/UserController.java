@@ -10,7 +10,6 @@ import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -75,6 +74,7 @@ public class UserController {
         return ApiResponse.onSuccess(userService.getMemberInfo(request));
     }
 
+
     @PatchMapping(value = "/api/v1/member/info")
     @Operation(
             summary = "닉네임/전화번호 수정 API - 인증 필요",
@@ -87,6 +87,7 @@ public class UserController {
         String result = userService.updateMemberInfo(updateDto, null, request);
         return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
+
 
     @PutMapping(
             value = "/api/v1/member/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -104,7 +105,6 @@ public class UserController {
     }
 
 
-
     @DeleteMapping("/api/auth/withdraw")
     @Operation(
             summary = "회원 탈퇴 API - 인증 필요",
@@ -116,6 +116,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다."));
     }
 
+
     @DeleteMapping("/api/auth/logout")
     @Operation(
             summary = "회원 로그아웃 API - 인증 필요",
@@ -124,7 +125,10 @@ public class UserController {
     )
     public ResponseEntity<ApiResponse<String>> logout(HttpServletRequest request) {
         userService.logout(request);
-        return ResponseEntity.ok(ApiResponse.onSuccess("로그아웃이 되었습니다."));
+        ResponseCookie clearCookie = authCookieProvider.clearRefreshTokenCookie();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                .body(ApiResponse.onSuccess("로그아웃이 되었습니다."));
     }
 
 }
