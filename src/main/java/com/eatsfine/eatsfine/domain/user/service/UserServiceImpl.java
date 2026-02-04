@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.user.service;
 
 import com.eatsfine.eatsfine.domain.image.exception.ImageException;
 import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
+import com.eatsfine.eatsfine.domain.term.repository.TermRepository;
 import com.eatsfine.eatsfine.domain.user.converter.UserConverter;
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
@@ -27,11 +28,13 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService{
     private final UserRepository userRepository;
+    private final TermRepository termRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final S3Service s3Service;
 
     @Override
+    @Transactional
     public UserResponseDto.JoinResultDto signup(UserRequestDto.JoinDto joinDto) {
         // 1) 이메일 중복 체크
         if (userRepository.existsByEmail(joinDto.getEmail())) {
@@ -41,10 +44,13 @@ public class UserServiceImpl implements UserService{
         // 2) 비밀번호 인코딩 후 유저 생성
         String encoded = passwordEncoder.encode(joinDto.getPassword());
         User user = UserConverter.toUser(joinDto, encoded);
+        User savedUser = userRepository.save(user);
 
-        // 3) 저장 및 응답
-        User saved = userRepository.save(user);
-        return UserConverter.toJoinResult(saved);
+        // 3) 약관 동의 내역 저장
+        termRepository.save(UserConverter.toUserTerm(joinDto, savedUser));
+
+        // 4) 응답 반환
+        return UserConverter.toJoinResult(savedUser);
     }
 
     @Override
@@ -106,18 +112,36 @@ public class UserServiceImpl implements UserService{
 
             String oldKey = user.getProfileImage();
             String directory = "users/profile/" + user.getId();
+
+            // S3에 먼저 업로드
             String newKey = s3Service.upload(profileImage, directory);
 
             user.updateProfileImage(newKey);
             changed = true;
 
-            // 기존 이미지가 있었으면 삭제
+            // 트랜잭션 롤백 시 방금 올린 새 파일 삭제 (S3 고아 파일 방지)
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status == STATUS_ROLLED_BACK) {
+                        try {
+                            s3Service.deleteByKey(newKey);
+                            log.info("트랜잭션 롤백으로 인해 업로드된 새 이미지를 삭제했습니다. key={}", newKey);
+                        } catch (Exception e) {
+                            log.error("롤백 후 새 이미지 삭제 실패. key={}", newKey, e);
+                        }
+                    }
+                }
+            });
+
+            // 트랜잭션 커밋 성공 시 기존(옛날) 파일 삭제
             if (oldKey != null && !oldKey.isBlank()) {
                 TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                     @Override
                     public void afterCommit() {
                         try {
                             s3Service.deleteByKey(oldKey);
+                            log.info("프로필 수정 완료 후 이전 이미지를 삭제했습니다. oldKey={}", oldKey);
                         } catch (Exception e) {
                             log.warn("이전 프로필 이미지를 삭제하는 데 실패했습니다. oldKey={}", oldKey, e);
                         }
@@ -133,7 +157,7 @@ public class UserServiceImpl implements UserService{
 
         userRepository.save(user);
         userRepository.flush();
-        
+
         log.info("[Service] Updated userId={}, nickname={}, phone={}, profileKey={}",
                 user.getId(),
                 user.getNickName(),
@@ -157,17 +181,26 @@ public class UserServiceImpl implements UserService{
     }
 
 
-
     @Override
+    @Transactional
     public void withdraw(HttpServletRequest request) {
         User user = getCurrentUser(request);
 
-        user.updateRefreshToken(null);
+        String profileImage = user.getProfileImage();
+        if (profileImage != null && !profileImage.isBlank()) {
+            try {
+                s3Service.deleteByKey(profileImage);
+            } catch (Exception e) {
+                log.warn("프로필 이미지 삭제 실패. key={}", profileImage, e);
+            }
+        }
 
+        user.updateRefreshToken(null);
         userRepository.delete(user);
     }
 
     @Override
+    @Transactional
     public void logout(HttpServletRequest request) {
         User user = getCurrentUser(request);
 
