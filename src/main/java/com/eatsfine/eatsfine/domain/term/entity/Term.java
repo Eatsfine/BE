@@ -23,14 +23,11 @@ public class Term extends BaseEntity {
         @JoinColumn(name = "user_id", nullable = false, unique = true)
         private User user;
 
-        @Builder.Default
         @Column(name = "tos_consent", nullable = false)
-        private Boolean tosConsent = true;
+        private Boolean tosConsent;
 
-        @Builder.Default
         @Column(name = "privacy_consent", nullable = false)
-        private Boolean privacyConsent = true;
-
+        private Boolean privacyConsent;
 
         @Column(name = "marketing_consent", nullable = false)
         private Boolean marketingConsent;
