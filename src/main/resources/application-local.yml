@@ -34,3 +34,6 @@ cloud:
     s3:
       bucket: eatsfine-images
       base-url: https://eatsfine-images.s3.ap-northeast-2.amazonaws.com
+
+jwt:
+  secret: ${SECRET_KEY}

@@ -13,7 +13,8 @@ import com.eatsfine.eatsfine.domain.tableimage.entity.TableImage;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
-import com.eatsfine.eatsfine.global.entity.BaseEntity;
+
+import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.BatchSize;

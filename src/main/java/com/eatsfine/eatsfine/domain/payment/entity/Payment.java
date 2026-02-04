@@ -5,7 +5,7 @@ import com.eatsfine.eatsfine.domain.payment.enums.PaymentMethod;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentProvider;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentType;
-import com.eatsfine.eatsfine.global.entity.BaseEntity;
+import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 

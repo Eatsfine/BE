@@ -1,5 +1,8 @@
 package com.eatsfine.eatsfine.domain.user.entity;
 
+import com.eatsfine.eatsfine.domain.user.enums.Role;
+import com.eatsfine.eatsfine.domain.user.enums.SocialType;
+import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,9 +13,54 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 20)
+    private String nickName;
+
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    private String password;
+
+    @Column(nullable = false, length = 20)
+    private String phoneNumber;
+
+    @Enumerated(EnumType.STRING)
+    private Role role;
+
+    @Column(name = "social_id", unique = true)
+    private String socialId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "social_type")
+    private SocialType socialType;
+
+    @Column(nullable = true)
+    private String profileImage;
+
+    @Column(length = 500)
+    private String refreshToken;
+
+    public void updateNickname(String nickName){
+        this.nickName = nickName;
+    }
+
+    public void updatePhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public void updateEmail(String email) {
+        this.email = email;
+    }
+
+    public void updateProfileImage(String profileImage) {
+        this.profileImage = profileImage;
+    }
+
+    public void updateRefreshToken(String refreshToken){this.refreshToken = refreshToken;}
 }
