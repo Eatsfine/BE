@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.user.service;
+package com.eatsfine.eatsfine.domain.user.service.userService;
 
 
 import com.eatsfine.eatsfine.domain.image.exception.ImageException;
@@ -10,6 +10,7 @@ import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.service.userService.UserService;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import com.eatsfine.eatsfine.global.s3.S3Service;
@@ -26,7 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final TermRepository termRepository;
     private final PasswordEncoder passwordEncoder;

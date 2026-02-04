@@ -4,7 +4,7 @@ package com.eatsfine.eatsfine.domain.user.controller;
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
-import com.eatsfine.eatsfine.domain.user.service.UserService;
+import com.eatsfine.eatsfine.domain.user.service.userService.UserService;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
