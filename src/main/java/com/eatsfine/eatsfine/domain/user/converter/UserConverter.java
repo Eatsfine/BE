@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.user.converter;
 
+import com.eatsfine.eatsfine.domain.term.entity.Term;
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
 import com.eatsfine.eatsfine.domain.user.entity.User;
@@ -69,6 +70,15 @@ public class UserConverter {
                 .phoneNumber(dto.getPhoneNumber())
                 .password(encodedPassword)
                 .role(ROLE_CUSTOMER)               // 기본 권한
+                .build();
+    }
+
+    public static Term toUserTerm(UserRequestDto.JoinDto dto, User user) {
+        return Term.builder()
+                .user(user)                      // 생성된 유저와 매핑
+                .tosConsent(dto.getTosConsent()) // 서비스 이용약관 동의
+                .privacyConsent(dto.getPrivacyConsent()) // 개인정보 처리방침 동의
+                .marketingConsent(dto.getMarketingConsent()) // 마케팅 수신 동의
                 .build();
     }
 
