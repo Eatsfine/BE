@@ -87,14 +87,15 @@ public class UserConverter {
      소셜 유저 생성 (최초 소셜 가입 등)
      -소셜 로그인에서 email/nickname/phoneNumber 등을 확보한 후 엔티티 생성에 사용
      */
-    public static User toSocialUser(String email, String nickName, String phoneNumber, String socialId, SocialType socialType) {
+    public static User toSocialUser(String email, String nickName, String profileImage, String socialId, SocialType socialType) {
 
         return User.builder()
                 .email(email)
                 .nickName(nickName)
-                .phoneNumber(phoneNumber)
+                .profileImage(profileImage)
                 .socialId(socialId)
                 .socialType(socialType)
+                .phoneNumber("")
                 .role(ROLE_CUSTOMER)
                 .build();
     }
