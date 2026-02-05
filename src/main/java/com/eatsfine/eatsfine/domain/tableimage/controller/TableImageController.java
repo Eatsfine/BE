@@ -4,12 +4,14 @@ import com.eatsfine.eatsfine.domain.tableimage.dto.TableImageResDto;
 import com.eatsfine.eatsfine.domain.tableimage.service.TableImageCommandService;
 import com.eatsfine.eatsfine.domain.tableimage.service.TableImageQueryService;
 import com.eatsfine.eatsfine.domain.tableimage.status.TableImageSuccessStatus;
+import com.eatsfine.eatsfine.global.annotation.CurrentUser;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -35,11 +37,12 @@ public class TableImageController {
     @PreAuthorize("hasRole('OWNER')")
     ApiResponse<TableImageResDto.UploadTableImageDto> uploadTableImage(
             @RequestPart("file") List<MultipartFile> files,
-            @PathVariable Long storeId
-    ) {
+            @PathVariable Long storeId,
+            @CurrentUser User user
+            ) {
         return ApiResponse.of(
                 TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS,
-                tableImageCommandService.uploadTableImage(storeId, files)
+                tableImageCommandService.uploadTableImage(storeId, files, user.getUsername())
         );
     }
 
@@ -62,9 +65,10 @@ public class TableImageController {
     @PreAuthorize("hasRole('OWNER')")
     ApiResponse<TableImageResDto.DeleteTableImageDto> deleteTableImage(
             @PathVariable Long storeId,
-            @RequestBody List<Long> tableImageIds
+            @RequestBody List<Long> tableImageIds,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_DELETE_SUCCESS, tableImageCommandService.deleteTableImage(storeId, tableImageIds));
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_DELETE_SUCCESS, tableImageCommandService.deleteTableImage(storeId, tableImageIds, user.getUsername()));
     }
 
 

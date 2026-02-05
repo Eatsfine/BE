@@ -7,7 +7,7 @@ import java.util.List;
 
 public interface TableImageCommandService {
 
-    TableImageResDto.UploadTableImageDto uploadTableImage(Long storeId, List<MultipartFile> files);
+    TableImageResDto.UploadTableImageDto uploadTableImage(Long storeId, List<MultipartFile> files, String email);
 
-    TableImageResDto.DeleteTableImageDto deleteTableImage(Long storeId, List<Long> tableImageIds);
+    TableImageResDto.DeleteTableImageDto deleteTableImage(Long storeId, List<Long> tableImageIds, String email);
 }

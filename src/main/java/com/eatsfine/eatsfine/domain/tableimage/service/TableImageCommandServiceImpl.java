@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import com.eatsfine.eatsfine.domain.tableimage.converter.TableImageConverter;
 import com.eatsfine.eatsfine.domain.tableimage.dto.TableImageResDto;
 import com.eatsfine.eatsfine.domain.tableimage.entity.TableImage;
@@ -28,12 +29,12 @@ public class TableImageCommandServiceImpl implements TableImageCommandService {
     private final StoreRepository storeRepository;
     private final TableImageRepository tableImageRepository;
     private final S3Service s3Service;
+    private final StoreValidator storeValidator;
 
     // 가게 테이블 이미지 등록
-    public TableImageResDto.UploadTableImageDto uploadTableImage(Long storeId, List<MultipartFile> files) {
+    public TableImageResDto.UploadTableImageDto uploadTableImage(Long storeId, List<MultipartFile> files, String email) {
 
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+        Store store = storeValidator.validateStoreOwner(storeId, email);
 
         if(files == null || files.isEmpty() || files.stream().allMatch(MultipartFile::isEmpty)) {
             throw new ImageException(ImageErrorStatus.EMPTY_FILE);
@@ -55,9 +56,9 @@ public class TableImageCommandServiceImpl implements TableImageCommandService {
     }
 
     @Override
-    public TableImageResDto.DeleteTableImageDto deleteTableImage(Long storeId, List<Long> tableImageIds) {
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+    public TableImageResDto.DeleteTableImageDto deleteTableImage(Long storeId, List<Long> tableImageIds, String email) {
+
+        Store store = storeValidator.validateStoreOwner(storeId, email);
 
         List<TableImage> tableImages = tableImageIds.stream()
                         .map(id -> tableImageRepository.findByIdAndStore(id, store)
