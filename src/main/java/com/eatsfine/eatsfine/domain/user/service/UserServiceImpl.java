@@ -69,7 +69,7 @@ public class UserServiceImpl implements UserService{
         }
 
         // 3) 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         // 4) refreshToken 저장
