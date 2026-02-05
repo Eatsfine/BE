@@ -77,13 +77,8 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
             cookie.setHttpOnly(true);
             cookie.setMaxAge(COOKIE_EXPIRE_SECONDS);
 
-            // ⭐ 환경에 따라 설정
-            cookie.setSecure(false);  // 로컬 HTTP: false, 운영 HTTPS: true
-
-            // ⭐ 도메인 명시 (선택사항, 문제 있을 때만)
-            // cookie.setDomain("eatsfine.co.kr");  // 운영 환경
-            // cookie.setDomain("localhost");  // 로컬 환경
-
+            // 환경에 따라 설정
+            cookie.setSecure(true);  // 로컬 HTTP: false, 운영 HTTPS: true
             response.addCookie(cookie);
 
             log.info("[SAVE] AuthorizationRequest 쿠키 저장 완료 - name={}, path={}, maxAge={}, secure={}, domain={}",
@@ -108,7 +103,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(0);
-        cookie.setSecure(false);  // 저장할 때와 동일하게
+        cookie.setSecure(true);  // 저장할 때와 동일하게
         cookie.setAttribute("SameSite", "Lax");  // 저장할 때와 동일하게
         response.addCookie(cookie);
 

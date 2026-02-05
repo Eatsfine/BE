@@ -57,10 +57,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         OAuth2User oAuth2User = oauthToken.getPrincipal();
         Map<String, Object> attrs = oAuth2User.getAttributes();
 
-        // ✅ 디버깅 핵심 로그
         log.info("[OAuth2 SUCCESS] provider={}, attrs={}", provider, attrs);
 
-        // 카카오의 경우 id도 추출해두면 원인 파악에 큰 도움 됨
         String socialId = extractSocialId(socialType, attrs);
         log.info("[OAuth2 SUCCESS] provider={}, socialId={}", provider, socialId);
 
@@ -68,7 +66,6 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         log.info("[OAuth2 SUCCESS] provider={}, extractedEmail={}", provider, email);
 
         if (email == null || email.isBlank()) {
-            // 카카오 email 관련 상태값도 같이 찍어주면 디버깅 끝남
             if (socialType == SocialType.KAKAO) {
                 logKakaoAccountStatus(attrs);
             }
@@ -133,7 +130,6 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
     private String extractSocialId(SocialType socialType, Map<String, Object> attributes) {
         if (socialType == SocialType.GOOGLE) {
-            // 구글은 OIDC면 보통 sub가 안정적 식별자 (환경에 따라 없을 수 있음)
             Object sub = attributes.get("sub");
             if (sub != null) return String.valueOf(sub);
 
