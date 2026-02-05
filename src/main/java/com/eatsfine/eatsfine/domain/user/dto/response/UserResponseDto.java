@@ -36,7 +36,7 @@ public class UserResponseDto {
         private Long id;
         private String profileImage;
         private String email;
-        private String nickName;
+        private String name;
         private String phoneNumber;
     }
 
@@ -46,7 +46,7 @@ public class UserResponseDto {
     public static class UpdateResponseDto{
         private String profileImage;
         private String email;
-        private String nickName;
+        private String name;
         private String phoneNumber;
     }
 

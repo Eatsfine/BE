@@ -99,9 +99,9 @@ public class UserServiceImpl implements UserService{
 
         boolean changed = false;
 
-        //닉네임/전화번호 부분 수정
-        if (updateDto.getNickName() != null && !updateDto.getNickName().isBlank()) {
-            user.updateNickname(updateDto.getNickName());
+        // 이름/전화번호 부분 수정
+        if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
+            user.updatename(updateDto.getName());
             changed = true;
         }
         if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
@@ -161,9 +161,9 @@ public class UserServiceImpl implements UserService{
         userRepository.save(user);
         userRepository.flush();
 
-        log.info("[Service] Updated userId={}, nickname={}, phone={}, profileKey={}",
+        log.info("[Service] Updated userId={}, name={}, phone={}, profileKey={}",
                 user.getId(),
-                user.getNickName(),
+                user.getName(),
                 user.getPhoneNumber(),
                 user.getProfileImage());
 
@@ -234,7 +234,7 @@ public class UserServiceImpl implements UserService{
             throw new UserException(UserErrorStatus.ALREADY_OWNER);
         }
 
-        businessNumberValidator.validate(dto.getBusinessNumber(), dto.getStartDate(), user.getNickName());
+        businessNumberValidator.validate(dto.getBusinessNumber(), dto.getStartDate(), user.getName());
 
         user.updateToOwner();
         User savedUser = userRepository.save(user);

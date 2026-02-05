@@ -14,7 +14,7 @@ public class UserRequestDto {
     public static class JoinDto{
 
         @NotBlank(message = "이름은 필수입니다.")
-        private String nickName;  // 이름
+        private String name;  // 이름
 
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "유효한 이메일 형식이어야 합니다.")
@@ -62,7 +62,7 @@ public class UserRequestDto {
     @Setter
     public static class UpdateDto {
         private String email;
-        private String nickName;
+        private String name;
         private String phoneNumber;
     }
 

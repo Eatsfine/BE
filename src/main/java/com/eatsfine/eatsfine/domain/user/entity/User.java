@@ -22,7 +22,7 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 20)
-    private String nickName;
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -48,8 +48,8 @@ public class User extends BaseEntity {
     @Column(length = 500)
     private String refreshToken;
 
-    public void updateNickname(String nickName){
-        this.nickName = nickName;
+    public void updatename(String name){
+        this.name = name;
     }
 
     public void updatePhoneNumber(String phoneNumber) {
