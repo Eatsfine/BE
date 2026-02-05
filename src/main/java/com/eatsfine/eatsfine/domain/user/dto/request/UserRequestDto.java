@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class UserRequestDto {
@@ -88,7 +89,7 @@ public class UserRequestDto {
     }
 
     @Getter
-    @Builder
+    @NoArgsConstructor
     public static class VerifyOwnerDto {
 
         @Schema(description = "사업자번호", example = "1234567890")
