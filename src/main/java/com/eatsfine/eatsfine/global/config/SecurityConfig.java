@@ -1,5 +1,8 @@
 package com.eatsfine.eatsfine.global.config;
 
+import com.eatsfine.eatsfine.domain.user.exception.handler.CustomOAuth2FailureHandler;
+import com.eatsfine.eatsfine.domain.user.exception.handler.CustomOAuth2SuccessHandler;
+import com.eatsfine.eatsfine.domain.user.service.oauthService.CustomOAuth2MemberServiceImpl;
 import com.eatsfine.eatsfine.global.auth.CustomAccessDeniedHandler;
 import com.eatsfine.eatsfine.global.auth.CustomAuthenticationEntryPoint;
 import com.eatsfine.eatsfine.global.config.jwt.JwtAuthenticationFilter;
@@ -31,6 +34,10 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final CustomAuthenticationEntryPoint authenticationEntryPoint;
     private final CustomAccessDeniedHandler accessDeniedHandler;
+    private final CustomOAuth2MemberServiceImpl customOAuth2UserService;
+    private final CustomOAuth2SuccessHandler customOAuth2SuccessHandler;
+    private final CustomOAuth2FailureHandler customOAuth2FailureHandler;
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -61,6 +68,14 @@ public class SecurityConfig {
 
                         // 그 외는 인증 필요
                         .anyRequest().authenticated()
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(customOAuth2UserService)
+                        )
+                        .successHandler(customOAuth2SuccessHandler)
+                        .failureHandler(customOAuth2FailureHandler)
+
                 )
 
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
