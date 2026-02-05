@@ -70,7 +70,7 @@ public class GeneralExceptionAdvice extends ResponseEntityExceptionHandler {
                 HttpHeaders.EMPTY,
                 UserErrorStatus.FORBIDDEN_OWNER.getHttpStatus(),
                 request,
-                e.getMessage()
+                null
         );
     }
 
