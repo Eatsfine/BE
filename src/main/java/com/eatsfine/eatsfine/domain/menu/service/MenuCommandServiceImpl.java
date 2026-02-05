@@ -13,6 +13,7 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,10 +37,11 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     private final S3Service s3Service;
     private final StoreRepository storeRepository;
     private final MenuRepository menuRepository;
+    private final StoreValidator storeValidator;
 
     @Override
-    public MenuResDto.MenuCreateDto createMenus(Long storeId, MenuReqDto.MenuCreateDto dto) {
-        Store store = findAndVerifyStore(storeId);
+    public MenuResDto.MenuCreateDto createMenus(Long storeId, MenuReqDto.MenuCreateDto dto, String email) {
+        Store store = storeValidator.validateStoreOwner(storeId, email);
 
         List<Menu> menus = dto.menus().stream()
                 .map(menuDto -> {
@@ -96,8 +98,8 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     }
 
     @Override
-    public MenuResDto.MenuDeleteDto deleteMenus(Long storeId, MenuReqDto.MenuDeleteDto dto) {
-        Store store = findAndVerifyStore(storeId);
+    public MenuResDto.MenuDeleteDto deleteMenus(Long storeId, MenuReqDto.MenuDeleteDto dto, String email) {
+        Store store = storeValidator.validateStoreOwner(storeId, email);
 
         List<Long> menuIds = dto.menuIds();
         List<Menu> menusToDelete = menuRepository.findAllById(dto.menuIds());
@@ -132,10 +134,8 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     }
 
     @Override
-    public MenuResDto.MenuUpdateDto updateMenu(Long storeId, Long menuId, MenuReqDto.MenuUpdateDto dto) {
-        Store store = findAndVerifyStore(storeId);
-
-        // TODO: [보안] Spring Security 병합 후, 현재 로그인한 사용자가 이 가게의 주인인지 확인하는 로직 추가
+    public MenuResDto.MenuUpdateDto updateMenu(Long storeId, Long menuId, MenuReqDto.MenuUpdateDto dto, String email) {
+        Store store = storeValidator.validateStoreOwner(storeId, email);
 
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuException(MenuErrorStatus._MENU_NOT_FOUND));
@@ -198,8 +198,8 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     }
 
     @Override
-    public MenuResDto.SoldOutUpdateDto updateSoldOutStatus(Long storeId, Long menuId, boolean isSoldOut) {
-        findAndVerifyStore(storeId);
+    public MenuResDto.SoldOutUpdateDto updateSoldOutStatus(Long storeId, Long menuId, boolean isSoldOut, String email) {
+        storeValidator.validateStoreOwner(storeId, email);
 
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuException(MenuErrorStatus._MENU_NOT_FOUND));
@@ -218,8 +218,8 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     }
 
     @Override
-    public MenuResDto.ImageUploadDto uploadImage(Long storeId, MultipartFile file) {
-        Store store = findAndVerifyStore(storeId);
+    public MenuResDto.ImageUploadDto uploadImage(Long storeId, MultipartFile file, String email) {
+        storeValidator.validateStoreOwner(storeId, email);
 
         if(file.isEmpty()) {
             throw new ImageException(ImageErrorStatus.EMPTY_FILE);
@@ -233,8 +233,8 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     }
 
     @Override
-    public MenuResDto.ImageDeleteDto deleteMenuImage(Long storeId, Long menuId) {
-        findAndVerifyStore(storeId);
+    public MenuResDto.ImageDeleteDto deleteMenuImage(Long storeId, Long menuId, String email) {
+        storeValidator.validateStoreOwner(storeId, email);
 
         Menu menu = menuRepository.findById(menuId)
                 .orElseThrow(() -> new MenuException(MenuErrorStatus._MENU_NOT_FOUND));
@@ -260,13 +260,6 @@ public class MenuCommandServiceImpl implements MenuCommandService {
         menu.updateImageKey(null);
 
         return MenuConverter.toImageDeleteDto(imageKey); // 삭제된 이미지의 키를 반환
-    }
-
-    private Store findAndVerifyStore(Long storeId) {
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
-        // TODO: [보안] Spring Security 병합 후, 현재 로그인한 사용자가 이 가게의 주인인지 확인하는 로직 추가
-        return store;
     }
 
     private void verifyMenuBelongsToStore(Menu menu, Long storeId) {
