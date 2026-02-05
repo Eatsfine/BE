@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.user.controller;
 
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
 import com.eatsfine.eatsfine.domain.user.service.authService.AuthTokenService;
+import com.eatsfine.eatsfine.domain.user.service.userService.UserService;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,14 +27,11 @@ public class AuthController {
             @CookieValue(value = "refreshToken", required = false) String refreshToken,
             HttpServletResponse response
     ) {
-        // 서비스에서 검증 &재발급
         AuthTokenService.ReissueResult result = authTokenService.reissue(refreshToken);
 
-        // refresh 쿠키 갱신
         ResponseCookie refreshCookie = authCookieProvider.refreshTokenCookie(result.refreshToken());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        // access 응답
         return ResponseEntity.ok(
                 ApiResponse.onSuccess(new UserResponseDto.AccessTokenResponse(result.accessToken()))
         );
