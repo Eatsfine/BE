@@ -33,7 +33,7 @@ public class StoreTableController implements StoreTableControllerDocs {
     @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.TableCreateDto> createTable(
             @PathVariable Long storeId,
-            @RequestBody StoreTableReqDto.TableCreateDto dto,
+            @RequestBody @Valid StoreTableReqDto.TableCreateDto dto,
             @CurrentUser User user
             ) {
         return ApiResponse.of(StoreTableSuccessStatus._TABLE_CREATED, storeTableCommandService.createTable(storeId, dto, user.getUsername()));
