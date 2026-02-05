@@ -34,15 +34,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.time.LocalTime;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
-public class BookingCommandServiceImpl implements BookingCommandService{
+public class BookingCommandServiceImpl implements BookingCommandService {
 
     private final StoreRepository storeRepository;
     private final StoreTableRepository storeTableRepository;
@@ -85,7 +81,6 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
         selectedTables.forEach(booking::addBookingTable);
 
-
         // 예약한 메뉴들 저장 및 총 메뉴 가격 계산
         BigDecimal itemTotalPrice = BigDecimal.ZERO;
         for (BookingRequestDTO.MenuOrderDto menuItem : dto.menuItems()) {
@@ -117,9 +112,10 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         bookingRepository.flush();
 
         // 결제 대기 데이터 생성 (내부 서비스 호출)
-        PaymentRequestDTO.RequestPaymentDTO paymentRequest = new PaymentRequestDTO.RequestPaymentDTO(savedBooking.getId());
-        PaymentResponseDTO.PaymentRequestResultDTO paymentInfo = paymentService.requestPayment(paymentRequest);
-
+        PaymentRequestDTO.RequestPaymentDTO paymentRequest = new PaymentRequestDTO.RequestPaymentDTO(
+                savedBooking.getId());
+        PaymentResponseDTO.PaymentRequestResultDTO paymentInfo = paymentService.requestPayment(paymentRequest,
+                user.getId());
 
         //BookingResponseDTO.BookingResultTableDTO로 변환
         List<BookingResponseDTO.BookingResultTableDTO> resultTableDTOS = savedBooking.getBookingTables().stream()
@@ -173,9 +169,8 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         // 예약 중 결제 완료된 결제의 결제키 이용 환불 로직 진행
         if(booking.getStatus() == BookingStatus.CONFIRMED) {
             PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(dto.reason());
-            paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
+            paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto, booking.getUser().getId());
         }
-
 
         //예약 상태 취소로 변경
         booking.cancel(dto.reason());

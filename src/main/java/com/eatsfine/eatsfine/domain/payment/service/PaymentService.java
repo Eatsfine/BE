@@ -41,9 +41,14 @@ public class PaymentService {
         private final TossPaymentService tossPaymentService;
 
         @Transactional
-        public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto) {
+        public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto,
+                        Long userId) {
                 Booking booking = bookingRepository.findById(dto.bookingId())
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._BOOKING_NOT_FOUND));
+
+                if (!booking.getUser().getId().equals(userId)) {
+                        throw new GeneralException(ErrorStatus._FORBIDDEN);
+                }
 
                 // 주문 ID 생성
                 String orderId = UUID.randomUUID().toString();
@@ -73,9 +78,13 @@ public class PaymentService {
         }
 
         @Transactional(noRollbackFor = GeneralException.class)
-        public PaymentResponseDTO.PaymentSuccessResultDTO confirmPayment(PaymentConfirmDTO dto) {
+        public PaymentResponseDTO.PaymentSuccessResultDTO confirmPayment(PaymentConfirmDTO dto, Long userId) {
                 Payment payment = paymentRepository.findByOrderId(dto.orderId())
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
+
+                if (!payment.getBooking().getUser().getId().equals(userId)) {
+                        throw new GeneralException(ErrorStatus._FORBIDDEN);
+                }
 
                 if (payment.getAmount().compareTo(dto.amount()) != 0) {
                         payment.failPayment();
@@ -130,9 +139,13 @@ public class PaymentService {
 
         @Transactional(noRollbackFor = GeneralException.class)
         public PaymentResponseDTO.CancelPaymentResultDTO cancelPayment(String paymentKey,
-                        PaymentRequestDTO.CancelPaymentDTO dto) {
+                        PaymentRequestDTO.CancelPaymentDTO dto, Long userId) {
                 Payment payment = paymentRepository.findByPaymentKey(paymentKey)
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
+
+                if (!payment.getBooking().getUser().getId().equals(userId)) {
+                        throw new GeneralException(ErrorStatus._FORBIDDEN);
+                }
 
                 // 토스 결제 취소 API 호출
                 TossPaymentResponse response = tossPaymentService.cancel(paymentKey, dto);
