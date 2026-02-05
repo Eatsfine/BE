@@ -44,7 +44,7 @@ public class UserController {
 
     @PostMapping("/api/auth/login")
     @Operation(summary = "로그인 API", description = "사용자 로그인을 처리하는 API입니다.")
-    public ResponseEntity<ApiResponse<UserResponseDto.LoginResponseDto>> login(@RequestBody UserRequestDto.LoginDto loginDto) {
+    public ResponseEntity<ApiResponse<UserResponseDto.LoginResponseDto>> login(@RequestBody @Valid UserRequestDto.LoginDto loginDto) {
         UserResponseDto.LoginResponseDto loginResult = userService.login(loginDto);
 
         if (loginResult.getRefreshToken() == null || loginResult.getRefreshToken().isBlank()) {
