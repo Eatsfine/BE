@@ -272,7 +272,7 @@ public class MenuCommandServiceImpl implements MenuCommandService {
     private void verifyMenuBelongsToStore(Menu menu, Long storeId) {
         if (!menu.getStore().getId().equals(storeId)) {
             // 다른 가게의 메뉴를 조작하려는 시도 방지
-            throw new StoreException(StoreErrorStatus._STORE_NOT_OWNER);
+            throw new StoreException(StoreErrorStatus._NOT_STORE_OWNER);
         }
     }
 }
