@@ -82,6 +82,12 @@ public class UserConverter {
                 .build();
     }
 
+    public static UserResponseDto.VerifyOwnerDto toVerifyOwnerResponse(User user) {
+        return UserResponseDto.VerifyOwnerDto.builder()
+                .userId(user.getId())
+                .build();
+    }
+
 
     /*
      소셜 유저 생성 (최초 소셜 가입 등)
