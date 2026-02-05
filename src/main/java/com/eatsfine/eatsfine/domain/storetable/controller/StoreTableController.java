@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableSucces
 import com.eatsfine.eatsfine.domain.storetable.service.StoreTableCommandService;
 import com.eatsfine.eatsfine.domain.storetable.service.StoreTableQueryService;
 import com.eatsfine.eatsfine.domain.tableimage.status.TableImageSuccessStatus;
+import com.eatsfine.eatsfine.global.annotation.CurrentUser;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -13,12 +14,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 
-import java.time.LocalDate;
 
 @Tag(name = "StoreTable", description = "가게 테이블 관리 API")
 @RestController
@@ -32,18 +33,20 @@ public class StoreTableController implements StoreTableControllerDocs {
     @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.TableCreateDto> createTable(
             @PathVariable Long storeId,
-            @RequestBody StoreTableReqDto.TableCreateDto dto
-    ) {
-        return ApiResponse.of(StoreTableSuccessStatus._TABLE_CREATED, storeTableCommandService.createTable(storeId, dto));
+            @RequestBody StoreTableReqDto.TableCreateDto dto,
+            @CurrentUser User user
+            ) {
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_CREATED, storeTableCommandService.createTable(storeId, dto, user.getUsername()));
     }
 
     @PostMapping(value = "/stores/{storeId}/tables/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.ImageUploadDto> uploadTableImageTemp(
             @PathVariable Long storeId,
-            @RequestPart("image") MultipartFile file
+            @RequestPart("image") MultipartFile file,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS, storeTableCommandService.uploadTableImageTemp(storeId, file));
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS, storeTableCommandService.uploadTableImageTemp(storeId, file, user.getUsername()));
     }
 
     @GetMapping("/stores/{storeId}/tables/{tableId}/slots")
@@ -71,18 +74,20 @@ public class StoreTableController implements StoreTableControllerDocs {
     public ApiResponse<StoreTableResDto.TableUpdateResultDto> updateTable(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
-            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto
+            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(StoreTableSuccessStatus._TABLE_UPDATED, storeTableCommandService.updateTable(storeId, tableId, dto));
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_UPDATED, storeTableCommandService.updateTable(storeId, tableId, dto, user.getUsername()));
     }
 
     @DeleteMapping("/stores/{storeId}/tables/{tableId}")
     @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.TableDeleteDto> deleteTable(
             @PathVariable Long storeId,
-            @PathVariable Long tableId
+            @PathVariable Long tableId,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(StoreTableSuccessStatus._TABLE_DELETED, storeTableCommandService.deleteTable(storeId, tableId));
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_DELETED, storeTableCommandService.deleteTable(storeId, tableId, user.getUsername()));
     }
 
     @PostMapping(
@@ -93,17 +98,19 @@ public class StoreTableController implements StoreTableControllerDocs {
     public ApiResponse<StoreTableResDto.UploadTableImageDto> uploadTableImage(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
-            @RequestPart("tableImage") MultipartFile tableImage
+            @RequestPart("tableImage") MultipartFile tableImage,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS, storeTableCommandService.uploadTableImage(storeId, tableId, tableImage));
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_UPLOAD_SUCCESS, storeTableCommandService.uploadTableImage(storeId, tableId, tableImage, user.getUsername()));
     }
 
     @DeleteMapping("/stores/{storeId}/tables/{tableId}/table-image")
     @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.DeleteTableImageDto> deleteTableImage(
             @PathVariable Long storeId,
-            @PathVariable Long tableId
+            @PathVariable Long tableId,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_DELETE_SUCCESS, storeTableCommandService.deleteTableImage(storeId, tableId));
+        return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_DELETE_SUCCESS, storeTableCommandService.deleteTableImage(storeId, tableId, user.getUsername()));
     }
 }
