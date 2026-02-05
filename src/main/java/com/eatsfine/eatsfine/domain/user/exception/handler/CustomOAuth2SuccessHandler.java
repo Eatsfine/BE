@@ -5,10 +5,11 @@ import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.core.Authentication;
@@ -27,6 +28,8 @@ import java.util.Map;
 @Transactional
 public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
+    private static final Logger log = LoggerFactory.getLogger(CustomOAuth2SuccessHandler.class);
+
     private final UserRepository userRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthCookieProvider authCookieProvider;
@@ -41,26 +44,42 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         OAuth2AuthenticationToken oauthToken = (OAuth2AuthenticationToken) authentication;
         String provider = oauthToken.getAuthorizedClientRegistrationId(); // google, kakao
-        SocialType socialType = SocialType.valueOf(provider.toUpperCase());
+
+        SocialType socialType;
+        try {
+            socialType = SocialType.valueOf(provider.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.error("Unknown provider registrationId={}", provider, e);
+            redirectFail(response, "unknown_provider");
+            return;
+        }
 
         OAuth2User oAuth2User = oauthToken.getPrincipal();
+        Map<String, Object> attrs = oAuth2User.getAttributes();
 
-        String email = extractEmail(socialType, oAuth2User);
+        // ✅ 디버깅 핵심 로그
+        log.info("[OAuth2 SUCCESS] provider={}, attrs={}", provider, attrs);
+
+        // 카카오의 경우 id도 추출해두면 원인 파악에 큰 도움 됨
+        String socialId = extractSocialId(socialType, attrs);
+        log.info("[OAuth2 SUCCESS] provider={}, socialId={}", provider, socialId);
+
+        String email = extractEmail(socialType, attrs);
+        log.info("[OAuth2 SUCCESS] provider={}, extractedEmail={}", provider, email);
+
         if (email == null || email.isBlank()) {
-            String failUrl = UriComponentsBuilder.fromUriString(LOGIN_ERROR_REDIRECT_BASE)
-                    .queryParam("error", "email_not_found")
-                    .build().toUriString();
-            response.sendRedirect(failUrl);
+            // 카카오 email 관련 상태값도 같이 찍어주면 디버깅 끝남
+            if (socialType == SocialType.KAKAO) {
+                logKakaoAccountStatus(attrs);
+            }
+            redirectFail(response, "email_not_found");
             return;
         }
 
         // DB에서 user 조회
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
-            String failUrl = UriComponentsBuilder.fromUriString(LOGIN_ERROR_REDIRECT_BASE)
-                    .queryParam("error", "user_not_found")
-                    .build().toUriString();
-            response.sendRedirect(failUrl);
+            redirectFail(response, "user_not_found");
             return;
         }
 
@@ -81,13 +100,21 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
                 .build()
                 .toUriString();
 
+        log.info("[OAuth2 SUCCESS] redirectUrl={}", redirectUrl);
         response.sendRedirect(redirectUrl);
     }
 
-    @SuppressWarnings("unchecked")
-    private String extractEmail(SocialType socialType, OAuth2User oAuth2User) {
-        Map<String, Object> attributes = oAuth2User.getAttributes();
+    private void redirectFail(HttpServletResponse response, String errorCode) throws IOException {
+        String failUrl = UriComponentsBuilder.fromUriString(LOGIN_ERROR_REDIRECT_BASE)
+                .queryParam("error", errorCode)
+                .build()
+                .toUriString();
 
+        log.warn("[OAuth2 FAIL] errorCode={}, failUrl={}", errorCode, failUrl);
+        response.sendRedirect(failUrl);
+    }
+
+    private String extractEmail(SocialType socialType, Map<String, Object> attributes) {
         if (socialType == SocialType.GOOGLE) {
             Object email = attributes.get("email");
             return email != null ? String.valueOf(email) : null;
@@ -102,5 +129,41 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         }
 
         return null;
+    }
+
+    private String extractSocialId(SocialType socialType, Map<String, Object> attributes) {
+        if (socialType == SocialType.GOOGLE) {
+            // 구글은 OIDC면 보통 sub가 안정적 식별자 (환경에 따라 없을 수 있음)
+            Object sub = attributes.get("sub");
+            if (sub != null) return String.valueOf(sub);
+
+            // fallback
+            Object id = attributes.get("id");
+            return id != null ? String.valueOf(id) : null;
+        }
+
+        if (socialType == SocialType.KAKAO) {
+            Object id = attributes.get("id");
+            return id != null ? String.valueOf(id) : null;
+        }
+
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void logKakaoAccountStatus(Map<String, Object> attributes) {
+        Object kakaoAccountObj = attributes.get("kakao_account");
+        if (!(kakaoAccountObj instanceof Map<?, ?> kakaoAccount)) {
+            log.warn("[KAKAO] kakao_account missing. attributes={}", attributes);
+            return;
+        }
+
+        Object hasEmail = kakaoAccount.get("has_email");
+        Object emailNeedsAgreement = kakaoAccount.get("email_needs_agreement");
+        Object isEmailValid = kakaoAccount.get("is_email_valid");
+        Object isEmailVerified = kakaoAccount.get("is_email_verified");
+
+        log.warn("[KAKAO] has_email={}, email_needs_agreement={}, is_email_valid={}, is_email_verified={}",
+                hasEmail, emailNeedsAgreement, isEmailValid, isEmailVerified);
     }
 }
