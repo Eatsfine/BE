@@ -8,6 +8,7 @@ import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "BusinessHours", description = "영업시간 관련 API")
@@ -23,6 +24,7 @@ public class BusinessHoursController {
             description = "가게의 영업시간을 수정합니다."
     )
     @PatchMapping("/stores/{storeId}/business-hours")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<BusinessHoursResDto.UpdateBusinessHoursDto> updateBusinessHours(
             @PathVariable Long storeId,
             @RequestBody BusinessHoursReqDto.UpdateBusinessHoursDto dto
@@ -38,6 +40,7 @@ public class BusinessHoursController {
             description = "가게의 브레이크타임을 설정합니다."
     )
     @PatchMapping("/stores/{storeId}/break-time")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<BusinessHoursResDto.UpdateBreakTimeDto> updateBreakTime(
             @PathVariable Long storeId,
             @RequestBody BusinessHoursReqDto.UpdateBreakTimeDto dto
@@ -47,5 +50,4 @@ public class BusinessHoursController {
                 businessHoursCommandService.updateBreakTime(storeId, dto)
         );
     }
-
 }

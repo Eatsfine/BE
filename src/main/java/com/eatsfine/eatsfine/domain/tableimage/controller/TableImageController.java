@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +32,7 @@ public class TableImageController {
             value = "/stores/{storeId}/table-images",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("hasRole('OWNER')")
     ApiResponse<TableImageResDto.UploadTableImageDto> uploadTableImage(
             @RequestPart("file") List<MultipartFile> files,
             @PathVariable Long storeId
@@ -46,7 +48,7 @@ public class TableImageController {
             description = "식당 테이블 이미지들을 조회합니다."
     )
     @GetMapping("/stores/{storeId}/table-images")
-    ApiResponse<TableImageResDto.GetTableImageDto>  getTableImage(
+    ApiResponse<TableImageResDto.GetTableImageDto> getTableImage(
             @PathVariable Long storeId
     ) {
         return ApiResponse.of(TableImageSuccessStatus._STORE_TABLE_IMAGE_GET_SUCCESS, tableImageQueryService.getTableImage(storeId));
@@ -57,6 +59,7 @@ public class TableImageController {
             description = "식당 테이블 이미지를 삭제합니다."
     )
     @DeleteMapping("/stores/{storeId}/table-images")
+    @PreAuthorize("hasRole('OWNER')")
     ApiResponse<TableImageResDto.DeleteTableImageDto> deleteTableImage(
             @PathVariable Long storeId,
             @RequestBody List<Long> tableImageIds

@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -28,6 +29,7 @@ public class StoreTableController implements StoreTableControllerDocs {
     private final StoreTableQueryService storeTableQueryService;
 
     @PostMapping("/stores/{storeId}/tables")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.TableCreateDto> createTable(
             @PathVariable Long storeId,
             @RequestBody StoreTableReqDto.TableCreateDto dto
@@ -36,6 +38,7 @@ public class StoreTableController implements StoreTableControllerDocs {
     }
 
     @PostMapping(value = "/stores/{storeId}/tables/images", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.ImageUploadDto> uploadTableImageTemp(
             @PathVariable Long storeId,
             @RequestPart("image") MultipartFile file
@@ -64,6 +67,7 @@ public class StoreTableController implements StoreTableControllerDocs {
     }
 
     @PatchMapping("/stores/{storeId}/tables/{tableId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.TableUpdateResultDto> updateTable(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
@@ -73,6 +77,7 @@ public class StoreTableController implements StoreTableControllerDocs {
     }
 
     @DeleteMapping("/stores/{storeId}/tables/{tableId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.TableDeleteDto> deleteTable(
             @PathVariable Long storeId,
             @PathVariable Long tableId
@@ -84,6 +89,7 @@ public class StoreTableController implements StoreTableControllerDocs {
             value = "/stores/{storeId}/tables/{tableId}/table-image",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.UploadTableImageDto> uploadTableImage(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
@@ -93,6 +99,7 @@ public class StoreTableController implements StoreTableControllerDocs {
     }
 
     @DeleteMapping("/stores/{storeId}/tables/{tableId}/table-image")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.DeleteTableImageDto> deleteTableImage(
             @PathVariable Long storeId,
             @PathVariable Long tableId

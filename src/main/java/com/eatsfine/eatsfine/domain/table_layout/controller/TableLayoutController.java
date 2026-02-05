@@ -8,6 +8,7 @@ import com.eatsfine.eatsfine.domain.table_layout.service.TableLayoutQueryService
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "TableLayout", description = "테이블 배치도 조회 및 관리 API")
@@ -19,6 +20,7 @@ public class TableLayoutController implements TableLayoutControllerDocs{
     private final TableLayoutQueryService tableLayoutQueryService;
 
     @PostMapping("stores/{storeId}/layouts")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<TableLayoutResDto.LayoutDetailDto> createLayout(
             @PathVariable Long storeId,
             @RequestBody TableLayoutReqDto.LayoutCreateDto dto

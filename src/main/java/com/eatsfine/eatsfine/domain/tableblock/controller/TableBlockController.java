@@ -7,6 +7,7 @@ import com.eatsfine.eatsfine.domain.tableblock.service.TableBlockCommandService;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "TableBlock", description = "테이블 슬롯 차단/해제 API")
@@ -18,6 +19,7 @@ public class TableBlockController implements TableBlockControllerDocs {
 
     @Override
     @PatchMapping("/stores/{storeId}/tables/{tableId}/slots")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<TableBlockResDto.SlotStatusUpdateDto> updateSlotStatus(
             @PathVariable Long storeId,
             @PathVariable Long tableId,

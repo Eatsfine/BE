@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,6 +31,7 @@ public class StoreController {
             description = "사장 회원이 새로운 식당을 등록합니다"
     )
     @PostMapping("/stores")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreResDto.StoreCreateDto> createStore(
             @Valid @RequestBody StoreReqDto.StoreCreateDto dto
     ) {
@@ -65,6 +67,7 @@ public class StoreController {
                     "영업시간, 브레이크타임, 이미지는 별도 엔티티/컬렉션이므로 개별 API로 분리"
     )
     @PatchMapping("/stores/{storeId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreResDto.StoreUpdateDto> updateStoreBasicInfo(
             @PathVariable Long storeId,
             @Valid @RequestBody StoreReqDto.StoreUpdateDto dto
@@ -81,6 +84,7 @@ public class StoreController {
             value = "/stores/{storeId}/main-image",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreResDto.UploadMainImageDto> uploadMainImage(
             @RequestPart("mainImage")MultipartFile mainImage,
             @PathVariable Long storeId
