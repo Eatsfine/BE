@@ -20,7 +20,7 @@ public enum UserErrorStatus implements BaseErrorCode {
     INVALID_TOKEN(HttpStatus.NOT_FOUND, "TOKEN4001", "토큰이 없습니다."),
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN4002", "토큰이 만료되었습니다."),
     REFRESH_TOKEN_NOT_ISSUED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN5001", "리프레시 토큰이 발급되지 않았습니다."),
-
+    EMPTY_TOKEN_ROLE(HttpStatus.UNAUTHORIZED, "AUTH401", "토큰 내 권한 정보가 누락되었습니다."),
     // 사장 인증 관련 에러
     ALREADY_OWNER(HttpStatus.CONFLICT, "OWNER409", "이미 사장 회원입니다."),
 
