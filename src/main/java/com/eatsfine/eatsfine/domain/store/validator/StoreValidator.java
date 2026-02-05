@@ -16,7 +16,7 @@ public class StoreValidator {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
-        if(!store.getOwner().getEmail().equals(email)) {
+        if(store.getOwner() == null || !store.getOwner().getEmail().equals(email)) {
             throw new StoreException(StoreErrorStatus._NOT_STORE_OWNER);
         }
 
