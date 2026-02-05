@@ -21,4 +21,6 @@ public interface UserService {
 
     void logout(HttpServletRequest request);
 
+    UserResponseDto.VerifyOwnerDto verifyOwner(UserRequestDto.VerifyOwnerDto verifyOwnerDto, HttpServletRequest request);
+
 }

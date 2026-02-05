@@ -73,6 +73,8 @@ public class RealBusinessNumberValidator implements BusinessNumberValidator {
             throw new BusinessNumberException(BusinessNumberErrorStatus._INVALID_BUSINESS_NUMBER);
         }
 
+        log.info("[BusinessNumber API] 인증 통과 - 번호: {}", businessNumber);
+
     };
 
 

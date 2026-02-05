@@ -2,6 +2,8 @@ package com.eatsfine.eatsfine.domain.user.entity;
 
 import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
@@ -60,6 +62,10 @@ public class User extends BaseEntity {
 
     public void updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
+    }
+
+    public void updateToOwner() {
+        this.role = Role.ROLE_OWNER;
     }
 
     public void updateRefreshToken(String refreshToken){this.refreshToken = refreshToken;}
