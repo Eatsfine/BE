@@ -101,7 +101,7 @@ public class UserServiceImpl implements UserService{
 
         // 이름/전화번호 부분 수정
         if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
-            user.updatename(updateDto.getName());
+            user.updateName(updateDto.getName());
             changed = true;
         }
         if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {

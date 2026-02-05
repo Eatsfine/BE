@@ -48,7 +48,7 @@ public class User extends BaseEntity {
     @Column(length = 500)
     private String refreshToken;
 
-    public void updatename(String name){
+    public void updateName(String name){
         this.name = name;
     }
 
