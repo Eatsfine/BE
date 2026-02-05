@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.user.dto.request;
 import com.eatsfine.eatsfine.global.validator.annotation.PasswordMatch;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -84,5 +85,20 @@ public class UserRequestDto {
         @NotBlank(message = "새 비밀번호 확인은 필수입니다.")
         @Schema(description = "새 비밀번호 확인", example = "NewPw!1234")
         private String newPasswordConfirm;
+    }
+
+    @Getter
+    @Builder
+    public static class VerifyOwnerDto {
+
+        @Schema(description = "사업자번호", example = "1234567890")
+        @NotBlank(message = "사업자번호는 필수입니다.")
+        @Pattern(regexp = "^[0-9]{10}$", message = "사업자번호는 숫자 10자리여야 합니다.")
+        private String businessNumber;
+
+        @Schema(description = "개업일자", example = "20240101")
+        @NotBlank
+        @Pattern(regexp = "^[0-9]{8}$", message = "개업일자는 YYYYMMDD 형식이어야 합니다.")
+        private String startDate;
     }
 }

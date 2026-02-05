@@ -1,6 +1,8 @@
 package com.eatsfine.eatsfine.domain.user.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -61,6 +63,13 @@ public class UserResponseDto {
 
         @Schema(description = "응답 메시지", example = "비밀번호가 성공적으로 변경되었습니다.")
         private String message;
+    }
+
+    @Getter
+    @Builder
+    public static class VerifyOwnerDto {
+        @Schema(description = "권한 승격이 완료된 유저의 식별자", example = "1")
+        private Long userId;
     }
 
 }
