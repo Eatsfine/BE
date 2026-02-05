@@ -226,8 +226,8 @@ public class UserServiceImpl implements UserService{
     @Transactional
     public UserResponseDto.VerifyOwnerDto verifyOwner(UserRequestDto.VerifyOwnerDto dto, HttpServletRequest request) {
         User user = getCurrentUser(request);
-        log.info("[OwnerAuth] 사장 인증 시도 - 유저ID: {}, 이메일: {}, 사업자번호: {}",
-                user.getId(), user.getEmail(), dto.getBusinessNumber());
+        log.info("[OwnerAuth] 사장 인증 시도 - 유저ID: {}, 이메일: {}",
+                user.getId(), user.getEmail());
 
         if (user.getRole() == Role.ROLE_OWNER) {
             log.warn("[OwnerAuth] 인증 실패 - 이미 사장 권한을 가진 유저입니다. 유저ID: {}", user.getId());
