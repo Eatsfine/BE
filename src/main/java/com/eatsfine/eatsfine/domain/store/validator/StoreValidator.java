@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class StoreValidator {
     private final StoreRepository storeRepository;
 
-    public void validateStoreOwner(Long storeId, String email) {
+    public Store validateStoreOwner(Long storeId, String email) {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
@@ -20,5 +20,6 @@ public class StoreValidator {
             throw new StoreException(StoreErrorStatus._NOT_STORE_OWNER);
         }
 
+        return store;
     }
 }
