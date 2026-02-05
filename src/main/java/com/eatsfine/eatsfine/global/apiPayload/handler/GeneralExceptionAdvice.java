@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.global.apiPayload.handler;
 
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.apiPayload.code.BaseErrorCode;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
@@ -10,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -54,6 +56,22 @@ public class GeneralExceptionAdvice extends ResponseEntityExceptionHandler {
         // 첫 번째 에러 메시지만 추출
         String errorMessage = e.getConstraintViolations().iterator().next().getMessage();
         return handleExceptionInternalFalse(e, ErrorStatus._BAD_REQUEST, HttpHeaders.EMPTY, ErrorStatus._BAD_REQUEST.getHttpStatus(), request, errorMessage);
+    }
+
+    // @PreAuthorize 권한 실패 시 발생하는 예외 캐치
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException e, WebRequest request) {
+        log.warn("Access Denied: {}", e.getMessage());
+
+        // 2. 기존 메서드를 활용해 ResponseEntity<Object>로 반환
+        return handleExceptionInternalFalse(
+                e,
+                UserErrorStatus.FORBIDDEN_OWNER,
+                HttpHeaders.EMPTY,
+                UserErrorStatus.FORBIDDEN_OWNER.getHttpStatus(),
+                request,
+                e.getMessage()
+        );
     }
 
     // 3. 커스텀 예외용 내부 응답 생성 메서드

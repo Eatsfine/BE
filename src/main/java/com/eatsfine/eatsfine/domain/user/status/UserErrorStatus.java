@@ -23,6 +23,9 @@ public enum UserErrorStatus implements BaseErrorCode {
 
     // 사장 인증 관련 에러
     ALREADY_OWNER(HttpStatus.CONFLICT, "OWNER409", "이미 사장 회원입니다."),
+
+    // 사장 전용 API 접근 관련 에러
+    FORBIDDEN_OWNER(HttpStatus.FORBIDDEN, "AUTH403", "사장님 권한이 필요한 서비스입니다.")
     ;
 
     private final HttpStatus httpStatus;
