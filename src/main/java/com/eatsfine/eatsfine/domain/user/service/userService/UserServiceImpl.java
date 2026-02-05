@@ -98,9 +98,11 @@ public class UserServiceImpl implements UserService {
         boolean changed = false;
 
         //닉네임/전화번호 부분 수정
-        if (updateDto.getNickName() != null && !updateDto.getNickName().isBlank()) {
-            user.updateNickname(updateDto.getNickName());
-            changed = true;
+        if (updateDto != null) {
+            if (updateDto.getNickName() != null && !updateDto.getNickName().isBlank()) {
+                user.updateNickname(updateDto.getNickName());
+                changed = true;
+            }
         }
         if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
             user.updatePhoneNumber(updateDto.getPhoneNumber());

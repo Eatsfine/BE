@@ -27,7 +27,7 @@ public class User extends BaseEntity {
 
     private String password;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
@@ -54,13 +54,16 @@ public class User extends BaseEntity {
         this.phoneNumber = phoneNumber;
     }
 
-    public void updateEmail(String email) {
-        this.email = email;
-    }
+    public void updateEmail(String email) {this.email = email;}
 
     public void updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
 
     public void updateRefreshToken(String refreshToken){this.refreshToken = refreshToken;}
+
+    public void linkSocial(SocialType socialType, String socialId) {
+        this.socialType = socialType;
+        this.socialId = socialId;
+    }
 }
