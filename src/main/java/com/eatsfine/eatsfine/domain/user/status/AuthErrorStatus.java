@@ -8,19 +8,16 @@ import org.springframework.http.HttpStatus;
 
 @Getter
 @AllArgsConstructor
-public enum UserErrorStatus implements BaseErrorCode {
+public enum AuthErrorStatus implements BaseErrorCode {
 
-    // 멤버 관련 에러
-    MEMBER_NOT_FOUND(HttpStatus.BAD_REQUEST, "MEMBER4001", "사용자가 없습니다."),
-    NICKNAME_NOT_EXIST(HttpStatus.BAD_REQUEST, "MEMBER4002", "닉네임은 필수 입니다."),
-    EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "MEMBER4003", "이미 존재하는 이메일입니다."),
-    INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4004", "비밀번호가 올바르지 않습니다."),
+    OAUTH2_EMAIL_NOT_FOUND(HttpStatus.BAD_REQUEST, "AUTH4001", "소셜 로그인 이메일을 가져올 수 없습니다."),
+    OAUTH2_PROVIDER_NOT_SUPPORTED(HttpStatus.BAD_REQUEST, "AUTH4002", "지원하지 않는 소셜 로그인 제공자입니다."),
+    REFRESH_TOKEN_MISSING(HttpStatus.UNAUTHORIZED, "AUTH4005", "리프레시 토큰이 없습니다."),
 
-    // 토큰 관련 에러
-    INVALID_TOKEN(HttpStatus.NOT_FOUND, "TOKEN4001", "토큰이 없습니다."),
-    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "TOKEN4002", "토큰이 만료되었습니다."),
-    REFRESH_TOKEN_NOT_ISSUED(HttpStatus.INTERNAL_SERVER_ERROR, "TOKEN5001", "리프레시 토큰이 발급되지 않았습니다.");
 
+    INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH4003", "유효하지 않은 토큰입니다."),
+    EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH4004", "토큰이 만료되었습니다."),
+    REFRESH_TOKEN_NOT_ISSUED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH5001", "리프레시 토큰이 발급되지 않았습니다.");
 
     private final HttpStatus httpStatus;
     private final String code;

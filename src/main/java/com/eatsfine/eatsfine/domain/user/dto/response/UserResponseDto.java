@@ -63,4 +63,10 @@ public class UserResponseDto {
         private String message;
     }
 
+    @Getter
+    @AllArgsConstructor
+    public static class AccessTokenResponse {
+        private String accessToken;
+    }
+
 }
