@@ -14,7 +14,7 @@ import java.io.IOException;
 public class CustomOAuth2FailureHandler implements AuthenticationFailureHandler {
 
     // TODO: 환경별로 분리 추천 (application.yml)
-    private static final String ERROR_REDIRECT_BASE = "https://chicchic-mu.vercel.app/login/error";
+    private static final String ERROR_REDIRECT_BASE = "https://eatsfine.co.kr/login/error";
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
