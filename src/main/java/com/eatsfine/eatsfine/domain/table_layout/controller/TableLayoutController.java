@@ -5,10 +5,12 @@ import com.eatsfine.eatsfine.domain.table_layout.dto.res.TableLayoutResDto;
 import com.eatsfine.eatsfine.domain.table_layout.exception.status.TableLayoutSuccessStatus;
 import com.eatsfine.eatsfine.domain.table_layout.service.TableLayoutCommandService;
 import com.eatsfine.eatsfine.domain.table_layout.service.TableLayoutQueryService;
+import com.eatsfine.eatsfine.global.annotation.CurrentUser;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "TableLayout", description = "테이블 배치도 조회 및 관리 API")
@@ -23,14 +25,19 @@ public class TableLayoutController implements TableLayoutControllerDocs{
     @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<TableLayoutResDto.LayoutDetailDto> createLayout(
             @PathVariable Long storeId,
-            @RequestBody TableLayoutReqDto.LayoutCreateDto dto
+            @RequestBody TableLayoutReqDto.LayoutCreateDto dto,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(TableLayoutSuccessStatus._LAYOUT_CREATED, tableLayoutCommandService.createLayout(storeId, dto));
+        return ApiResponse.of(TableLayoutSuccessStatus._LAYOUT_CREATED, tableLayoutCommandService.createLayout(storeId, dto, user.getUsername()));
     }
 
     @GetMapping("stores/{storeId}/layouts")
-    public ApiResponse<TableLayoutResDto.LayoutDetailDto> getActiveLayout(@PathVariable Long storeId) {
-        TableLayoutResDto.LayoutDetailDto result = tableLayoutQueryService.getActiveLayout(storeId);
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<TableLayoutResDto.LayoutDetailDto> getActiveLayout(
+            @PathVariable Long storeId,
+            @CurrentUser User user
+            ) {
+        TableLayoutResDto.LayoutDetailDto result = tableLayoutQueryService.getActiveLayout(storeId, user.getUsername());
 
         if (result == null) {
             return ApiResponse.of(TableLayoutSuccessStatus._LAYOUT_NO_CONTENT, null);
