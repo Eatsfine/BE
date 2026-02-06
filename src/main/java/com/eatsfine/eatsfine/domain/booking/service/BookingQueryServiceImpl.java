@@ -8,12 +8,16 @@ import com.eatsfine.eatsfine.domain.booking.exception.BookingException;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.booking.status.BookingErrorStatus;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
+import com.eatsfine.eatsfine.domain.businesshours.repository.BusinessHoursRepository;
+import com.eatsfine.eatsfine.domain.businesshours.status.BusinessHoursErrorStatus;
 import com.eatsfine.eatsfine.domain.payment.entity.Payment;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
+import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
 import com.eatsfine.eatsfine.domain.user.entity.User;
@@ -37,6 +41,8 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     private final BookingRepository bookingRepository;
     private final StoreRepository storeRepository;
     private final TableLayoutRepository tableLayoutRepository;
+    private final BusinessHoursRepository businessHourRepository;
+    private final StoreTableRepository storeTableRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -44,27 +50,30 @@ public class BookingQueryServiceImpl implements BookingQueryService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._STORE_NOT_FOUND));
 
-        BusinessHours hours = store.getBusinessHoursByDay(dto.date().getDayOfWeek());
+        // 1. 영업시간 조회
+        BusinessHours hours = businessHourRepository.findByStoreAndDayOfWeek(store, dto.date().getDayOfWeek())
+                .orElseThrow(() -> new BusinessHoursException(BusinessHoursErrorStatus._BUSINESS_HOURS_DAY_NOT_FOUND));
 
-        if (hours == null) {
-            throw new BookingException(StoreErrorStatus._STORE_NOT_OPEN_ON_DAY);
+        // 2. 루프 밖에서 활성 레이아웃과 테이블 리스트를 DB에서 직접 조회
+        TableLayout activeLayout = tableLayoutRepository.findByStoreIdAndIsActiveTrue(store.getId())
+                .orElseThrow(() -> new BookingException(BookingErrorStatus._LAYOUT_NOT_FOUND));
+
+        List<StoreTable> activeTables = storeTableRepository.findAllByTableLayoutAndIsDeletedFalse(activeLayout);
+
+        // 테이블 정보가 아예 없는 경우 검증
+        if (activeTables.isEmpty()) {
+            throw new BookingException(BookingErrorStatus._TABLE_NOT_FOUND);
         }
 
         List<LocalTime> availableSlots = new ArrayList<>();
         LocalTime currentTime = hours.getOpenTime();
 
         while (currentTime.isBefore(hours.getCloseTime())) {
-
             if (!isDuringBreakTime(hours, currentTime)) {
+                // 해당 시간대의 예약된 테이블 ID 목록만 DB에서 조회
                 List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, dto.date(), currentTime);
 
-                List<TableLayout> tableLayouts = store.getTableLayouts();
-                TableLayout activeTableLayout = tableLayouts.stream()
-                        .filter(TableLayout::isActive).findFirst()
-                        .orElseThrow(() -> new BookingException(BookingErrorStatus._LAYOUT_NOT_FOUND));
-
-                List<StoreTable> activeTables = activeTableLayout.getTables();
-
+                // 미리 가져온 activeTables를 사용하여 검증 (테이블 seats가 null인 경우 등은 canAccommodate 내부에서 처리 권장)
                 if (canAccommodate(activeTables, reservedTableIds, dto.partySize(), dto.isSplitAccepted())) {
                     availableSlots.add(currentTime);
                 }
@@ -80,16 +89,23 @@ public class BookingQueryServiceImpl implements BookingQueryService {
                 .filter(t -> !reservedTableIds.contains(t.getId()))
                 .toList();
 
-        // 1.단일 테이블 가능한지 체크
-        if(freeTables.stream().anyMatch(t-> t.getTableSeats() >= partySize)) return true;
+        // 1. 단일 테이블 범위 내 수용 가능한지 체크
+        if (freeTables.stream().anyMatch(t ->
+                t.getMinSeatCount() != null && t.getMaxSeatCount() != null &&
+                        partySize >= t.getMinSeatCount() && partySize <= t.getMaxSeatCount())) {
+            return true;
+        }
 
-        // 2. 단일 테이블로 안 될 때, 나눠 앉기 동의 했을 경우 합계로 체크
-        if (isSplitAccepted) {
-            int totalSeats = freeTables.stream().mapToInt(StoreTable::getTableSeats).sum();
-            return totalSeats >= partySize;
+        // 2. 나눠 앉기 시 합계 체크 (최소 인원 합산 조건 등은 비즈니스에 따라 추가 가능)
+        if (Boolean.TRUE.equals(isSplitAccepted)) {
+            int totalMaxSeats = freeTables.stream()
+                    .mapToInt(t -> t.getMaxSeatCount() != null ? t.getMaxSeatCount() : 0)
+                    .sum();
+            return totalMaxSeats >= partySize;
         }
         return false;
     }
+
 
     //브레이크 타임 판별 메서드
     private boolean isDuringBreakTime(BusinessHours hours, LocalTime time) {
@@ -104,24 +120,35 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     public BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, BookingRequestDTO.GetAvailableTableDTO dto) {
         TableLayout activeTableLayout = tableLayoutRepository.findByStoreIdAndIsActiveTrue(storeId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._LAYOUT_NOT_FOUND));
-        List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, dto.date(), dto.time());
 
+        List<Long> reservedTableIds = bookingRepository.findReservedTableIds(storeId, dto.date(), dto.time());
 
         List<BookingResponseDTO.TableInfoDTO> availableTables = activeTableLayout.getTables().stream()
                 .filter(t -> !reservedTableIds.contains(t.getId()))
                 .filter(t -> {
-                    // 사용자가 "분리 허용 안 함(false)"을 선택했다면, 테이블 크기가 인원수보다 커야 함
-                    if (dto.isSplitAccepted() != null && !dto.isSplitAccepted()) {
-                        return t.getTableSeats() >= dto.partySize();
+
+                    if (t.getMinSeatCount() == null || t.getMaxSeatCount() == null) {
+                        throw new BookingException(BookingErrorStatus._TABLE_SEATS_NOT_FOUND);
                     }
-                    // 사용자가 "분리 허용(true)"을 선택했다면 모든 빈 테이블 표시
-                    return true;
+
+                    // 1. 공통 조건: 예약 인원이 테이블의 최소 인원보다 크거나 같고, 최대 인원보다 작거나 같아야 함
+                    boolean isWithinRange = dto.partySize() >= t.getMinSeatCount() && dto.partySize() <= t.getMaxSeatCount();
+
+                    // 2. "나눠 앉기 비허용" 시에는 단일 테이블의 수용 범위가 정확히 맞아야 함
+                    if (Boolean.FALSE.equals(dto.isSplitAccepted())) {
+                        return isWithinRange;
+                    }
+
+                    // 3. "나눠 앉기 허용" 시에는 예약 인원이 테이블의 최소 인원보다는 많아야 선택 가능 (최대 인원은 초과해도 됨)
+                    // (여러 테이블을 합칠 예정이므로 최소 인원 조건만 충족하면 표시해 줍니다.)
+                    return dto.partySize() >= t.getMinSeatCount();
                 })
-                .filter(t -> dto.seatsType() == null || dto.seatsType().isEmpty() || (t.getSeatsType() != null && t.getSeatsType().name().equalsIgnoreCase(dto.seatsType())))
+                .filter(t -> dto.seatsType() == null || dto.seatsType().isEmpty() ||
+                        (t.getSeatsType() != null && t.getSeatsType().name().equalsIgnoreCase(dto.seatsType())))
                 .map(t -> BookingResponseDTO.TableInfoDTO.builder()
                         .tableId(t.getId())
                         .tableNumber(t.getTableNumber())
-                        .tableSeats(t.getTableSeats())
+                        .tableSeats(t.getMaxSeatCount())
                         .seatsType(t.getSeatsType() != null ? t.getSeatsType().name() : null)
                         .gridX(t.getGridX())
                         .gridY(t.getGridY())
@@ -185,6 +212,34 @@ public class BookingQueryServiceImpl implements BookingQueryService {
                 .totalElements(bookingPage.getTotalElements())
                 .listSize(bookingPreviewDTOList.size())
                 .bookingList(bookingPreviewDTOList)
+                .build();
+    }
+
+    // 사장님용 예약 상세 조회
+    @Override
+    @Transactional(readOnly = true)
+    public BookingResponseDTO.BookingDetailDTO getBookingDetail(Long storeId, Long tableId, Long bookingId) {
+        // 1. 예약 존재 여부 확인
+        Booking booking = bookingRepository.findByIdAndStatus(bookingId, BookingStatus.CONFIRMED)
+                .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
+
+        // 2. 계층 구조를 통한 데이터 무결성 검증
+        // Booking에 연결된 BookingTable 리스트에서 해당 tableId가 있는지 확인
+        boolean isCorrectTable = booking.getBookingTables().stream()
+                .anyMatch(bt -> bt.getStoreTable().getId().equals(tableId));
+
+        // 해당 테이블이 속한 가게 ID가 요청받은 storeId와 일치하는지 확인
+        boolean isCorrectStore = booking.getStore().getId().equals(storeId);
+
+        if (!isCorrectTable || !isCorrectStore) {
+            // "잘못된 접근입니다" 또는 "해당 가게의 예약이 아닙니다" 예외 발생
+            throw new BookingException(BookingErrorStatus._INVALID_BOOKING_ACCESS);
+        }
+
+        return BookingResponseDTO.BookingDetailDTO.builder()
+                .bookerName(booking.getUser().getName())
+                .partySize(booking.getPartySize())
+                .amount(booking.getDepositAmount())
                 .build();
     }
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -55,4 +56,17 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "     OR (b.bookingDate = :currentDate AND b.bookingTime >= :currentTime)) " +
             "AND b.status IN ('CONFIRMED', 'PENDING')")
     boolean existsFutureBookingByTable(@Param("tableId") Long tableId, @Param("currentDate") LocalDate currentDate, @Param("currentTime") LocalTime currentTime);
+
+    // BookingRepository.java
+    @Query("SELECT b FROM Booking b " +
+            "JOIN b.bookingTables bt " +
+            "JOIN bt.storeTable st " +
+            "WHERE st.id = :tableId " +
+            "AND b.bookingDate = :date " +
+            "AND b.status = 'CONFIRMED'")
+    List<Booking> findActiveBookingsByTableAndDate(
+            @Param("tableId") Long tableId,
+            @Param("date") LocalDate date);
+
+    Optional<Booking> findByIdAndStatus(Long bookingId, BookingStatus status);
 }
