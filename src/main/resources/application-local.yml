@@ -33,16 +33,16 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "https://eatsfine.co.kr/oauth/login/oauth2/code/google"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             authorization-grant-type: authorization_code
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
-            client-secret: ""
+            client-secret: ${KAKAO_CLIENT_SECRET}
             scope:
               - profile_nickname
               - profile_image
               - account_email
-            redirect-uri: "https://eatsfine.co.kr/oauth/code/kakao"
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
             authorization-grant-type: authorization_code
             client-name: Kakao
             provider: kakao
