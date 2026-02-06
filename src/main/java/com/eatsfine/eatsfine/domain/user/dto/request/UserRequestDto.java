@@ -98,7 +98,7 @@ public class UserRequestDto {
         private String businessNumber;
 
         @Schema(description = "개업일자", example = "20240101")
-        @NotBlank
+        @NotBlank(message = "개업일자는 필수입니다.")
         @Pattern(regexp = "^[0-9]{8}$", message = "개업일자는 YYYYMMDD 형식이어야 합니다.")
         private String startDate;
     }

@@ -2,8 +2,6 @@ package com.eatsfine.eatsfine.domain.user.entity;
 
 import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
-import com.eatsfine.eatsfine.domain.user.exception.UserException;
-import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
