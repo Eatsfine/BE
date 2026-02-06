@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.user.entity;
 
+import com.eatsfine.eatsfine.domain.term.entity.Term;
 import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
@@ -70,9 +71,18 @@ public class User extends BaseEntity {
         this.refreshToken = refreshToken;
     }
 
+    public void setTerm(Term term) {
+        this.term = term;
+        if (term != null) term.setUser(this);
+    }
+
     public void linkSocial(SocialType socialType, String socialId) {
         this.socialType = socialType;
         this.socialId = socialId;
     }
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private Term term;
+
 
 }
