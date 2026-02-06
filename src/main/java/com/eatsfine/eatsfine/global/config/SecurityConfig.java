@@ -69,6 +69,17 @@ public class SecurityConfig {
                         ).permitAll()
 
                         .requestMatchers("/auth/**", "/login/**", "/signup").permitAll()
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/stores/search", // 식당 검색
+                                "/api/v1/stores/{storeId}", //식당 상세 조회
+                                "/api/v1/stores/{storeId}/main-image", // 식당 대표 이미지 조회
+                                "/api/v1/stores/{storeId}/menus", // 식당 메뉴 조회
+                                "/api/v1/stores/{storeId}/table-images" // 식당 테이블 이미지(가게 전경) 조회
+                        ).permitAll()
+
+                        .requestMatchers("/auth/**", "/login", "/signup").permitAll()
+
+                        // 그 외는 인증 필요
                         .anyRequest().authenticated()
                 )
 
