@@ -92,6 +92,9 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         ResponseCookie refreshCookie = authCookieProvider.refreshTokenCookie(refreshToken);
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
+        log.info("[OAuth2 SUCCESS] 새 refreshToken 쿠키 설정: {}", refreshToken);
+        log.info("[OAuth2 SUCCESS] 쿠키 설정 내용: {}", refreshCookie.toString());
+
         String redirectUrl = UriComponentsBuilder.fromUriString(CALLBACK_REDIRECT_BASE)
                 .queryParam("accessToken", accessToken)
                 .build()
