@@ -4,7 +4,9 @@ package com.eatsfine.eatsfine.domain.user.service.oauthService;
 import com.eatsfine.eatsfine.domain.user.converter.UserConverter;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
+import com.eatsfine.eatsfine.domain.user.exception.AuthException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,7 +24,12 @@ public class Oauth2MemberServiceImpl implements Oauth2MemberService {
 
     @Override
     public User findOrCreateOauthUser(SocialType socialType, String socialId, String email, String nickName) {
-        // 1. 소셜 ID로 이미 가입된 회원이 있는지 조회
+
+        if (email == null || email.isBlank()) {
+            throw new AuthException(AuthErrorStatus.OAUTH2_EMAIL_NOT_FOUND);
+        }
+
+        // 소셜 ID로 이미 가입된 회원이 있는지 조회
         return userRepository.findBySocialTypeAndSocialId(socialType, socialId)
                 .orElseGet(() -> findByEmailOrJoin(socialType, socialId, email, nickName));
     }

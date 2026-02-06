@@ -24,7 +24,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
         log.info("[LOAD] 쿠키에서 AuthorizationRequest 로드 시도");
 
-        // ⭐ 모든 쿠키 이름 출력
+        //  모든 쿠키 이름 출력
         if (request.getCookies() != null) {
             for (Cookie c : request.getCookies()) {
                 log.info("[LOAD] 발견된 쿠키: name={}, value={}, path={}, domain={}",
@@ -79,6 +79,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
 
             // 환경에 따라 설정
             cookie.setSecure(true);  // 로컬 HTTP: false, 운영 HTTPS: true
+            cookie.setAttribute("SameSite", "Lax");
             response.addCookie(cookie);
 
             log.info("[SAVE] AuthorizationRequest 쿠키 저장 완료 - name={}, path={}, maxAge={}, secure={}, domain={}",

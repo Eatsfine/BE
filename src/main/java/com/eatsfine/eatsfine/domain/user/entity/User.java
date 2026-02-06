@@ -30,7 +30,6 @@ public class User extends BaseEntity {
     @Column(nullable = false, length = 20)
     private String phoneNumber;
 
-    @Getter
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -81,7 +80,7 @@ public class User extends BaseEntity {
         this.socialId = socialId;
     }
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private Term term;
 
 }

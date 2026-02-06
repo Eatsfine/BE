@@ -5,6 +5,8 @@ import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
+import com.eatsfine.eatsfine.global.apiPayload.code.BaseErrorCode;
+import com.eatsfine.eatsfine.global.apiPayload.code.ErrorReasonDto;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -106,27 +108,14 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         response.sendRedirect(redirectUrl);
     }
 
-    private void redirectFail(HttpServletResponse response, AuthErrorStatus errorStatus) throws IOException {
+    private void redirectFail(HttpServletResponse response, BaseErrorCode errorStatus) throws IOException {
+        ErrorReasonDto reason = errorStatus.getReason();
         String failUrl = UriComponentsBuilder.fromUriString(LOGIN_ERROR_REDIRECT_BASE)
-                .queryParam("error", errorStatus.getCode())
-                .queryParam("message", errorStatus.getMessage())
+                .queryParam("error", reason.getCode())
+                .queryParam("message", reason.getMessage())
                 .build()
                 .toUriString();
-
-        log.warn("[OAuth2 FAIL] errorCode={}, message={}, failUrl={}",
-                errorStatus.getCode(), errorStatus.getMessage(), failUrl);
-        response.sendRedirect(failUrl);
-    }
-
-    private void redirectFail(HttpServletResponse response, UserErrorStatus errorStatus) throws IOException {
-        String failUrl = UriComponentsBuilder.fromUriString(LOGIN_ERROR_REDIRECT_BASE)
-                .queryParam("error", errorStatus.getCode())
-                .queryParam("message", errorStatus.getMessage())
-                .build()
-                .toUriString();
-
-        log.warn("[OAuth2 FAIL] errorCode={}, message={}, failUrl={}",
-                errorStatus.getCode(), errorStatus.getMessage(), failUrl);
+        log.warn("[OAuth2 FAIL] errorCode={}, message={}", reason.getCode(), reason.getMessage());
         response.sendRedirect(failUrl);
     }
 
@@ -169,7 +158,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     private void logKakaoAccountStatus(Map<String, Object> attributes) {
         Object kakaoAccountObj = attributes.get("kakao_account");
         if (!(kakaoAccountObj instanceof Map<?, ?> kakaoAccount)) {
-            log.warn("[KAKAO] kakao_account missing. attributes={}", attributes);
+            log.warn("[KAKAO] \n" + "카카오 계정이 없거나 유효하지 않습니다.. attributes={}", attributes);
             return;
         }
 
@@ -180,5 +169,13 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
 
         log.warn("[KAKAO] has_email={}, email_needs_agreement={}, is_email_valid={}, is_email_verified={}",
                 hasEmail, emailNeedsAgreement, isEmailValid, isEmailVerified);
+
+
+        Object profileObj = kakaoAccount.get("profile");
+        if (profileObj instanceof Map<?, ?> profile) {
+            Object nickname = profile.get("nickname");
+            log.warn("[KAKAO] profile.nickname={}", nickname);
+        }
     }
+
 }

@@ -28,7 +28,13 @@ public class CustomOAuth2MemberServiceImpl extends DefaultOAuth2UserService {
         String email = null;
         String name = null;
 
-        SocialType socialType = SocialType.valueOf(provider.toUpperCase());
+        SocialType socialType;
+        try {
+            socialType = SocialType.valueOf(provider.toUpperCase());
+            } catch (IllegalArgumentException e) {
+            OAuth2Error error = new OAuth2Error("unsupported_provider", "지원되지 않는 소셜 로그인 제공자입니다: " + provider, null);
+            throw new OAuth2AuthenticationException(error, e);
+            }
 
         try {
             if (socialType == SocialType.GOOGLE) {

@@ -48,7 +48,15 @@ public class AuthController {
             throw new AuthException(AuthErrorStatus.REFRESH_TOKEN_MISSING);
         }
 
-        String email = jwtTokenProvider.getEmailFromToken(refreshToken);
+        String email;
+        try {
+            if (!jwtTokenProvider.validateToken(refreshToken)) {
+                throw new AuthException(AuthErrorStatus.INVALID_TOKEN);
+            }
+            email = jwtTokenProvider.getEmailFromToken(refreshToken);
+        } catch (Exception e) {
+            throw new AuthException(AuthErrorStatus.INVALID_TOKEN);
+        }
 
         // DB에서 User 조회
         User user = userRepository.findByEmail(email)

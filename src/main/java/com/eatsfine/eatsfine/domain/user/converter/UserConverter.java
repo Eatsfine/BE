@@ -91,7 +91,7 @@ public class UserConverter {
 
     /*
      소셜 유저 생성 (최초 소셜 가입 등)
-     -소셜 로그인에서 email/nickname/phoneNumber 등을 확보한 후 엔티티 생성에 사용
+     소셜 로그인에서 email/nickname/profileImage 등을 확보한 후 엔티티 생성에 사용
      */
     public static User toSocialUser(String email, String nickName, String profileImage, String socialId, SocialType socialType) {
 
@@ -101,7 +101,7 @@ public class UserConverter {
                 .profileImage(profileImage)
                 .socialId(socialId)
                 .socialType(socialType)
-                .phoneNumber("")
+                .phoneNumber(null)
                 .role(ROLE_CUSTOMER)
                 .build();
     }
