@@ -12,6 +12,7 @@ public class UserRequestDto {
     @PasswordMatch
     @Getter
     public static class JoinDto{
+
         @NotBlank(message = "이름은 필수입니다.")
         private String name;  // 이름
 
@@ -100,5 +101,4 @@ public class UserRequestDto {
         @Pattern(regexp = "^[0-9]{8}$", message = "개업일자는 YYYYMMDD 형식이어야 합니다.")
         private String startDate;
     }
-
 }

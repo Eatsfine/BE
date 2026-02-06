@@ -84,5 +84,4 @@ public class User extends BaseEntity {
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true)
     private Term term;
 
-
 }

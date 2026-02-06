@@ -40,4 +40,5 @@ public enum UserErrorStatus implements BaseErrorCode {
                 .message(message)
                 .build();
     }
+
 }
