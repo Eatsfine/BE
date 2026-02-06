@@ -113,7 +113,12 @@ public class UserController {
     )
     public ResponseEntity<?> withdraw(HttpServletRequest request) {
         userService.withdraw(request);
-        return ResponseEntity.ok(ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다."));
+
+        //회원탈퇴 시 refreshToken 쿠키도 삭제
+        ResponseCookie clearCookie = authCookieProvider.clearRefreshTokenCookie();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                .body(ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다."));
     }
 
 

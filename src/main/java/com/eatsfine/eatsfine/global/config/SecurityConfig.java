@@ -71,7 +71,6 @@ public class SecurityConfig {
                 )
 
                 .oauth2Login(oauth2 -> oauth2
-                        // ✅ 핵심: 세션 대신 쿠키에 AuthorizationRequest 저장
                         .authorizationEndpoint(authorization -> authorization
                                 .authorizationRequestRepository(cookieAuthorizationRequestRepository())
                         )
