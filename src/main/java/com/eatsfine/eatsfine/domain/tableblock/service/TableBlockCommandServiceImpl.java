@@ -5,6 +5,7 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.exception.StoreTableException;
 import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableErrorStatus;
@@ -34,12 +35,18 @@ public class TableBlockCommandServiceImpl implements TableBlockCommandService {
     private final TableBlockRepository tableBlockRepository;
     private final StoreRepository storeRepository;
     private final BookingRepository bookingRepository;
+    private final StoreValidator storeValidator;
 
     // 테이블 슬롯 상태 변경
     @Override
-    public TableBlockResDto.SlotStatusUpdateDto updateSlotStatus(Long storeId, Long tableId, TableBlockReqDto.SlotStatusUpdateDto dto) {
-        Store store = storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+    public TableBlockResDto.SlotStatusUpdateDto updateSlotStatus(
+            Long storeId,
+            Long tableId,
+            TableBlockReqDto.SlotStatusUpdateDto dto,
+            String email
+            ) {
+
+        Store store = storeValidator.validateStoreOwner(storeId, email);
 
         StoreTable table = storeTableRepository.findById(tableId)
                 .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));

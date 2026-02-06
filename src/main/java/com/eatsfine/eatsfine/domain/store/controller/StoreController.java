@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.service.StoreCommandService;
 import com.eatsfine.eatsfine.domain.store.service.StoreQueryService;
 import com.eatsfine.eatsfine.domain.store.status.StoreSuccessStatus;
+import com.eatsfine.eatsfine.global.annotation.CurrentUser;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -13,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -30,10 +33,12 @@ public class StoreController {
             description = "사장 회원이 새로운 식당을 등록합니다"
     )
     @PostMapping("/stores")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreResDto.StoreCreateDto> createStore(
-            @Valid @RequestBody StoreReqDto.StoreCreateDto dto
+            @Valid @RequestBody StoreReqDto.StoreCreateDto dto,
+            @CurrentUser User user
     ) {
-        return ApiResponse.of(StoreSuccessStatus._STORE_CREATED, storeCommandService.createStore(dto));
+        return ApiResponse.of(StoreSuccessStatus._STORE_CREATED, storeCommandService.createStore(dto, user.getUsername()));
     }
 
     @Operation(
@@ -65,11 +70,13 @@ public class StoreController {
                     "영업시간, 브레이크타임, 이미지는 별도 엔티티/컬렉션이므로 개별 API로 분리"
     )
     @PatchMapping("/stores/{storeId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreResDto.StoreUpdateDto> updateStoreBasicInfo(
             @PathVariable Long storeId,
-            @Valid @RequestBody StoreReqDto.StoreUpdateDto dto
+            @Valid @RequestBody StoreReqDto.StoreUpdateDto dto,
+            @CurrentUser User user
             ) {
-        return ApiResponse.of(StoreSuccessStatus._STORE_UPDATE_SUCCESS, storeCommandService.updateBasicInfo(storeId, dto));
+        return ApiResponse.of(StoreSuccessStatus._STORE_UPDATE_SUCCESS, storeCommandService.updateBasicInfo(storeId, dto, user.getUsername()));
     }
 
 
@@ -81,11 +88,13 @@ public class StoreController {
             value = "/stores/{storeId}/main-image",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreResDto.UploadMainImageDto> uploadMainImage(
             @RequestPart("mainImage")MultipartFile mainImage,
-            @PathVariable Long storeId
+            @PathVariable Long storeId,
+            @CurrentUser User user
             ){
-        return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_UPLOAD_SUCCESS, storeCommandService.uploadMainImage(storeId, mainImage));
+        return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_UPLOAD_SUCCESS, storeCommandService.uploadMainImage(storeId, mainImage, user.getUsername()));
     }
 
     @Operation(

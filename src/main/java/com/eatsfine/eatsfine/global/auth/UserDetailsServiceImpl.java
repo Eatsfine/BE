@@ -1,10 +1,8 @@
 package com.eatsfine.eatsfine.global.auth;
 
-
-
-
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -28,7 +26,11 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             throw new UsernameNotFoundException("비밀번호 기반 로그인 대상이 아닙니다.");
         }
 
-        return new User(user.getEmail(), password, List.of());
+        return new User(
+                user.getEmail(),
+                password,
+                List.of(new SimpleGrantedAuthority(user.getRole().name()))
+        );
     }
 }
 

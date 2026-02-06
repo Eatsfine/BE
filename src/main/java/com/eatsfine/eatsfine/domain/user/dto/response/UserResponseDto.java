@@ -34,7 +34,7 @@ public class UserResponseDto {
         private Long id;
         private String profileImage;
         private String email;
-        private String nickName;
+        private String name;
         private String phoneNumber;
     }
 
@@ -44,7 +44,7 @@ public class UserResponseDto {
     public static class UpdateResponseDto{
         private String profileImage;
         private String email;
-        private String nickName;
+        private String name;
         private String phoneNumber;
     }
 
@@ -69,4 +69,9 @@ public class UserResponseDto {
         private String accessToken;
     }
 
+    @Builder
+    public static class VerifyOwnerDto {
+        @Schema(description = "권한 승격이 완료된 유저의 식별자", example = "1")
+        private Long userId;
+    }
 }

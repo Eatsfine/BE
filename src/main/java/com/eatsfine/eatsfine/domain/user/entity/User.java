@@ -5,7 +5,6 @@ import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
 @Entity
 @Getter
 // 수정한 부분: access 레벨을 PROTECTED로 설정하여 Hibernate가 접근할 수 있게 합니다.
@@ -20,16 +19,17 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 20)
-    private String nickName;
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
 
     private String password;
 
-    @Column(nullable = true, length = 20)
+    @Column(nullable = false, length = 20)
     private String phoneNumber;
 
+    @Getter
     @Enumerated(EnumType.STRING)
     private Role role;
 
@@ -46,24 +46,33 @@ public class User extends BaseEntity {
     @Column(length = 500)
     private String refreshToken;
 
-    public void updateNickname(String nickName){
-        this.nickName = nickName;
+    public void updateName(String name) {
+        this.name = name;
     }
 
     public void updatePhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
     }
 
-    public void updateEmail(String email) {this.email = email;}
+    public void updateEmail(String email) {
+        this.email = email;
+    }
 
     public void updateProfileImage(String profileImage) {
         this.profileImage = profileImage;
     }
 
-    public void updateRefreshToken(String refreshToken){this.refreshToken = refreshToken;}
+    public void updateToOwner() {
+        this.role = Role.ROLE_OWNER;
+    }
+
+    public void updateRefreshToken(String refreshToken){
+        this.refreshToken = refreshToken;
+    }
 
     public void linkSocial(SocialType socialType, String socialId) {
         this.socialType = socialType;
         this.socialId = socialId;
     }
+
 }

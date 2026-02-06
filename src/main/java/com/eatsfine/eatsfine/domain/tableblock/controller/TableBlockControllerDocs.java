@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.RequestBody;
 
 public interface TableBlockControllerDocs {
@@ -31,6 +32,9 @@ public interface TableBlockControllerDocs {
             @Parameter(description = "테이블 ID", required = true, example = "1")
             Long tableId,
 
-            @RequestBody @Valid TableBlockReqDto.SlotStatusUpdateDto dto
+            @RequestBody @Valid TableBlockReqDto.SlotStatusUpdateDto dto,
+
+            @Parameter(hidden = true) User user
+
     );
 }

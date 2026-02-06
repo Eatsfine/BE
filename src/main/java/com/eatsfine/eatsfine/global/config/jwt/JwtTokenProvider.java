@@ -1,10 +1,13 @@
 package com.eatsfine.eatsfine.global.config.jwt;
 
+import com.eatsfine.eatsfine.domain.user.exception.AuthException;
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.config.properties.Constants;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
-import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.config.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -22,9 +25,11 @@ import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtTokenProvider {
 
     private final JwtProperties jwtProperties;
@@ -36,11 +41,18 @@ public class JwtTokenProvider {
     private final long accessTokenValidity = 1000L * 60 * 60; // 1시간
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 7; // 7일
 
-    public String createAccessToken(String email) {
+    public String createAccessToken(String email, String role) {
+        if (!StringUtils.hasText(role)) {
+            throw new AuthException(AuthErrorStatus.EMPTY_TOKEN_ROLE);
+        }
+
+        Claims claims = Jwts.claims().setSubject(email);
+        claims.put("role", role);
+
         Date now = new Date();
         Date expiry = new Date(now.getTime() + accessTokenValidity);
         return Jwts.builder()
-                .setSubject(email)
+                .setClaims(claims)
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
@@ -79,7 +91,17 @@ public class JwtTokenProvider {
 
         String email = claims.getSubject();
 
-        User principal = new User(email, "", Collections.emptyList());
+
+        String role = claims.get("role", String.class);
+
+        if (!StringUtils.hasText(role)) {
+            log.error("JWT Token does not contain role claim for user: {}", claims.getSubject());
+            throw new AuthException(AuthErrorStatus.EMPTY_TOKEN_ROLE);
+        }
+
+        List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
+
+        User principal = new User(email, "", authorities);
         return new UsernamePasswordAuthenticationToken(principal, token, principal.getAuthorities());
     }
 
@@ -95,7 +117,7 @@ public class JwtTokenProvider {
     public Authentication extractAuthentication(HttpServletRequest request) {
         String accessToken = resolveToken(request);
         if (accessToken == null || !validateToken(accessToken)) {
-            throw new UserException(UserErrorStatus.INVALID_TOKEN);
+            throw new AuthException(AuthErrorStatus.INVALID_TOKEN);
         }
         return getAuthentication(accessToken);
     }

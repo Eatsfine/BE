@@ -3,9 +3,10 @@ package com.eatsfine.eatsfine.domain.user.controller;
 
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
-import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.exception.AuthException;
 import com.eatsfine.eatsfine.domain.user.service.userService.UserService;
-import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
+import com.eatsfine.eatsfine.domain.user.status.UserSuccessStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
@@ -48,7 +49,7 @@ public class UserController {
         UserResponseDto.LoginResponseDto loginResult = userService.login(loginDto);
 
         if (loginResult.getRefreshToken() == null || loginResult.getRefreshToken().isBlank()) {
-            throw new UserException(UserErrorStatus.REFRESH_TOKEN_NOT_ISSUED);
+            throw new AuthException(AuthErrorStatus.REFRESH_TOKEN_NOT_ISSUED);
         }
 
         ResponseCookie refreshCookie = authCookieProvider.refreshTokenCookie(loginResult.getRefreshToken());
@@ -102,6 +103,20 @@ public class UserController {
     ) {
         String result = userService.updateMemberInfo(null, profileImage, request);
         return ResponseEntity.ok(ApiResponse.onSuccess(result));
+    }
+
+
+    @PatchMapping("/api/users/role/owner")
+    @Operation(
+            summary = "사장 인증 API - 인증 필요",
+            description = "사장 인증을 통해 사장 권한을 부여받습니다.",
+            security = {@SecurityRequirement(name = "JWT")}
+    )
+    public ApiResponse<UserResponseDto.VerifyOwnerDto> verifyOwner(
+            @RequestBody @Valid UserRequestDto.VerifyOwnerDto verifyOwnerDto,
+            HttpServletRequest request
+    ) {
+        return ApiResponse.of(UserSuccessStatus.OWNER_VERIFICATION_SUCCESS, userService.verifyOwner(verifyOwnerDto, request));
     }
 
 

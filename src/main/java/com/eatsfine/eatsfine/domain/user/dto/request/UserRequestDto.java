@@ -3,8 +3,8 @@ package com.eatsfine.eatsfine.domain.user.dto.request;
 import com.eatsfine.eatsfine.global.validator.annotation.PasswordMatch;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class UserRequestDto {
@@ -12,9 +12,8 @@ public class UserRequestDto {
     @PasswordMatch
     @Getter
     public static class JoinDto{
-
         @NotBlank(message = "이름은 필수입니다.")
-        private String nickName;  // 이름
+        private String name;  // 이름
 
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "유효한 이메일 형식이어야 합니다.")
@@ -62,7 +61,7 @@ public class UserRequestDto {
     @Setter
     public static class UpdateDto {
         private String email;
-        private String nickName;
+        private String name;
         private String phoneNumber;
     }
 
@@ -86,4 +85,20 @@ public class UserRequestDto {
         @Schema(description = "새 비밀번호 확인", example = "NewPw!1234")
         private String newPasswordConfirm;
     }
+
+    @Getter
+    @NoArgsConstructor
+    public static class VerifyOwnerDto {
+
+        @Schema(description = "사업자번호", example = "1234567890")
+        @NotBlank(message = "사업자번호는 필수입니다.")
+        @Pattern(regexp = "^[0-9]{10}$", message = "사업자번호는 숫자 10자리여야 합니다.")
+        private String businessNumber;
+
+        @Schema(description = "개업일자", example = "20240101")
+        @NotBlank(message = "개업일자는 필수입니다.")
+        @Pattern(regexp = "^[0-9]{8}$", message = "개업일자는 YYYYMMDD 형식이어야 합니다.")
+        private String startDate;
+    }
+
 }

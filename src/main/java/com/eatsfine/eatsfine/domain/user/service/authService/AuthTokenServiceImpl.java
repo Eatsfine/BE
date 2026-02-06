@@ -1,9 +1,11 @@
 package com.eatsfine.eatsfine.domain.user.service.authService;
 
 import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.user.exception.AuthException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
+
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -22,7 +24,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
     private final UserRepository userRepository;
 
     @Override
-    public ReissueResult reissue(String refreshToken) {
+    public ReissueResult reissue(String refreshToken, Role role) {
 
         log.info("[REISSUE] 재발급 요청 시작");
         log.info("[REISSUE] 요청 refreshToken={}", refreshToken);
@@ -73,7 +75,7 @@ public class AuthTokenServiceImpl implements AuthTokenService {
         log.info("[REISSUE] 토큰 일치 확인 완료. 새 토큰 발급 시작");
 
         // 새 토큰 발급
-        String newAccessToken = jwtTokenProvider.createAccessToken(email);
+        String newAccessToken = jwtTokenProvider.createAccessToken(email, role.name());
         String newRefreshToken = jwtTokenProvider.createRefreshToken(email);
 
         log.info("[REISSUE] 새 accessToken 발급 완료");

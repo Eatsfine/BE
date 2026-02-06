@@ -7,7 +7,6 @@ import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 
 import java.time.LocalDateTime;
-
 import static com.eatsfine.eatsfine.domain.user.enums.Role.ROLE_CUSTOMER;
 
 public class UserConverter {
@@ -20,7 +19,7 @@ public class UserConverter {
     }
 
 
-     //로그인 응답 변환
+    //로그인 응답 변환
     public static UserResponseDto.LoginResponseDto toLoginResponse(User user, String accessToken) {
         return UserResponseDto.LoginResponseDto.builder()
                 .id(user.getId())
@@ -36,7 +35,7 @@ public class UserConverter {
                 .id(user.getId())
                 .profileImage(user.getProfileImage())
                 .email(user.getEmail())
-                .nickName(user.getNickName())
+                .name(user.getName())
                 .phoneNumber(user.getPhoneNumber())
                 .build();
     }
@@ -47,7 +46,7 @@ public class UserConverter {
         return UserResponseDto.UpdateResponseDto.builder()
                 .profileImage(user.getProfileImage())
                 .email(user.getEmail())
-                .nickName(user.getNickName())
+                .name(user.getName())
                 .phoneNumber(user.getPhoneNumber())
                 .build();
     }
@@ -65,7 +64,7 @@ public class UserConverter {
 
     public static User toUser(UserRequestDto.JoinDto dto, String encodedPassword) {
         return User.builder()
-                .nickName(dto.getNickName())
+                .name(dto.getName())
                 .email(dto.getEmail())
                 .phoneNumber(dto.getPhoneNumber())
                 .password(encodedPassword)
@@ -83,6 +82,13 @@ public class UserConverter {
     }
 
 
+    public static UserResponseDto.VerifyOwnerDto toVerifyOwnerResponse(User user) {
+        return UserResponseDto.VerifyOwnerDto.builder()
+                .userId(user.getId())
+                .build();
+    }
+
+
     /*
      소셜 유저 생성 (최초 소셜 가입 등)
      -소셜 로그인에서 email/nickname/phoneNumber 등을 확보한 후 엔티티 생성에 사용
@@ -91,7 +97,7 @@ public class UserConverter {
 
         return User.builder()
                 .email(email)
-                .nickName(nickName)
+                .name(nickName)
                 .profileImage(profileImage)
                 .socialId(socialId)
                 .socialType(socialType)

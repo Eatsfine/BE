@@ -3,6 +3,8 @@ package com.eatsfine.eatsfine.domain.user.exception.handler;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpServletRequest;
@@ -50,7 +52,7 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             socialType = SocialType.valueOf(provider.toUpperCase());
         } catch (IllegalArgumentException e) {
             log.error("Unknown provider registrationId={}", provider, e);
-            redirectFail(response, "unknown_provider");
+            redirectFail(response, AuthErrorStatus.OAUTH2_PROVIDER_NOT_SUPPORTED);
             return;
         }
 
@@ -69,19 +71,19 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
             if (socialType == SocialType.KAKAO) {
                 logKakaoAccountStatus(attrs);
             }
-            redirectFail(response, "email_not_found");
+            redirectFail(response, AuthErrorStatus.OAUTH2_EMAIL_NOT_FOUND);
             return;
         }
 
         // DB에서 user 조회
         User user = userRepository.findByEmail(email).orElse(null);
         if (user == null) {
-            redirectFail(response, "user_not_found");
+            redirectFail(response, UserErrorStatus.MEMBER_NOT_FOUND);
             return;
         }
 
         // 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(email);
+        String accessToken = jwtTokenProvider.createAccessToken(email, user.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(email);
 
         // refresh DB 저장
@@ -104,13 +106,27 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
         response.sendRedirect(redirectUrl);
     }
 
-    private void redirectFail(HttpServletResponse response, String errorCode) throws IOException {
+    private void redirectFail(HttpServletResponse response, AuthErrorStatus errorStatus) throws IOException {
         String failUrl = UriComponentsBuilder.fromUriString(LOGIN_ERROR_REDIRECT_BASE)
-                .queryParam("error", errorCode)
+                .queryParam("error", errorStatus.getCode())
+                .queryParam("message", errorStatus.getMessage())
                 .build()
                 .toUriString();
 
-        log.warn("[OAuth2 FAIL] errorCode={}, failUrl={}", errorCode, failUrl);
+        log.warn("[OAuth2 FAIL] errorCode={}, message={}, failUrl={}",
+                errorStatus.getCode(), errorStatus.getMessage(), failUrl);
+        response.sendRedirect(failUrl);
+    }
+
+    private void redirectFail(HttpServletResponse response, UserErrorStatus errorStatus) throws IOException {
+        String failUrl = UriComponentsBuilder.fromUriString(LOGIN_ERROR_REDIRECT_BASE)
+                .queryParam("error", errorStatus.getCode())
+                .queryParam("message", errorStatus.getMessage())
+                .build()
+                .toUriString();
+
+        log.warn("[OAuth2 FAIL] errorCode={}, message={}, failUrl={}",
+                errorStatus.getCode(), errorStatus.getMessage(), failUrl);
         response.sendRedirect(failUrl);
     }
 
