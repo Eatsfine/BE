@@ -1,6 +1,6 @@
 package com.eatsfine.eatsfine.global.apiPayload.handler;
 
-import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.apiPayload.code.BaseErrorCode;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
@@ -66,9 +66,9 @@ public class GeneralExceptionAdvice extends ResponseEntityExceptionHandler {
         // 2. 기존 메서드를 활용해 ResponseEntity<Object>로 반환
         return handleExceptionInternalFalse(
                 e,
-                UserErrorStatus.FORBIDDEN_OWNER,
+                AuthErrorStatus.FORBIDDEN_OWNER,
                 HttpHeaders.EMPTY,
-                UserErrorStatus.FORBIDDEN_OWNER.getHttpStatus(),
+                AuthErrorStatus.FORBIDDEN_OWNER.getHttpStatus(),
                 request,
                 null
         );
