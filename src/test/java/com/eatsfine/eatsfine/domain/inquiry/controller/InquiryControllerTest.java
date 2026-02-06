@@ -117,4 +117,42 @@ class InquiryControllerTest {
                 .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
+
+    @Test
+    @DisplayName("문의 등록 실패 - 유효성 검증 실패 (이름 길이 초과)")
+    void registerInquiry_fail_longName() throws Exception {
+        // given
+        InquiryRequestDTO request = new InquiryRequestDTO();
+        ReflectionTestUtils.setField(request, "name", "a".repeat(21)); // 21 chars
+        ReflectionTestUtils.setField(request, "email", "test@example.com");
+        ReflectionTestUtils.setField(request, "type", InquiryType.ETC);
+        ReflectionTestUtils.setField(request, "title", "문의 제목");
+        ReflectionTestUtils.setField(request, "content", "문의 내용입니다.");
+
+        // when & then
+        mockMvc.perform(post("/api/v1/inquiries")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("문의 등록 실패 - 유효성 검증 실패 (제목 길이 초과)")
+    void registerInquiry_fail_longTitle() throws Exception {
+        // given
+        InquiryRequestDTO request = new InquiryRequestDTO();
+        ReflectionTestUtils.setField(request, "name", "홍길동");
+        ReflectionTestUtils.setField(request, "email", "test@example.com");
+        ReflectionTestUtils.setField(request, "type", InquiryType.ETC);
+        ReflectionTestUtils.setField(request, "title", "a".repeat(101)); // 101 chars
+        ReflectionTestUtils.setField(request, "content", "문의 내용입니다.");
+
+        // when & then
+        mockMvc.perform(post("/api/v1/inquiries")
+                .with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
 }
