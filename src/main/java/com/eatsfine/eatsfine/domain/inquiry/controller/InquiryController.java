@@ -3,11 +3,12 @@ package com.eatsfine.eatsfine.domain.inquiry.controller;
 import com.eatsfine.eatsfine.domain.inquiry.dto.InquiryRequestDTO;
 import com.eatsfine.eatsfine.domain.inquiry.dto.InquiryResponseDTO;
 import com.eatsfine.eatsfine.domain.inquiry.service.InquiryService;
+
+import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,8 +24,8 @@ public class InquiryController {
 
     @Operation(summary = "1:1 문의 등록 API", description = "이름, 이메일, 문의 유형, 제목, 내용을 입력받아 문의를 등록합니다.")
     @PostMapping
-    public ResponseEntity<InquiryResponseDTO> registerInquiry(@Valid @RequestBody InquiryRequestDTO request) {
+    public ApiResponse<InquiryResponseDTO> registerInquiry(@Valid @RequestBody InquiryRequestDTO request) {
         InquiryResponseDTO response = inquiryService.registerInquiry(request);
-        return ResponseEntity.ok(response);
+        return ApiResponse.onSuccess(response);
     }
 }
