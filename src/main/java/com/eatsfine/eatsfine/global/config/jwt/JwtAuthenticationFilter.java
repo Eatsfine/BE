@@ -5,11 +5,10 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,10 +17,10 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
-    private final UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -30,22 +29,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String uri = request.getRequestURI();
-        System.out.println("요청 URI: " + uri);
-
-        // 인증 없이 통과시킬 경로들
-        if (uri.startsWith("/api/auth/login") ||
-                uri.startsWith("/api/auth/signup") ||
-                uri.startsWith("/oauth2") ||
-                uri.startsWith("/login")) {
-            chain.doFilter(request, response);
-            return;
-        }
-
+        log.debug("요청 URI: " + uri);
 
         String token = JwtTokenProvider.resolveToken(request);
 
         if (token != null && jwtTokenProvider.validateToken(token)) {
             try {
+
+                // uri.startsWith() 로직 삭제
+                // 토큰이 없으면 아래 if문에서 알아서 걸러지고 다음 필터로 넘어감.
+                // -> SecurityConfig의 permitAll() 설정에 따라 통과 여부 결정
 
                 Authentication authentication = jwtTokenProvider.getAuthentication(token);
 
@@ -57,7 +50,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception e) {
                 // 예외 로그 출력
-                System.out.println("JWT 인증 오류: " + e.getMessage());
+                log.warn("JWT 인증 오류: " + e.getMessage());
             }
         }
 

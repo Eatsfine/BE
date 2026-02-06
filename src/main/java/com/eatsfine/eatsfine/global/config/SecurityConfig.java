@@ -52,6 +52,7 @@ public class SecurityConfig {
                         // 공개 리소스 / 인증 없이
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/oauth2/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
