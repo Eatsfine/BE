@@ -29,7 +29,7 @@ public class StoreTableReqDto {
             @NotNull(message = "테이블 유형은 필수입니다.")
             SeatsType seatsType,
 
-            String tableImageUrl
+            String tableImageKey
     ) {}
 
     public record TableUpdateDto(

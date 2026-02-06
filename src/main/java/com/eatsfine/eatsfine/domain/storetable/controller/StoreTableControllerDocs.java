@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,7 +41,37 @@ public interface StoreTableControllerDocs {
     ApiResponse<StoreTableResDto.TableCreateDto> createTable(
             @Parameter(description = "가게 ID", required = true, example = "1")
             Long storeId,
-            @RequestBody @Valid StoreTableReqDto.TableCreateDto dto
+            @RequestBody @Valid StoreTableReqDto.TableCreateDto dto,
+            @Parameter(hidden = true) User user
+    );
+
+    @Operation(
+            summary = "테이블 이미지 선 업로드",
+            description = """
+                테이블 생성 전에 이미지를 먼저 업로드하고 KEY를 반환합니다.
+                
+                - 이미지를 임시 경로(temp/tables/)에 저장합니다.
+                - 반환된 imageKey를 테이블 생성 시 사용합니다.
+                - imageUrl은 프론트엔드에서 즉시 미리보기에 사용할 수 있습니다.
+                - 테이블 생성 시 영구 경로(stores/{storeId}/tables/{tableId}/)로 자동 이동됩니다.
+                """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "201", description = "이미지 업로드 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "잘못된 요청 (빈 파일, 지원하지 않는 형식 등)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가게를 찾을 수 없음"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "500", description = "S3 업로드 실패")
+    })
+    ApiResponse<StoreTableResDto.ImageUploadDto> uploadTableImageTemp(
+            @Parameter(description = "가게 ID", required = true, example = "1")
+            Long storeId,
+            @Parameter(
+                    description = "업로드할 이미지 파일",
+                    required = true,
+                    content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
+            )
+            MultipartFile file,
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -166,7 +197,9 @@ public interface StoreTableControllerDocs {
             @Parameter(description = "테이블 ID", required = true, example = "1")
             Long tableId,
 
-            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto
+            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto,
+
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -190,7 +223,8 @@ public interface StoreTableControllerDocs {
             @Parameter(description = "가게 ID", required = true, example = "1")
             Long storeId,
             @Parameter(description = "테이블 ID", required = true, example = "1")
-            Long tableId
+            Long tableId,
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -221,7 +255,9 @@ public interface StoreTableControllerDocs {
                     required = true,
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
             )
-            MultipartFile tableImage
+            MultipartFile tableImage,
+
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -244,6 +280,8 @@ public interface StoreTableControllerDocs {
             Long storeId,
 
             @Parameter(description = "테이블 ID", required = true, example = "1")
-            Long tableId
+            Long tableId,
+
+            @Parameter(hidden = true) User user
     );
 }

@@ -1,7 +1,13 @@
 package com.eatsfine.eatsfine.domain.user.repository;
 
 import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface UserRepository extends JpaRepository<User,Long> {
+import java.util.Optional;
+
+public interface UserRepository extends JpaRepository<User, Long> {
+    Optional<User> findByEmail(String email);
+    Optional<User> findBySocialTypeAndSocialId(SocialType socialType, String socialId);
+    boolean existsByEmail(String email);
 }

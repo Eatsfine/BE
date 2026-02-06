@@ -61,6 +61,8 @@ public class StoreQueryServiceImpl implements StoreQueryService {
                                 .currentPage(page)
                                 .totalPages(resultPage.getTotalPages())
                                 .totalCount(resultPage.getTotalElements())
+                                .isFirst(resultPage.isFirst())
+                                .isLast(resultPage.isLast())
                                 .build()
                 )
                 .build();

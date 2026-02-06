@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import org.springframework.security.core.userdetails.User;
 
 public interface TableLayoutControllerDocs {
     @Operation(
@@ -28,7 +29,8 @@ public interface TableLayoutControllerDocs {
     ApiResponse<TableLayoutResDto.LayoutDetailDto> createLayout(
             @Parameter(description = "가게 ID", required = true, example = "1")
             Long storeId,
-            @RequestBody @Valid TableLayoutReqDto.LayoutCreateDto dto
+            @RequestBody @Valid TableLayoutReqDto.LayoutCreateDto dto,
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -48,6 +50,7 @@ public interface TableLayoutControllerDocs {
     })
     ApiResponse<TableLayoutResDto.LayoutDetailDto> getActiveLayout(
             @Parameter(description = "가게 ID", required = true, example = "1")
-            Long storeId
+            Long storeId,
+            @Parameter(hidden = true) User user
     );
 }

@@ -5,7 +5,7 @@ import com.eatsfine.eatsfine.domain.payment.enums.PaymentMethod;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentProvider;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentType;
-import com.eatsfine.eatsfine.global.entity.BaseEntity;
+import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -24,6 +24,10 @@ public class Payment extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "payment_id")
     private Long id;
+
+    // 낙관적 락을 위한 버전 필드
+    @Version
+    private Long version;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "booking_id", nullable = false)

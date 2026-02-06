@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.payment.service;
 
 import com.eatsfine.eatsfine.domain.booking.entity.Booking;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
+import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentWebhookDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
@@ -22,7 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.RestClient;
 
 import java.math.BigDecimal;
 import org.springframework.data.domain.PageRequest;
@@ -38,7 +38,7 @@ public class PaymentService {
 
         private final PaymentRepository paymentRepository;
         private final BookingRepository bookingRepository;
-        private final RestClient tossPaymentClient;
+        private final TossPaymentService tossPaymentService;
 
         @Transactional
         public PaymentResponseDTO.PaymentRequestResultDTO requestPayment(PaymentRequestDTO.RequestPaymentDTO dto) {
@@ -84,19 +84,14 @@ public class PaymentService {
                 // 토스 API 호출
                 TossPaymentResponse response;
                 try {
-                        response = tossPaymentClient.post()
-                                        .uri("/v1/payments/confirm")
-                                        .body(dto)
-                                        .retrieve()
-                                        .body(TossPaymentResponse.class);
-
-                        if (response == null || !"DONE".equals(response.status())) {
-                                log.error("Toss Payment Confirmation Failed: Status is not DONE");
-                                payment.failPayment();
-                                throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
-                        }
+                        response = tossPaymentService.confirm(dto);
                 } catch (Exception e) {
-                        log.error("Toss Payment API Error", e);
+                        payment.failPayment();
+                        throw e;
+                }
+
+                if (response == null || !"DONE".equals(response.status())) {
+                        log.error("Toss Payment Confirmation Failed: Status is not DONE");
                         payment.failPayment();
                         throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
                 }
@@ -140,20 +135,10 @@ public class PaymentService {
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
                 // 토스 결제 취소 API 호출
-                TossPaymentResponse response;
-                try {
-                        response = tossPaymentClient.post()
-                                        .uri("/v1/payments/" + paymentKey + "/cancel")
-                                        .body(dto)
-                                        .retrieve()
-                                        .body(TossPaymentResponse.class);
+                TossPaymentResponse response = tossPaymentService.cancel(paymentKey, dto);
 
-                        if (response == null || !"CANCELED".equals(response.status())) {
-                                log.error("Toss Payment Cancel Failed: {}", response);
-                                throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
-                        }
-                } catch (Exception e) {
-                        log.error("Toss Payment Cancel API Error", e);
+                if (response == null || !"CANCELED".equals(response.status())) {
+                        log.error("Toss Payment Cancel Failed: {}", response);
                         throw new GeneralException(ErrorStatus._INTERNAL_SERVER_ERROR);
                 }
 
@@ -235,5 +220,81 @@ public class PaymentService {
                                 payment.getReceiptUrl(),
                                 null // 환불 상세 정보는 현재 null 처리
                 );
+        }
+
+        @Transactional
+        public void processWebhook(PaymentWebhookDTO dto) {
+                // 이벤트 타입 검증
+                if (!"PAYMENT_STATUS_CHANGED".equals(dto.eventType())) {
+                        log.info("Webhook skipped: Unhandled event type {}", dto.eventType());
+                        return;
+                }
+
+                PaymentWebhookDTO.PaymentData data = dto.data();
+
+                Payment payment = paymentRepository.findByOrderId(data.orderId())
+                                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
+
+                PaymentStatus targetStatus = null;
+                if ("DONE".equals(data.status())) {
+                        targetStatus = PaymentStatus.COMPLETED;
+                } else if ("CANCELED".equals(data.status())) {
+                        targetStatus = PaymentStatus.REFUNDED;
+                }
+
+                if (targetStatus == null) {
+                        log.info("Webhook skipped: Unknown or unhandled status {}", data.status());
+                        return;
+                }
+
+                if (payment.getPaymentStatus() == targetStatus) {
+                        log.info("Webhook skipped: Payment {} already in status {}", data.orderId(), targetStatus);
+                        return;
+                }
+
+                // 상태 전환 유효성 검사
+                // COMPLETED 완료 처리는 오직 PENDING 상태에서만 가능
+                if (targetStatus == PaymentStatus.COMPLETED && payment.getPaymentStatus() != PaymentStatus.PENDING) {
+                        log.warn("Webhook skipped: Invalid state transition from {} to {} for OrderID {}",
+                                        payment.getPaymentStatus(), targetStatus, data.orderId());
+                        return;
+                }
+                if (targetStatus == PaymentStatus.REFUNDED && payment.getPaymentStatus() != PaymentStatus.COMPLETED) {
+                        log.warn("Webhook skipped: Invalid state transition from {} to {} for OrderID {}",
+                                        payment.getPaymentStatus(), targetStatus, data.orderId());
+                        return;
+                }
+
+                if (targetStatus == PaymentStatus.COMPLETED) {
+                        // 금액 검증
+                        if (data.totalAmount() == null || payment.getAmount().compareTo(data.totalAmount()) != 0) {
+                                log.error("Webhook amount verification failed for OrderID: {}. Expected: {}, Received: {}",
+                                                data.orderId(), payment.getAmount(), data.totalAmount());
+                                payment.failPayment();
+                                return;
+                        }
+
+                        // Provider 파싱
+                        PaymentProvider provider = null;
+                        if (data.easyPay() != null) {
+                                String providerCode = data.easyPay().provider();
+                                if ("토스페이".equals(providerCode)) {
+                                        provider = PaymentProvider.TOSS;
+                                } else if ("카카오페이".equals(providerCode)) {
+                                        provider = PaymentProvider.KAKAOPAY;
+                                }
+                        }
+
+                        payment.completePayment(
+                                        LocalDateTime.now(),
+                                        PaymentMethod.SIMPLE_PAYMENT,
+                                        data.paymentKey(),
+                                        provider,
+                                        null);
+                        log.info("Webhook processed: Payment {} status updated to COMPLETED", data.orderId());
+                } else if (targetStatus == PaymentStatus.REFUNDED) {
+                        payment.cancelPayment();
+                        log.info("Webhook processed: Payment {} status updated to REFUNDED", data.orderId());
+                }
         }
 }

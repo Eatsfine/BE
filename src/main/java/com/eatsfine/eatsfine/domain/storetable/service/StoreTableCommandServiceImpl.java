@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import com.eatsfine.eatsfine.domain.storetable.converter.StoreTableConverter;
 import com.eatsfine.eatsfine.domain.storetable.dto.req.StoreTableReqDto;
 import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
@@ -20,8 +21,11 @@ import com.eatsfine.eatsfine.domain.table_layout.exception.status.TableLayoutErr
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
@@ -30,22 +34,24 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class StoreTableCommandServiceImpl implements StoreTableCommandService {
     private final StoreRepository storeRepository;
     private final TableLayoutRepository tableLayoutRepository;
     private final StoreTableRepository storeTableRepository;
     private final BookingRepository bookingRepository;
     private final S3Service s3Service;
+    private final StoreValidator storeValidator;
 
     // 테이블 생성
     @Override
-    public StoreTableResDto.TableCreateDto createTable(Long storeId, StoreTableReqDto.TableCreateDto dto) {
-        storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+    public StoreTableResDto.TableCreateDto createTable(Long storeId, StoreTableReqDto.TableCreateDto dto, String email) {
+        storeValidator.validateStoreOwner(storeId, email);
 
         TableLayout layout = tableLayoutRepository.findByStoreIdAndIsActiveTrue(storeId)
                 .orElseThrow(() -> new TableLayoutException(TableLayoutErrorStatus._LAYOUT_NOT_FOUND));
@@ -74,25 +80,76 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
                 .maxSeatCount(dto.maxSeatCount())
                 .seatsType(dto.seatsType())
                 .rating(BigDecimal.ZERO)
-                .tableImageUrl(dto.tableImageUrl())
+                .tableImageUrl(null)
                 .isDeleted(false)
                 .build();
 
         StoreTable savedTable = storeTableRepository.save(newTable);
 
-        return StoreTableConverter.toTableCreateDto(savedTable);
+        // 이미지 처리 temp → permanent
+        String permanentImageKey = null;
+        String tempImageKey = dto.tableImageKey();
+
+        if (tempImageKey != null && !tempImageKey.isBlank()) {
+            Long tableId = savedTable.getId();
+            String extension = s3Service.extractExtension(tempImageKey);
+
+            permanentImageKey = "stores/" + storeId + "/tables/" + tableId + "/" + UUID.randomUUID() + extension;
+
+            String finalPermanentKey = permanentImageKey;
+
+            // 트랜잭션 커밋 후 S3 이동
+            TransactionSynchronizationManager.registerSynchronization(
+                    new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            try {
+                                s3Service.moveObject(tempImageKey, finalPermanentKey);
+                            } catch (Exception e) {
+                                log.error("temp에서 영구로 이동 실패. Source: {}, Dest: {}", tempImageKey, finalPermanentKey);
+                            }
+                        }
+                    }
+            );
+            savedTable.updateTableImage(permanentImageKey);
+        }
+
+        String tableImageUrl = s3Service.toUrl(savedTable.getTableImageUrl());
+
+        return StoreTableConverter.toTableCreateDto(savedTable, tableImageUrl);
+    }
+
+    @Override
+    public StoreTableResDto.ImageUploadDto uploadTableImageTemp(Long storeId, MultipartFile file, String email) {
+
+        storeValidator.validateStoreOwner(storeId, email);
+
+        if (file.isEmpty()) {
+            throw new ImageException(ImageErrorStatus.EMPTY_FILE);
+        }
+
+        // 임시 경로에 업로드
+        String tempPath = "temp/tables";
+        String imageKey = s3Service.upload(file, tempPath);
+
+        return StoreTableConverter.toImageUploadDto(imageKey, s3Service.toUrl(imageKey));
     }
 
     // 테이블 정보 수정
     @Override
-    public StoreTableResDto.TableUpdateResultDto updateTable(Long storeId, Long tableId, StoreTableReqDto.TableUpdateDto dto) {
+    public StoreTableResDto.TableUpdateResultDto updateTable(
+            Long storeId,
+            Long tableId,
+            StoreTableReqDto.TableUpdateDto dto,
+            String email
+    )
+    {
+        storeValidator.validateStoreOwner(storeId, email);
+
         // 최소 하나의 변경사항이 있는지 확인
         if (!dto.hasAnyUpdate()) {
             throw new StoreTableException(StoreTableErrorStatus._NO_UPDATE_FIELD);
         }
-
-        storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
         StoreTable table = storeTableRepository.findById(tableId)
                 .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
@@ -141,9 +198,9 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
 
     // 테이블 삭제
     @Override
-    public StoreTableResDto.TableDeleteDto deleteTable(Long storeId, Long tableId) {
-        storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+    public StoreTableResDto.TableDeleteDto deleteTable(Long storeId, Long tableId, String email) {
+
+        storeValidator.validateStoreOwner(storeId, email);
 
         StoreTable table = storeTableRepository.findById(tableId)
                 .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
@@ -160,6 +217,19 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
             throw new StoreTableException(StoreTableErrorStatus._TABLE_HAS_FUTURE_BOOKING);
         }
 
+        // 이미지가 존재하면, S3 이미지 삭제
+        String imageKey = table.getTableImageUrl();
+
+        if (imageKey != null && !imageKey.isBlank()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                        @Override
+                        public void afterCommit() {
+                            s3Service.deleteByKey(imageKey);
+                        }
+                    }
+            );
+        }
+
         storeTableRepository.delete(table);
 
         return StoreTableConverter.toTableDeleteDto(table);
@@ -167,9 +237,14 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
 
     // 테이블 이미지 업로드
     @Override
-    public StoreTableResDto.UploadTableImageDto uploadTableImage(Long storeId, Long tableId, MultipartFile tableImage) {
-        storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+    public StoreTableResDto.UploadTableImageDto uploadTableImage(
+            Long storeId,
+            Long tableId,
+            MultipartFile tableImage,
+            String email
+            ) {
+
+        storeValidator.validateStoreOwner(storeId, email);
 
         StoreTable table = storeTableRepository.findById(tableId)
                 .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
@@ -196,9 +271,9 @@ public class StoreTableCommandServiceImpl implements StoreTableCommandService {
     }
 
     @Override
-    public StoreTableResDto.DeleteTableImageDto deleteTableImage(Long storeId, Long tableId) {
-        storeRepository.findById(storeId)
-                .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+    public StoreTableResDto.DeleteTableImageDto deleteTableImage(Long storeId, Long tableId, String email) {
+
+        storeValidator.validateStoreOwner(storeId, email);
 
         StoreTable table = storeTableRepository.findById(tableId)
                 .orElseThrow(() -> new StoreTableException(StoreTableErrorStatus._TABLE_NOT_FOUND));
