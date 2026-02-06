@@ -49,7 +49,8 @@ public class StoreTableResDto {
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
             LocalTime time,
             SlotStatus status,
-            boolean isAvailable
+            boolean isAvailable,
+            Long bookingId
     ) {}
 
     @Builder
