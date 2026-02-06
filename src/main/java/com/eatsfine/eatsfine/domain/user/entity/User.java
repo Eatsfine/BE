@@ -66,5 +66,7 @@ public class User extends BaseEntity {
         this.role = Role.ROLE_OWNER;
     }
 
-    public void updateRefreshToken(String refreshToken){this.refreshToken = refreshToken;}
+    public void updateRefreshToken(String refreshToken){
+        this.refreshToken = refreshToken;
+    }
 }
