@@ -1,5 +1,7 @@
 package com.eatsfine.eatsfine.global.config.jwt;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -29,7 +31,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String uri = request.getRequestURI();
-        log.debug("요청 URI: " + uri);
+        log.debug("요청 URI: {}", uri);
 
         String token = JwtTokenProvider.resolveToken(request);
 
@@ -48,9 +50,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-            } catch (Exception e) {
+            } catch (ExpiredJwtException e) {
                 // 예외 로그 출력
-                log.warn("JWT 인증 오류: " + e.getMessage());
+                log.warn("만료된 JWT 토큰입니다. {}", e.getMessage());
+            } catch (JwtException | IllegalArgumentException e) {
+                // JWT 관련 구조적 문제는 스텍트레이스 포함해서 기록
+                log.warn("유효하지 않은 JWT 토큰입니다. {}", e.getMessage(), e);
+            } catch (Exception e) {
+                // 예상치 못한 시스템 에러는 error 레벨로 전체 기록
+                log.error("JWT 인증 과정에서 예상치 못한 오류가 발생했습니다. {}", e.getMessage(), e);
             }
         }
 
