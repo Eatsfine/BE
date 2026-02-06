@@ -34,8 +34,8 @@ public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler 
     private final JwtTokenProvider jwtTokenProvider;
     private final AuthCookieProvider authCookieProvider;
 
-    private static final String CALLBACK_REDIRECT_BASE = "https://eatsfine.co.kr/oauth/callback";
-    private static final String LOGIN_ERROR_REDIRECT_BASE = "https://eatsfine.co.kr/login/error";
+    private static final String CALLBACK_REDIRECT_BASE =  "http://localhost:5173/oauth/callback" ;//"https://eatsfine.co.kr/oauth/callback";
+    private static final String LOGIN_ERROR_REDIRECT_BASE ="http://localhost:5173/login/error";  //"https://eatsfine.co.kr/login/error";
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
