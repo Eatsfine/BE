@@ -10,6 +10,7 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,12 +21,17 @@ import org.springframework.transaction.annotation.Transactional;
 public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandService {
 
     private final StoreRepository storeRepository;
+    private final StoreValidator storeValidator;
 
     @Override
     public BusinessHoursResDto.UpdateBusinessHoursDto updateBusinessHours(
             Long storeId,
-            BusinessHoursReqDto.UpdateBusinessHoursDto dto
+            BusinessHoursReqDto.UpdateBusinessHoursDto dto,
+            String email
     ) {
+
+        storeValidator.validateStoreOwner(storeId, email);
+
         // 영업시간 검증
         BusinessHoursValidator.validateForUpdate(dto.businessHours());
 
@@ -47,10 +53,11 @@ public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandServ
     @Override
     public BusinessHoursResDto.UpdateBreakTimeDto updateBreakTime(
             Long storeId,
-            BusinessHoursReqDto.UpdateBreakTimeDto dto
+            BusinessHoursReqDto.UpdateBreakTimeDto dto,
+            String email
     ) {
-        Store store = storeRepository.findById(storeId)
-                        .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
+
+        Store store = storeValidator.validateStoreOwner(storeId, email);
 
         for(BusinessHours bh : store.getBusinessHours()) {
             if(bh.isClosed()) continue;

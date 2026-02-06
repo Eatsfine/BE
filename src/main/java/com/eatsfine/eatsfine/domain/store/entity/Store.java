@@ -40,7 +40,7 @@ public class Store extends BaseEntity {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id") // 임시 nullable 허용 (User 도메인 머지 후 owner 처리 예정)
+    @JoinColumn(name = "owner_id", nullable = false)
     private User owner;
 
     @ManyToOne(fetch = FetchType.LAZY)

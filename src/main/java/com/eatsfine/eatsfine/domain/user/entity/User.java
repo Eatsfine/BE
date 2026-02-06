@@ -20,7 +20,7 @@ public class User extends BaseEntity {
     private Long id;
 
     @Column(nullable = false, length = 20)
-    private String nickName;
+    private String name;
 
     @Column(nullable = false, unique = true)
     private String email;
@@ -46,8 +46,8 @@ public class User extends BaseEntity {
     @Column(length = 500)
     private String refreshToken;
 
-    public void updateNickname(String nickName){
-        this.nickName = nickName;
+    public void updateName(String name) {
+        this.name = name;
     }
 
     public void updatePhoneNumber(String phoneNumber) {
@@ -62,5 +62,11 @@ public class User extends BaseEntity {
         this.profileImage = profileImage;
     }
 
-    public void updateRefreshToken(String refreshToken){this.refreshToken = refreshToken;}
+    public void updateToOwner() {
+        this.role = Role.ROLE_OWNER;
+    }
+
+    public void updateRefreshToken(String refreshToken){
+        this.refreshToken = refreshToken;
+    }
 }

@@ -34,7 +34,9 @@ public class StoreResDto {
     public record PaginationDto(
             int currentPage,
             int totalPages,
-            long totalCount
+            long totalCount,
+            boolean isFirst,
+            boolean isLast
     ){}
 
     @Builder

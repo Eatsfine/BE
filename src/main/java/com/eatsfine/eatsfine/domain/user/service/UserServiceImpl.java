@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.domain.user.service;
 
 
+import com.eatsfine.eatsfine.domain.businessnumber.validator.BusinessNumberValidator;
 import com.eatsfine.eatsfine.domain.image.exception.ImageException;
 import com.eatsfine.eatsfine.domain.image.status.ImageErrorStatus;
 import com.eatsfine.eatsfine.domain.term.repository.TermRepository;
@@ -8,6 +9,7 @@ import com.eatsfine.eatsfine.domain.user.converter.UserConverter;
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
 import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
@@ -32,6 +34,7 @@ public class UserServiceImpl implements UserService{
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final S3Service s3Service;
+    private final BusinessNumberValidator businessNumberValidator;
 
     @Override
     @Transactional
@@ -66,7 +69,7 @@ public class UserServiceImpl implements UserService{
         }
 
         // 3) 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         // 4) refreshToken 저장
@@ -96,9 +99,9 @@ public class UserServiceImpl implements UserService{
 
         boolean changed = false;
 
-        //닉네임/전화번호 부분 수정
-        if (updateDto.getNickName() != null && !updateDto.getNickName().isBlank()) {
-            user.updateNickname(updateDto.getNickName());
+        // 이름/전화번호 부분 수정
+        if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
+            user.updateName(updateDto.getName());
             changed = true;
         }
         if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
@@ -158,9 +161,9 @@ public class UserServiceImpl implements UserService{
         userRepository.save(user);
         userRepository.flush();
 
-        log.info("[Service] Updated userId={}, nickname={}, phone={}, profileKey={}",
+        log.info("[Service] Updated userId={}, name={}, phone={}, profileKey={}",
                 user.getId(),
-                user.getNickName(),
+                user.getName(),
                 user.getPhoneNumber(),
                 user.getProfileImage());
 
@@ -217,5 +220,26 @@ public class UserServiceImpl implements UserService{
 
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto.VerifyOwnerDto verifyOwner(UserRequestDto.VerifyOwnerDto dto, HttpServletRequest request) {
+        User user = getCurrentUser(request);
+        log.info("[OwnerAuth] 사장 인증 시도 - 유저ID: {}, 이메일: {}",
+                user.getId(), user.getEmail());
+
+        if (user.getRole() == Role.ROLE_OWNER) {
+            log.warn("[OwnerAuth] 인증 실패 - 이미 사장 권한을 가진 유저입니다. 유저ID: {}", user.getId());
+            throw new UserException(UserErrorStatus.ALREADY_OWNER);
+        }
+
+        businessNumberValidator.validate(dto.getBusinessNumber(), dto.getStartDate(), user.getName());
+
+        user.updateToOwner();
+        User savedUser = userRepository.save(user);
+
+        log.info("[OwnerAuth] 인증 성공 - 유저 권한이 OWNER로 변경되었습니다. 유저ID: {}", savedUser.getId());
+        return UserConverter.toVerifyOwnerResponse(savedUser);
     }
 }

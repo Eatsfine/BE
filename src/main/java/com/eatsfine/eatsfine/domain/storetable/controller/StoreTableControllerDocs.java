@@ -10,6 +10,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,7 +41,8 @@ public interface StoreTableControllerDocs {
     ApiResponse<StoreTableResDto.TableCreateDto> createTable(
             @Parameter(description = "가게 ID", required = true, example = "1")
             Long storeId,
-            @RequestBody @Valid StoreTableReqDto.TableCreateDto dto
+            @RequestBody @Valid StoreTableReqDto.TableCreateDto dto,
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -68,7 +70,8 @@ public interface StoreTableControllerDocs {
                     required = true,
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
             )
-            MultipartFile file
+            MultipartFile file,
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -194,7 +197,9 @@ public interface StoreTableControllerDocs {
             @Parameter(description = "테이블 ID", required = true, example = "1")
             Long tableId,
 
-            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto
+            @RequestBody @Valid StoreTableReqDto.TableUpdateDto dto,
+
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -218,7 +223,8 @@ public interface StoreTableControllerDocs {
             @Parameter(description = "가게 ID", required = true, example = "1")
             Long storeId,
             @Parameter(description = "테이블 ID", required = true, example = "1")
-            Long tableId
+            Long tableId,
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -249,7 +255,9 @@ public interface StoreTableControllerDocs {
                     required = true,
                     content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE)
             )
-            MultipartFile tableImage
+            MultipartFile tableImage,
+
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -272,6 +280,8 @@ public interface StoreTableControllerDocs {
             Long storeId,
 
             @Parameter(description = "테이블 ID", required = true, example = "1")
-            Long tableId
+            Long tableId,
+
+            @Parameter(hidden = true) User user
     );
 }
