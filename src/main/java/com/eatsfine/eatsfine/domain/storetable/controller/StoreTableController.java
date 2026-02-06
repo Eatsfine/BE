@@ -1,5 +1,9 @@
 package com.eatsfine.eatsfine.domain.storetable.controller;
 
+import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
+import com.eatsfine.eatsfine.domain.booking.service.BookingCommandService;
+import com.eatsfine.eatsfine.domain.booking.service.BookingQueryService;
+import com.eatsfine.eatsfine.domain.booking.status.BookingSuccessStatus;
 import com.eatsfine.eatsfine.domain.storetable.dto.req.StoreTableReqDto;
 import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableSuccessStatus;
@@ -28,6 +32,8 @@ import java.time.LocalDate;
 public class StoreTableController implements StoreTableControllerDocs {
     private final StoreTableCommandService storeTableCommandService;
     private final StoreTableQueryService storeTableQueryService;
+    private final BookingQueryService bookingQueryService;
+    private final BookingCommandService bookingCommandService;
 
     @PostMapping("/stores/{storeId}/tables")
     @PreAuthorize("hasRole('OWNER')")
@@ -57,6 +63,28 @@ public class StoreTableController implements StoreTableControllerDocs {
     ) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
         return ApiResponse.of(StoreTableSuccessStatus._SLOT_LIST_FOUND, storeTableQueryService.getTableSlots(storeId, tableId, targetDate));
+    }
+
+    // 사장이 특정 슬롯(예약)의 상세 정보 조회
+    @GetMapping("/stores/{storeId}/tables/{tableId}/slots/{bookingId}")
+    public ApiResponse<BookingResponseDTO.BookingDetailDTO> getTableSlotDetail(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId,
+            @PathVariable Long bookingId) {
+
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_BOOKING_FOUND
+                ,bookingQueryService.getBookingDetail(storeId,tableId,bookingId));
+    }
+
+    // 사장이 특정 테이블 슬롯의 예약 취소
+    @PatchMapping("/stores/{storeId}/tables/{tableId}/slots/{bookingId}/cancel")
+    public ApiResponse<BookingResponseDTO.OwnerCancelBookingResultDTO> cancelTableSlotBooking(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId,
+            @PathVariable Long bookingId
+            ) {
+
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_CANCELLED,bookingCommandService.cancelBookingByOwner(storeId, tableId, bookingId));
     }
 
     @GetMapping("/stores/{storeId}/tables/{tableId}")
