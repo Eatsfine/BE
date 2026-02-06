@@ -29,17 +29,17 @@ public class Inquiry extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private String name;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 50)
     private String email;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private InquiryType type;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 100)
     private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
