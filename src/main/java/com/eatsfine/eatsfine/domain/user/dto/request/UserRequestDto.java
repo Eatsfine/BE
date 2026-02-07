@@ -61,8 +61,8 @@ public class UserRequestDto {
     @Getter
     @Setter
     public static class UpdateDto {
-        private String email;
         private String name;
+        @Schema(description = "전화번호", nullable = true, defaultValue = "")
         private String phoneNumber;
     }
 

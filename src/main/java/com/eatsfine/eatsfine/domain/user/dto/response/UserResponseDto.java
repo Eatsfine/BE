@@ -43,7 +43,6 @@ public class UserResponseDto {
     @Builder
     public static class UpdateResponseDto{
         private String profileImage;
-        private String email;
         private String name;
         private String phoneNumber;
     }

@@ -78,8 +78,8 @@ public class UserController {
 
     @PatchMapping(value = "/api/v1/member/info")
     @Operation(
-            summary = "닉네임/전화번호 수정 API - 인증 필요",
-            description = "닉네임/전화번호만 수정합니다. (JSON)",
+            summary = "이름/전화번호 수정 API - 인증 필요",
+            description = "이름/전화번호/이메일만 수정합니다. (JSON)",
             security = {@SecurityRequirement(name = "JWT")}
     )
     public ResponseEntity<ApiResponse<String>> updateMyInfoText(
@@ -149,6 +149,20 @@ public class UserController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
                 .body(ApiResponse.onSuccess("로그아웃이 되었습니다."));
+    }
+
+    @PutMapping("/api/v1/member/password")
+    @Operation(
+            summary = "비밀번호 변경 API - 인증 필요",
+            description = "비밀번호 변경하는 API입니다.",
+            security = {@SecurityRequirement(name = "JWT")}
+    )
+    public ResponseEntity<ApiResponse<UserResponseDto.UpdatePasswordDto>> changePassword
+            (@RequestBody @Valid UserRequestDto.ChangePasswordDto changePassword, HttpServletRequest request){
+
+        UserResponseDto.UpdatePasswordDto result =   userService.changePassword(changePassword, request);
+
+        return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
 
 }
