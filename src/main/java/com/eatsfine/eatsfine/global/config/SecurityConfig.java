@@ -57,7 +57,10 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/v1/deploy/health-check",
-                                "/swagger-resources/**"
+                                "/swagger-resources/**",
+                                "/api/v1/stores/*/bookings/available-times",
+                                "/api/v1/stores/*/bookings/available-tables"
+
                         ).permitAll()
 
                         .requestMatchers("/auth/**", "/login", "/signup").permitAll()
