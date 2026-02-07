@@ -3,10 +3,7 @@ package com.eatsfine.eatsfine.domain.term.entity;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Entity
 @Getter
@@ -19,7 +16,8 @@ public class Term extends BaseEntity {
         @GeneratedValue(strategy = GenerationType.IDENTITY)
         private Long id;
 
-        @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE, orphanRemoval = true)
+        @Setter
+        @OneToOne(fetch = FetchType.LAZY)
         @JoinColumn(name = "user_id", nullable = false, unique = true)
         private User user;
 
@@ -31,5 +29,4 @@ public class Term extends BaseEntity {
 
         @Column(name = "marketing_consent", nullable = false)
         private Boolean marketingConsent;
-
 }

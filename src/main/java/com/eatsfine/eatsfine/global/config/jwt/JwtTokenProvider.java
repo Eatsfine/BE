@@ -1,12 +1,13 @@
 package com.eatsfine.eatsfine.global.config.jwt;
 
+import com.eatsfine.eatsfine.domain.user.exception.AuthException;
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.config.properties.Constants;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
-import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.config.properties.JwtProperties;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -22,7 +23,6 @@ import org.springframework.util.StringUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -43,7 +43,7 @@ public class JwtTokenProvider {
 
     public String createAccessToken(String email, String role) {
         if (!StringUtils.hasText(role)) {
-            throw new UserException(UserErrorStatus.EMPTY_TOKEN_ROLE);
+            throw new AuthException(AuthErrorStatus.EMPTY_TOKEN_ROLE);
         }
 
         Claims claims = Jwts.claims().setSubject(email);
@@ -91,11 +91,12 @@ public class JwtTokenProvider {
 
         String email = claims.getSubject();
 
+
         String role = claims.get("role", String.class);
 
         if (!StringUtils.hasText(role)) {
             log.error("JWT Token does not contain role claim for user: {}", claims.getSubject());
-            throw new UserException(UserErrorStatus.EMPTY_TOKEN_ROLE);
+            throw new AuthException(AuthErrorStatus.EMPTY_TOKEN_ROLE);
         }
 
         List<SimpleGrantedAuthority> authorities = Collections.singletonList(new SimpleGrantedAuthority(role));
@@ -116,7 +117,7 @@ public class JwtTokenProvider {
     public Authentication extractAuthentication(HttpServletRequest request) {
         String accessToken = resolveToken(request);
         if (accessToken == null || !validateToken(accessToken)) {
-            throw new UserException(UserErrorStatus.INVALID_TOKEN);
+            throw new AuthException(AuthErrorStatus.INVALID_TOKEN);
         }
         return getAuthentication(accessToken);
     }

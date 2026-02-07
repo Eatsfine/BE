@@ -7,7 +7,6 @@ import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 
 import java.time.LocalDateTime;
-
 import static com.eatsfine.eatsfine.domain.user.enums.Role.ROLE_CUSTOMER;
 
 public class UserConverter {
@@ -20,7 +19,7 @@ public class UserConverter {
     }
 
 
-     //로그인 응답 변환
+    //로그인 응답 변환
     public static UserResponseDto.LoginResponseDto toLoginResponse(User user, String accessToken) {
         return UserResponseDto.LoginResponseDto.builder()
                 .id(user.getId())
@@ -75,12 +74,13 @@ public class UserConverter {
 
     public static Term toUserTerm(UserRequestDto.JoinDto dto, User user) {
         return Term.builder()
-                .user(user)                      // 생성된 유저와 매핑
+                .user(user)
                 .tosConsent(dto.getTosConsent()) // 서비스 이용약관 동의
                 .privacyConsent(dto.getPrivacyConsent()) // 개인정보 처리방침 동의
                 .marketingConsent(dto.getMarketingConsent()) // 마케팅 수신 동의
                 .build();
     }
+
 
     public static UserResponseDto.VerifyOwnerDto toVerifyOwnerResponse(User user) {
         return UserResponseDto.VerifyOwnerDto.builder()
@@ -91,16 +91,17 @@ public class UserConverter {
 
     /*
      소셜 유저 생성 (최초 소셜 가입 등)
-     -소셜 로그인에서 email/name/phoneNumber 등을 확보한 후 엔티티 생성에 사용
+     소셜 로그인에서 email/nickname/profileImage 등을 확보한 후 엔티티 생성에 사용
      */
-    public static User toSocialUser(String email, String name, String phoneNumber, String socialId, SocialType socialType) {
+    public static User toSocialUser(String email, String nickName, String profileImage, String socialId, SocialType socialType) {
 
         return User.builder()
                 .email(email)
-                .name(name)
-                .phoneNumber(phoneNumber)
+                .name(nickName)
+                .profileImage(profileImage)
                 .socialId(socialId)
                 .socialType(socialType)
+                .phoneNumber(null)
                 .role(ROLE_CUSTOMER)
                 .build();
     }

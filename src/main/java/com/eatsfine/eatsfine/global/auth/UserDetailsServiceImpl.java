@@ -1,8 +1,5 @@
 package com.eatsfine.eatsfine.global.auth;
 
-
-
-
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
