@@ -59,9 +59,6 @@ public class StoreTableQueryServiceImpl implements StoreTableQueryService{
 
         List<TableBlock> tableBlocks = tableBlockRepository.findByStoreTableAndTargetDate(storeTable, date);
 
-        //List<LocalTime> bookedTimeList = bookingRepository.findBookedTimesByTableAndDate(tableId, date);
-        //Set<LocalTime> bookedTimes = new HashSet<>(bookedTimeList);
-
         SlotCalculator.SlotCalculationResult result = SlotCalculator.calculateSlots(storeTable, date, tableBlocks, bookingMap.keySet());
 
         return StoreTableConverter.toSlotListDto(
