@@ -21,6 +21,9 @@ import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
 import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,6 +46,7 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     private final TableLayoutRepository tableLayoutRepository;
     private final BusinessHoursRepository businessHourRepository;
     private final StoreTableRepository storeTableRepository;
+    private final UserRepository userRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -165,8 +169,11 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     }
 
     @Override
-    public BookingResponseDTO.BookingPreviewListDTO getBookingList(User user, String status, Integer page) {
+    public BookingResponseDTO.BookingPreviewListDTO getBookingList(Long userId, String status, Integer page) {
         PageRequest pageRequest = PageRequest.of(page, 10, Sort.by("bookingDate").descending());
+
+        com.eatsfine.eatsfine.domain.user.entity.User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
 
         Page<Booking> bookingPage;
 

@@ -13,7 +13,7 @@ public interface BookingQueryService {
 
     BookingResponseDTO.AvailableTableListDTO getAvailableTables(Long storeId, BookingRequestDTO.GetAvailableTableDTO dto);
 
-    BookingResponseDTO.BookingPreviewListDTO getBookingList(User user, String status, Integer page);
+    BookingResponseDTO.BookingPreviewListDTO getBookingList(Long userId, String status, Integer page);
 
     BookingResponseDTO.BookingDetailDTO getBookingDetail(Long storeId, Long tableId, Long bookingId);
 }
