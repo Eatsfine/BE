@@ -23,6 +23,7 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
@@ -53,6 +54,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     private final PaymentService paymentService;
     private final MenuRepository menuRepository;
     private final UserRepository userRepository;
+    private final StoreValidator storeValidator;
 
     @Override
     @Transactional
@@ -208,19 +210,21 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
     @Override
     @Transactional
-    public BookingResponseDTO.OwnerCancelBookingResultDTO cancelBookingByOwner(Long storeId, Long tableId, Long bookingId) {
+    public BookingResponseDTO.OwnerCancelBookingResultDTO cancelBookingByOwner(Long storeId, Long tableId, Long bookingId, String email) {
+
+        // 0. 가게 주인 검증
+        storeValidator.validateStoreOwner(storeId, email);
+
         // 1. 예약 존재 확인
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
         // 2. 데이터 무결성 검증
-        // - 해당 예약이 요청된 가게의 예약인지 확인
         if (!booking.getStore().getId().equals(storeId)) {
             throw new BookingException(BookingErrorStatus._INVALID_BOOKING_ACCESS);
         }
 
-        // - 해당 예약의 테이블 목록중에 요청된 tableId가 있는지 확인
-        // 정영님의 구조: Booking -> BookingTable -> StoreTable
+        // - 해당 예약의 테이블 목록 중 요청된 tableId가 포함되어 있는지 확인
         boolean isCorrectTable = booking.getBookingTables().stream()
                 .anyMatch(bt -> bt.getStoreTable().getId().equals(tableId));
 
@@ -228,18 +232,30 @@ public class BookingCommandServiceImpl implements BookingCommandService{
             throw new BookingException(BookingErrorStatus._TABLE_NOT_FOUND);
         }
 
+        // - 이미 취소된 예약인지 확인
         if (booking.getStatus() == BookingStatus.CANCELED) {
             throw new BookingException(BookingErrorStatus._ALREADY_CANCELED);
         }
 
+        // 3. 환불 로직 추가
+        // 예약 확정(CONFIRMED) 상태라면 환불 진행
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            String cancelReason = "사장님에 의한 예약 취소";
+            PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(cancelReason);
+
+            // 결제 시 저장해둔 successPaymentKey를 사용하여 외부 API 호출
+            paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
+        }
+
+        // 4. 예약 상태 변경
         booking.cancel("사장님에 의한 예약 취소");
 
-        // 3. 응답 DTO 반환
+        // 5. 응답 DTO 반환
         return BookingResponseDTO.OwnerCancelBookingResultDTO.builder()
                 .bookingId(booking.getId())
                 .status(booking.getStatus().name())
+                .refundAmount(booking.getDepositAmount()) // 환불된 금액 세팅
                 .canceledAt(LocalDateTime.now())
-                //.refundAmount()
                 .build();
     }
 }
