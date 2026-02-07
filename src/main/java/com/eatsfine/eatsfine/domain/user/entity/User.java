@@ -27,7 +27,7 @@ public class User extends BaseEntity {
 
     private String password;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
