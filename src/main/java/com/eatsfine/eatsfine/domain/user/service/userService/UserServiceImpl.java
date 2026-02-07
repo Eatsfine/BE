@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.user.service;
+package com.eatsfine.eatsfine.domain.user.service.userService;
 
 
 import com.eatsfine.eatsfine.domain.businessnumber.validator.BusinessNumberValidator;
@@ -10,8 +10,11 @@ import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.enums.Role;
+import com.eatsfine.eatsfine.domain.user.exception.AuthException;
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.service.userService.UserService;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import com.eatsfine.eatsfine.global.s3.S3Service;
@@ -28,7 +31,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final TermRepository termRepository;
     private final PasswordEncoder passwordEncoder;
@@ -69,7 +72,7 @@ public class UserServiceImpl implements UserService{
         }
 
         // 3) 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(),  user.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         // 4) refreshToken 저장
@@ -104,6 +107,7 @@ public class UserServiceImpl implements UserService{
             user.updateName(updateDto.getName());
             changed = true;
         }
+
         if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
             user.updatePhoneNumber(updateDto.getPhoneNumber());
             changed = true;
@@ -161,7 +165,7 @@ public class UserServiceImpl implements UserService{
         userRepository.save(user);
         userRepository.flush();
 
-        log.info("[Service] Updated userId={}, name={}, phone={}, profileKey={}",
+        log.info("[Service] Updated userId={}, nickname={}, phone={}, profileKey={}",
                 user.getId(),
                 user.getName(),
                 user.getPhoneNumber(),
@@ -213,7 +217,7 @@ public class UserServiceImpl implements UserService{
     private User getCurrentUser(HttpServletRequest request) {
         String token = JwtTokenProvider.resolveToken(request);
         if (token == null || token.isBlank() || !jwtTokenProvider.validateToken(token)) {
-            throw new UserException(UserErrorStatus.INVALID_TOKEN);
+            throw new AuthException(AuthErrorStatus.INVALID_TOKEN);
         }
 
         String email = jwtTokenProvider.getEmailFromToken(token);
@@ -231,7 +235,7 @@ public class UserServiceImpl implements UserService{
 
         if (user.getRole() == Role.ROLE_OWNER) {
             log.warn("[OwnerAuth] 인증 실패 - 이미 사장 권한을 가진 유저입니다. 유저ID: {}", user.getId());
-            throw new UserException(UserErrorStatus.ALREADY_OWNER);
+            throw new AuthException(AuthErrorStatus.ALREADY_OWNER);
         }
 
         businessNumberValidator.validate(dto.getBusinessNumber(), dto.getStartDate(), user.getName());

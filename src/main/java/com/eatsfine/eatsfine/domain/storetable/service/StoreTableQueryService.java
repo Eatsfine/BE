@@ -5,7 +5,7 @@ import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import java.time.LocalDate;
 
 public interface StoreTableQueryService {
-    StoreTableResDto.SlotListDto getTableSlots(Long storeId, Long tableId, LocalDate date);
+    StoreTableResDto.SlotListDto getTableSlots(Long storeId, Long tableId, LocalDate date, String email);
 
-    StoreTableResDto.TableDetailDto getTableDetail(Long storeId, Long tableId, LocalDate targetDate);
+    StoreTableResDto.TableDetailDto getTableDetail(Long storeId, Long tableId, LocalDate targetDate, String email);
 }

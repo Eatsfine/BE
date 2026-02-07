@@ -109,12 +109,25 @@ public class StoreCommandServiceImpl implements StoreCommandService {
     public List<String> extractUpdatedFields(StoreReqDto.StoreUpdateDto dto) {
         List<String> updated = new ArrayList<>();
 
-        if (dto.storeName() != null) updated.add("storeName");
-        if (dto.description() != null) updated.add("description");
-        if (dto.phoneNumber() != null) updated.add("phoneNumber");
-        if (dto.category() != null) updated.add("category");
-        if (dto.depositRate() != null) updated.add("depositRate");
-        if (dto.bookingIntervalMinutes() != null) updated.add("bookingIntervalMinutes");
+        // 검사할 필드 이름들을 리스트로 관리
+        List<String> fieldsToTrack = List.of(
+                "storeName", "description", "phoneNumber",
+                "category", "depositRate", "bookingIntervalMinutes"
+        );
+
+        // 각 필드가 null이 아닌지 체크 (패턴 중복 제거)
+        // DTO가 Record라면 accessor 메서드를 찾아서 체크.
+        fieldsToTrack.forEach(fieldName -> {
+            try {
+                // Record의 필드 이름과 동일한 이름의 메서드를 호출하여 null 체크
+                Object value = dto.getClass().getMethod(fieldName).invoke(dto);
+                if (value != null) {
+                    updated.add(fieldName);
+                }
+            } catch (Exception e) {
+                log.error("필드 추출 중 에러 발생: {}", fieldName);
+            }
+        });
 
         return updated;
     }

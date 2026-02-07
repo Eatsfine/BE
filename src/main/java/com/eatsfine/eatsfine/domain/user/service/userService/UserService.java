@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.user.service;
+package com.eatsfine.eatsfine.domain.user.service.userService;
 
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
