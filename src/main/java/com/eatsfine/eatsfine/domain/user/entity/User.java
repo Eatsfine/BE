@@ -1,11 +1,11 @@
 package com.eatsfine.eatsfine.domain.user.entity;
 
+import com.eatsfine.eatsfine.domain.term.entity.Term;
 import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
-
 @Entity
 @Getter
 // 수정한 부분: access 레벨을 PROTECTED로 설정하여 Hibernate가 접근할 수 있게 합니다.
@@ -27,7 +27,7 @@ public class User extends BaseEntity {
 
     private String password;
 
-    @Column(nullable = false, length = 20)
+    @Column(nullable = true, length = 20)
     private String phoneNumber;
 
     @Enumerated(EnumType.STRING)
@@ -69,4 +69,18 @@ public class User extends BaseEntity {
     public void updateRefreshToken(String refreshToken){
         this.refreshToken = refreshToken;
     }
+
+    public void setTerm(Term term) {
+        this.term = term;
+        if (term != null) term.setUser(this);
+    }
+
+    public void linkSocial(SocialType socialType, String socialId) {
+        this.socialType = socialType;
+        this.socialId = socialId;
+    }
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Term term;
+
 }

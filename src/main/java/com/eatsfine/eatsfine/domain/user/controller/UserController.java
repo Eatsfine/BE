@@ -3,9 +3,9 @@ package com.eatsfine.eatsfine.domain.user.controller;
 
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
-import com.eatsfine.eatsfine.domain.user.exception.UserException;
-import com.eatsfine.eatsfine.domain.user.service.UserService;
-import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
+import com.eatsfine.eatsfine.domain.user.exception.AuthException;
+import com.eatsfine.eatsfine.domain.user.service.userService.UserService;
+import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.domain.user.status.UserSuccessStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
@@ -45,11 +45,11 @@ public class UserController {
 
     @PostMapping("/api/auth/login")
     @Operation(summary = "로그인 API", description = "사용자 로그인을 처리하는 API입니다.")
-    public ResponseEntity<ApiResponse<UserResponseDto.LoginResponseDto>> login(@RequestBody UserRequestDto.LoginDto loginDto) {
+    public ResponseEntity<ApiResponse<UserResponseDto.LoginResponseDto>> login(@RequestBody @Valid UserRequestDto.LoginDto loginDto) {
         UserResponseDto.LoginResponseDto loginResult = userService.login(loginDto);
 
         if (loginResult.getRefreshToken() == null || loginResult.getRefreshToken().isBlank()) {
-            throw new UserException(UserErrorStatus.REFRESH_TOKEN_NOT_ISSUED);
+            throw new AuthException(AuthErrorStatus.REFRESH_TOKEN_NOT_ISSUED);
         }
 
         ResponseCookie refreshCookie = authCookieProvider.refreshTokenCookie(loginResult.getRefreshToken());
@@ -78,8 +78,8 @@ public class UserController {
 
     @PatchMapping(value = "/api/v1/member/info")
     @Operation(
-            summary = "이름/전화번호 수정 API - 인증 필요",
-            description = "이름/전화번호만 수정합니다. (JSON)",
+            summary = "닉네임/전화번호 수정 API - 인증 필요",
+            description = "닉네임/전화번호만 수정합니다. (JSON)",
             security = {@SecurityRequirement(name = "JWT")}
     )
     public ResponseEntity<ApiResponse<String>> updateMyInfoText(
@@ -105,6 +105,7 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
 
+
     @PatchMapping("/api/users/role/owner")
     @Operation(
             summary = "사장 인증 API - 인증 필요",
@@ -127,7 +128,12 @@ public class UserController {
     )
     public ResponseEntity<?> withdraw(HttpServletRequest request) {
         userService.withdraw(request);
-        return ResponseEntity.ok(ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다."));
+
+        //회원탈퇴 시 refreshToken 쿠키도 삭제
+        ResponseCookie clearCookie = authCookieProvider.clearRefreshTokenCookie();
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                .body(ApiResponse.onSuccess("회원 탈퇴가 완료되었습니다."));
     }
 
 
