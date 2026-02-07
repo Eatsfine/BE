@@ -15,7 +15,7 @@ public interface BookingCommandService {
 
     BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(Long BookingId, BookingRequestDTO.PaymentConfirmDTO dto);
 
-    BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long bookingId, BookingRequestDTO.CancelBookingDTO dto);
+    BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long userId, Long bookingId, BookingRequestDTO.CancelBookingDTO dto);
 
     BookingResponseDTO.OwnerCancelBookingResultDTO cancelBookingByOwner(Long storeId, Long tableId, Long bookingId);
 }

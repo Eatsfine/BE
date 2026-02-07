@@ -173,16 +173,28 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
     @Override
     @Transactional
-    public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
+    public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long userId, Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
+
+
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
+
+        //  본인 예약인지 확인
+        if (!booking.getUser().getId().equals(userId)) {
+            throw new BookingException(BookingErrorStatus._BOOKING_NOT_USER); // 본인 예약이 아님 에러
+        }
+
+        //  이미 취소된 예약인지 확인
+        if (booking.getStatus() == BookingStatus.CANCELED) {
+            throw new BookingException(BookingErrorStatus._ALREADY_CANCELED);
+        }
+
         // 예약 중 결제 완료된 결제의 결제키 이용 환불 로직 진행
-        if(booking.getStatus() == BookingStatus.CONFIRMED) {
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
             PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(dto.reason());
             paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
         }
-
 
         //예약 상태 취소로 변경
         booking.cancel(dto.reason());
