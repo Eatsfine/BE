@@ -67,26 +67,28 @@ public class StoreTableController implements StoreTableControllerDocs {
         return ApiResponse.of(StoreTableSuccessStatus._SLOT_LIST_FOUND, storeTableQueryService.getTableSlots(storeId, tableId, targetDate, user.getUsername()));
     }
 
-    // 사장이 특정 슬롯(예약)의 상세 정보 조회
     @GetMapping("/stores/{storeId}/tables/{tableId}/slots/{bookingId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<BookingResponseDTO.BookingDetailDTO> getTableSlotDetail(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
-            @PathVariable Long bookingId) {
+            @PathVariable Long bookingId,
+            @CurrentUser User user) {
 
         return ApiResponse.of(StoreTableSuccessStatus._TABLE_BOOKING_FOUND
-                ,bookingQueryService.getBookingDetail(storeId,tableId,bookingId));
+                ,bookingQueryService.getBookingDetail(storeId,tableId,bookingId,user.getUsername()));
     }
 
-    // 사장이 특정 테이블 슬롯의 예약 취소
     @PatchMapping("/stores/{storeId}/tables/{tableId}/slots/{bookingId}/cancel")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<BookingResponseDTO.OwnerCancelBookingResultDTO> cancelTableSlotBooking(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
-            @PathVariable Long bookingId
+            @PathVariable Long bookingId,
+            @CurrentUser User user
             ) {
 
-        return ApiResponse.of(StoreTableSuccessStatus._TABLE_CANCELLED,bookingCommandService.cancelBookingByOwner(storeId, tableId, bookingId));
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_CANCELLED,bookingCommandService.cancelBookingByOwner(storeId, tableId, bookingId,user.getUsername()));
     }
 
     @GetMapping("/stores/{storeId}/tables/{tableId}")
