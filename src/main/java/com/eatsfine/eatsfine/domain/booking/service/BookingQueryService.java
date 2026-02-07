@@ -15,5 +15,5 @@ public interface BookingQueryService {
 
     BookingResponseDTO.BookingPreviewListDTO getBookingList(Long userId, String status, Integer page);
 
-    BookingResponseDTO.BookingDetailDTO getBookingDetail(Long storeId, Long tableId, Long bookingId);
+    BookingResponseDTO.BookingDetailDTO getBookingDetail(Long storeId, Long tableId, Long bookingId,String email);
 }

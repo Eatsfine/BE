@@ -16,6 +16,7 @@ import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
@@ -47,6 +48,7 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     private final BusinessHoursRepository businessHourRepository;
     private final StoreTableRepository storeTableRepository;
     private final UserRepository userRepository;
+    private final StoreValidator storeValidator;
 
     @Override
     @Transactional(readOnly = true)
@@ -225,7 +227,11 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     // 사장님용 예약 상세 조회
     @Override
     @Transactional(readOnly = true)
-    public BookingResponseDTO.BookingDetailDTO getBookingDetail(Long storeId, Long tableId, Long bookingId) {
+    public BookingResponseDTO.BookingDetailDTO getBookingDetail(Long storeId, Long tableId, Long bookingId, String email) {
+
+        // 0. 가게 소유자 검증
+        storeValidator.validateStoreOwner(storeId, email);
+
         // 1. 예약 존재 여부 확인
         Booking booking = bookingRepository.findByIdAndStatus(bookingId, BookingStatus.CONFIRMED)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
