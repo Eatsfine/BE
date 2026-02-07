@@ -16,6 +16,7 @@ import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.domain.user.service.userService.UserService;
 import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
+import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,6 +28,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -245,5 +248,24 @@ public class UserServiceImpl implements UserService {
 
         log.info("[OwnerAuth] 인증 성공 - 유저 권한이 OWNER로 변경되었습니다. 유저ID: {}", savedUser.getId());
         return UserConverter.toVerifyOwnerResponse(savedUser);
+    }
+
+    @Override
+    @Transactional
+    public UserResponseDto.UpdatePasswordDto changePassword(UserRequestDto.ChangePasswordDto requestDto, HttpServletRequest request) {
+
+        User user = getCurrentUser(request);
+
+        //  현재 비밀번호 일치 여부 확인
+        if (!passwordEncoder.matches(requestDto.getCurrentPassword(), user.getPassword())) {
+            throw new GeneralException(UserErrorStatus.PASSWORD_NOT_MATCH);
+        }
+
+        // 새 비밀번호 암호화 및 업데이트
+        String encryptedPassword = passwordEncoder.encode(requestDto.getNewPassword());
+        user.updatePassword(encryptedPassword);
+
+        // 결과 반환
+        return UserConverter.toUpdatePasswordResponse(true, LocalDateTime.now(), "비밀번호가 성공적으로 변경되었습니다." );
     }
 }

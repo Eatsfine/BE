@@ -23,4 +23,6 @@ public interface UserService {
 
     UserResponseDto.VerifyOwnerDto verifyOwner(UserRequestDto.VerifyOwnerDto verifyOwnerDto, HttpServletRequest request);
 
+    UserResponseDto.UpdatePasswordDto changePassword(UserRequestDto.ChangePasswordDto changePassword, HttpServletRequest request);
+
 }
