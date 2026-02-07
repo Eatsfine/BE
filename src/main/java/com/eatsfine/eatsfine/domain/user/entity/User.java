@@ -80,7 +80,7 @@ public class User extends BaseEntity {
         if (term != null) {
             term.setUser(this);
         }
-    }
+
 
     public void linkSocial(SocialType socialType, String socialId) {
         this.socialType = socialType;

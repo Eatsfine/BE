@@ -50,23 +50,27 @@ public class StoreTableController implements StoreTableControllerDocs {
     }
 
     @GetMapping("/stores/{storeId}/tables/{tableId}/slots")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.SlotListDto> getTableSlots(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @CurrentUser User user
     ) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
-        return ApiResponse.of(StoreTableSuccessStatus._SLOT_LIST_FOUND, storeTableQueryService.getTableSlots(storeId, tableId, targetDate));
+        return ApiResponse.of(StoreTableSuccessStatus._SLOT_LIST_FOUND, storeTableQueryService.getTableSlots(storeId, tableId, targetDate, user.getUsername()));
     }
 
     @GetMapping("/stores/{storeId}/tables/{tableId}")
+    @PreAuthorize("hasRole('OWNER')")
     public ApiResponse<StoreTableResDto.TableDetailDto> getTableDetail(
             @PathVariable Long storeId,
             @PathVariable Long tableId,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+            @CurrentUser User user
     ) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
-        return ApiResponse.of(StoreTableSuccessStatus._TABLE_DETAIL_FOUND, storeTableQueryService.getTableDetail(storeId, tableId, targetDate));
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_DETAIL_FOUND, storeTableQueryService.getTableDetail(storeId, tableId, targetDate, user.getUsername()));
     }
 
     @PatchMapping("/stores/{storeId}/tables/{tableId}")
