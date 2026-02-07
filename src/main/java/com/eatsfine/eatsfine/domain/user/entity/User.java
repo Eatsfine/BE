@@ -71,8 +71,13 @@ public class User extends BaseEntity {
     }
 
     public void setTerm(Term term) {
+        if (this.term != null && this.term != term) {
+            this.term.setUser(null);
+        }
         this.term = term;
-        if (term != null) term.setUser(this);
+        if (term != null) {
+            term.setUser(this);
+        }
     }
 
     public void linkSocial(SocialType socialType, String socialId) {
