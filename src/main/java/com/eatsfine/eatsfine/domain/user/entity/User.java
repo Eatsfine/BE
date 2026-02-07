@@ -70,6 +70,8 @@ public class User extends BaseEntity {
         this.refreshToken = refreshToken;
     }
 
+    public void updatePassword(String password){this.password = password;}
+
     public void setTerm(Term term) {
         if (this.term != null && this.term != term) {
             this.term.setUser(null);
