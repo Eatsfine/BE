@@ -256,9 +256,14 @@ public class UserServiceImpl implements UserService {
 
         User user = getCurrentUser(request);
 
+        // 소셜 로그인 사용자 명시적 차단
+        if (user.getPassword() == null || user.getPassword().isBlank()) {
+            throw new AuthException(AuthErrorStatus.OAUTH_PASSWORD_NOT_SUPPORTED);
+        }
+
         //  현재 비밀번호 일치 여부 확인
         if (!passwordEncoder.matches(requestDto.getCurrentPassword(), user.getPassword())) {
-            throw new GeneralException(UserErrorStatus.PASSWORD_NOT_MATCH);
+            throw new UserException(UserErrorStatus.PASSWORD_NOT_MATCH);
         }
 
         // 새 비밀번호 암호화 및 업데이트

@@ -79,7 +79,7 @@ public class UserController {
     @PatchMapping(value = "/api/v1/member/info")
     @Operation(
             summary = "이름/전화번호 수정 API - 인증 필요",
-            description = "이름/전화번호/이메일만 수정합니다. (JSON)",
+            description = "이름/전화번호만 수정합니다. (JSON)",
             security = {@SecurityRequirement(name = "JWT")}
     )
     public ResponseEntity<ApiResponse<String>> updateMyInfoText(
