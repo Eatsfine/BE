@@ -45,7 +45,6 @@ public class UserConverter {
     public static UserResponseDto.UpdateResponseDto toUpdateResponse(User user) {
         return UserResponseDto.UpdateResponseDto.builder()
                 .profileImage(user.getProfileImage())
-                .email(user.getEmail())
                 .name(user.getName())
                 .phoneNumber(user.getPhoneNumber())
                 .build();
