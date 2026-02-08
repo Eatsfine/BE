@@ -70,17 +70,23 @@ public class User extends BaseEntity {
         this.refreshToken = refreshToken;
     }
 
+    public void updatePassword(String password){this.password = password;}
+
     public void setTerm(Term term) {
+        if (this.term != null && this.term != term) {
+            this.term.setUser(null);
+        }
         this.term = term;
-        if (term != null) term.setUser(this);
+        if (term != null) {
+            term.setUser(this);
+        }
     }
 
-    public void linkSocial(SocialType socialType, String socialId) {
+    public void linkSocial (SocialType socialType, String socialId){
         this.socialType = socialType;
         this.socialId = socialId;
     }
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
     private Term term;
-
 }
