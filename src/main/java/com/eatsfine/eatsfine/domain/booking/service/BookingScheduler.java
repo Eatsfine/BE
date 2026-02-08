@@ -1,4 +1,4 @@
-package com.eatsfine.eatsfine.domain.booking.util;
+package com.eatsfine.eatsfine.domain.booking.service;
 
 import com.eatsfine.eatsfine.domain.booking.entity.Booking;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
