@@ -76,9 +76,7 @@ public class SecurityConfig {
                                 "/api/v1/stores/*/table-images" // 식당 테이블 이미지(가게 전경) 조회
                         ).permitAll()
 
-                        .requestMatchers("/auth/**", "/login", "/signup").permitAll()
-
-                        // 그 외는 인증 필요
+                        .requestMatchers("/auth/**", "/login/**", "/signup").permitAll()
                         .anyRequest().authenticated()
                 )
 
