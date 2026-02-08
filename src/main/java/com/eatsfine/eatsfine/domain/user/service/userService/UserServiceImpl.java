@@ -15,15 +15,11 @@ import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.domain.user.status.AuthErrorStatus;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
-import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +37,6 @@ public class UserServiceImpl implements UserService {
     private final TermRepository termRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-    private final AuthCookieProvider authCookieProvider;
     private final S3Service s3Service;
     private final BusinessNumberValidator businessNumberValidator;
 
@@ -257,8 +252,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public UserResponseDto.UpdatePasswordDto changePassword(
             UserRequestDto.ChangePasswordDto requestDto,
-            HttpServletRequest request,
-            HttpServletResponse response) {
+            HttpServletRequest request) {
 
         User user = getCurrentUser(request);
 
@@ -277,8 +271,6 @@ public class UserServiceImpl implements UserService {
         user.updatePassword(encryptedPassword);
 
         user.updateRefreshToken(null);
-        ResponseCookie clearCookie = authCookieProvider.clearRefreshTokenCookie();
-        response.addHeader(HttpHeaders.SET_COOKIE, clearCookie.toString());
 
         // 결과 반환
         return UserConverter.toUpdatePasswordResponse(true, LocalDateTime.now(), "비밀번호가 성공적으로 변경되었습니다." );

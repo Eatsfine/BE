@@ -12,7 +12,6 @@ import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -158,13 +157,18 @@ public class UserController {
             description = "비밀번호 변경하는 API입니다.",
             security = {@SecurityRequirement(name = "JWT")}
     )
-    public ResponseEntity<ApiResponse<UserResponseDto.UpdatePasswordDto>> changePassword
-            (@RequestBody @Valid UserRequestDto.ChangePasswordDto changePassword,
-             HttpServletRequest request, HttpServletResponse response){
+    public ResponseEntity<ApiResponse<UserResponseDto.UpdatePasswordDto>> changePassword(
+            @RequestBody @Valid UserRequestDto.ChangePasswordDto changePassword, HttpServletRequest request
+    ) {
+        UserResponseDto.UpdatePasswordDto result = userService.changePassword(changePassword, request);
 
-        UserResponseDto.UpdatePasswordDto result =   userService.changePassword(changePassword, request, response);
+        // 비밀번호 변경 성공 시 refreshToken 쿠키 삭제
+        ResponseCookie clearCookie = authCookieProvider.clearRefreshTokenCookie();
 
-        return ResponseEntity.ok(ApiResponse.onSuccess(result));
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, clearCookie.toString())
+                .body(ApiResponse.onSuccess(result));
     }
+
 
 }
