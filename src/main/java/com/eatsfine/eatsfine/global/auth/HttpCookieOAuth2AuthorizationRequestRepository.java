@@ -64,7 +64,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
                                          HttpServletResponse response) {
         if (authorizationRequest == null) {
             log.info("[SAVE] authorizationRequest가 null이므로 쿠키 제거");
-            removeAuthorizationRequestCookies(request, response);
+            removeAuthorizationRequestCookies(response);
             return;
         }
 
@@ -78,7 +78,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
             cookie.setMaxAge(COOKIE_EXPIRE_SECONDS);
 
             // 환경에 따라 설정
-            cookie.setSecure(request.isSecure());
+            cookie.setSecure(request.isSecure());  // 로컬 HTTP: false, 운영 HTTPS: true
             cookie.setAttribute("SameSite", "Lax");
             response.addCookie(cookie);
 
@@ -95,20 +95,19 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
                                                                  HttpServletResponse response) {
         log.info("[REMOVE] AuthorizationRequest 제거");
         OAuth2AuthorizationRequest authRequest = loadAuthorizationRequest(request);
-        removeAuthorizationRequestCookies(request, response);
+        removeAuthorizationRequestCookies(response);
         return authRequest;
     }
 
-    private void removeAuthorizationRequestCookies(HttpServletRequest request,
-                                                   HttpServletResponse response) {
+    private void removeAuthorizationRequestCookies(HttpServletResponse response) {
         Cookie cookie = new Cookie(OAUTH2_AUTH_REQUEST_COOKIE_NAME, "");
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(0);
-        cookie.setSecure(request.isSecure());  // 저장할 때와 동일하게
+        cookie.setSecure(true);  // 저장할 때와 동일하게
         cookie.setAttribute("SameSite", "Lax");  // 저장할 때와 동일하게
         response.addCookie(cookie);
 
-        log.info("[REMOVE] 쿠키 제거 완료 - secure={}", cookie.getSecure());
+        log.info("[REMOVE] 쿠키 제거 완료");
     }
 }
