@@ -33,13 +33,11 @@ public class StoreTable extends BaseEntity {
     @JoinColumn(name = "table_layout_id", nullable = false)
     private TableLayout tableLayout; // 부모 변경
 
-    private Integer tableSeats; // 추후 삭제 예정
-
     @Column(name = "min_seat_count", nullable = false)
-    private int minSeatCount;
+    private Integer minSeatCount;
 
     @Column(name = "max_seat_count", nullable = false)
-    private int maxSeatCount;
+    private Integer maxSeatCount;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "seats_type")

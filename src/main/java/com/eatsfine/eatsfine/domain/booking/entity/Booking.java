@@ -13,6 +13,7 @@ import com.eatsfine.eatsfine.domain.user.entity.User;
 
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.math.BigDecimal;
@@ -59,10 +60,12 @@ public class Booking extends BaseEntity {
 
     // 예약 날짜 (YYYY-MM-DD)
     @Column(name = "booking_date", nullable = false)
+    @NotNull
     private LocalDate bookingDate;
 
     // 예약 시간 (HH:mm)
     @Column(name = "booking_time", nullable = false)
+    @NotNull
     private LocalTime bookingTime;
 
     @Enumerated(EnumType.STRING)

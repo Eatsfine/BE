@@ -1,7 +1,12 @@
 package com.eatsfine.eatsfine.domain.businesshours.repository;
 
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.store.entity.Store;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface BusinessHoursRepository extends JpaRepository<BusinessHours,Long> {
+import java.time.DayOfWeek;
+import java.util.Optional;
+
+public interface BusinessHoursRepository extends JpaRepository<BusinessHours, Long> {
+    Optional<BusinessHours> findByStoreAndDayOfWeek(Store store, DayOfWeek dayOfWeek);
 }

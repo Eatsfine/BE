@@ -115,6 +115,14 @@ public class PaymentService {
                                 provider,
                                 response.receipt() != null ? response.receipt().url() : null);
 
+                Booking booking = payment.getBooking(); // 결제 엔티티에 매핑된 예약 객체 가져오기
+                if (booking != null) {
+                        // 예약 상태를 CONFIRMED로 변경
+                        booking.confirm();
+                        log.info("Booking confirmed for OrderID: {}", dto.orderId());
+                }
+
+
                 log.info("Payment confirmed for OrderID: {}", dto.orderId());
 
                 return new PaymentResponseDTO.PaymentSuccessResultDTO(
@@ -127,6 +135,7 @@ public class PaymentService {
                                 payment.getPaymentProvider() != null ? payment.getPaymentProvider().name() : null,
                                 payment.getReceiptUrl());
         }
+
 
         @Transactional(noRollbackFor = GeneralException.class)
         public PaymentResponseDTO.CancelPaymentResultDTO cancelPayment(String paymentKey,

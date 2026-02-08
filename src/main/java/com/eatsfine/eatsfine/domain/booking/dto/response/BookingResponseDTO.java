@@ -78,6 +78,15 @@ public class BookingResponseDTO {
     ){}
 
     @Builder
+        public record OwnerCancelBookingResultDTO(
+            Long bookingId,
+            String status,         // CANCELED
+            LocalDateTime canceledAt, // 취소 시간
+            BigDecimal refundAmount    // 환불 금액
+    ){}
+
+
+    @Builder
     public record BookingPreviewListDTO(
             List<BookingPreviewDTO> bookingList,
             Integer listSize,
@@ -100,5 +109,12 @@ public class BookingResponseDTO {
             BigDecimal amount,
             String paymentMethod,
             String status
+    ){}
+
+    @Builder
+    public record BookingDetailDTO(
+            String bookerName,
+            Integer partySize,
+            BigDecimal amount
     ){}
 }

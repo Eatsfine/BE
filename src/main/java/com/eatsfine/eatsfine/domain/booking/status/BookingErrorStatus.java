@@ -19,6 +19,11 @@ public enum BookingErrorStatus implements BaseErrorCode {
     _ALREADY_CONFIRMED(HttpStatus.BAD_REQUEST,"BOOKING4002", "이미 확정된 예약입니다."),
     _PAYMENT_AMOUNT_MISMATCH(HttpStatus.BAD_REQUEST, "BOOKING4003", "결제 금액이 일치하지 않습니다."),
     _ALREADY_CANCELED(HttpStatus.BAD_REQUEST,"BOOKING4004", "이미 취소된 예약입니다."),
+    _TABLE_NOT_FOUND(HttpStatus.NOT_FOUND, "TABLE404", "해당 테이블을 찾을 수 없습니다."),
+    _TABLE_SEATS_NOT_FOUND(HttpStatus.NOT_FOUND, "TABLE4041", "테이블 좌석 정보를 찾을 수 없습니다."),
+    _INVALID_BOOKING_ACCESS(HttpStatus.FORBIDDEN, "BOOKING403", "해당 가게의 예약이 아닙니다."),
+    _BOOKING_NOT_USER(HttpStatus.FORBIDDEN, "BOOKING4031", "해당 유저의 예약이 아닙니다."),
+    _INVALID_DATE_TIME(HttpStatus.BAD_REQUEST, "BOOKING4005", "유효하지 않은 날짜 또는 시간입니다.")
     ;
 
     private final HttpStatus httpStatus;

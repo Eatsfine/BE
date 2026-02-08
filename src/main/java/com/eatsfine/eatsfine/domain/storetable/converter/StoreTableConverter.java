@@ -6,7 +6,9 @@ import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.util.SlotCalculator;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 public class StoreTableConverter {
     // StoreTable Entity를 생성 응답 DTO로 변환
@@ -34,12 +36,15 @@ public class StoreTableConverter {
                 .build();
     }
 
-    public static StoreTableResDto.SlotListDto toSlotListDto(int totalCount, int availableCount, List<SlotCalculator.SlotDto> slots) {
+    public static StoreTableResDto.SlotListDto toSlotListDto(int totalCount, int availableCount,
+                                                             List<SlotCalculator.SlotDto> slots,
+                                                             Map<LocalTime,Long> bookingMap) {
         List<StoreTableResDto.SlotDetailDto> slotDetails = slots.stream()
                 .map(slot -> StoreTableResDto.SlotDetailDto.builder()
                         .time(slot.time())
                         .status(slot.status())
                         .isAvailable(slot.isAvailable())
+                        .bookingId(bookingMap.get(slot.time()))
                         .build())
                 .toList();
 

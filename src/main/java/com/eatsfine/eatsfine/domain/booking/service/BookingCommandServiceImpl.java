@@ -23,11 +23,14 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableErrorStatus;
 import com.eatsfine.eatsfine.domain.storetable.repository.StoreTableRepository;
 import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,10 +53,19 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     private final BookingRepository bookingRepository;
     private final PaymentService paymentService;
     private final MenuRepository menuRepository;
+    private final UserRepository userRepository;
+    private final StoreValidator storeValidator;
 
     @Override
     @Transactional
-    public BookingResponseDTO.CreateBookingResultDTO createBooking(User user, Long storeId, BookingRequestDTO.CreateBookingDTO dto) {
+    public BookingResponseDTO.CreateBookingResultDTO createBooking(Long userId, Long storeId, BookingRequestDTO.CreateBookingDTO dto) {
+
+        if (dto.date() == null || dto.time() == null) {
+            throw new BookingException(BookingErrorStatus._INVALID_DATE_TIME);
+        }
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
 
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
@@ -127,7 +140,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .map(t -> BookingResponseDTO.BookingResultTableDTO.builder()
                         .tableId(t.getId())
                         .tableNumber(t.getTableNumber())
-                        .tableSeats(t.getTableSeats())
+                        .tableSeats(t.getMaxSeatCount())
                         .seatsType(t.getSeatsType() != null ? t.getSeatsType().name() : null)
                         .build())
                 .toList();
@@ -166,16 +179,28 @@ public class BookingCommandServiceImpl implements BookingCommandService{
 
     @Override
     @Transactional
-    public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
+    public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long userId, Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
+
+
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
+
+        //  본인 예약인지 확인
+        if (!booking.getUser().getId().equals(userId)) {
+            throw new BookingException(BookingErrorStatus._BOOKING_NOT_USER); // 본인 예약이 아님 에러
+        }
+
+        //  이미 취소된 예약인지 확인
+        if (booking.getStatus() == BookingStatus.CANCELED) {
+            throw new BookingException(BookingErrorStatus._ALREADY_CANCELED);
+        }
+
         // 예약 중 결제 완료된 결제의 결제키 이용 환불 로직 진행
-        if(booking.getStatus() == BookingStatus.CONFIRMED) {
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
             PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(dto.reason());
             paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
         }
-
 
         //예약 상태 취소로 변경
         booking.cancel(dto.reason());
@@ -184,6 +209,57 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .bookingId(booking.getId())
                 .status(booking.getStatus().name())
                 .refundAmount(booking.getDepositAmount())
+                .build();
+    }
+
+    @Override
+    @Transactional
+    public BookingResponseDTO.OwnerCancelBookingResultDTO cancelBookingByOwner(Long storeId, Long tableId, Long bookingId, String email) {
+
+        // 0. 가게 주인 검증
+        storeValidator.validateStoreOwner(storeId, email);
+
+        // 1. 예약 존재 확인
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
+
+        // 2. 데이터 무결성 검증
+        if (!booking.getStore().getId().equals(storeId)) {
+            throw new BookingException(BookingErrorStatus._INVALID_BOOKING_ACCESS);
+        }
+
+        // - 해당 예약의 테이블 목록 중 요청된 tableId가 포함되어 있는지 확인
+        boolean isCorrectTable = booking.getBookingTables().stream()
+                .anyMatch(bt -> bt.getStoreTable().getId().equals(tableId));
+
+        if (!isCorrectTable) {
+            throw new BookingException(BookingErrorStatus._TABLE_NOT_FOUND);
+        }
+
+        // - 이미 취소된 예약인지 확인
+        if (booking.getStatus() == BookingStatus.CANCELED) {
+            throw new BookingException(BookingErrorStatus._ALREADY_CANCELED);
+        }
+
+        // 3. 환불 로직 추가
+        // 예약 확정(CONFIRMED) 상태라면 환불 진행
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
+            String cancelReason = "사장님에 의한 예약 취소";
+            PaymentRequestDTO.CancelPaymentDTO cancelDto = new PaymentRequestDTO.CancelPaymentDTO(cancelReason);
+
+            // 결제 시 저장해둔 successPaymentKey를 사용하여 외부 API 호출
+            paymentService.cancelPayment(booking.getSuccessPaymentKey(), cancelDto);
+        }
+
+        // 4. 예약 상태 변경
+        booking.cancel("사장님에 의한 예약 취소");
+
+        // 5. 응답 DTO 반환
+        return BookingResponseDTO.OwnerCancelBookingResultDTO.builder()
+                .bookingId(booking.getId())
+                .status(booking.getStatus().name())
+                .refundAmount(booking.getDepositAmount()) // 환불된 금액 세팅
+                .canceledAt(LocalDateTime.now())
                 .build();
     }
 }

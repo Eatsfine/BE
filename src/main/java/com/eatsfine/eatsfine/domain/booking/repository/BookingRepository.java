@@ -11,8 +11,10 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
@@ -55,4 +57,25 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "     OR (b.bookingDate = :currentDate AND b.bookingTime >= :currentTime)) " +
             "AND b.status IN ('CONFIRMED', 'PENDING')")
     boolean existsFutureBookingByTable(@Param("tableId") Long tableId, @Param("currentDate") LocalDate currentDate, @Param("currentTime") LocalTime currentTime);
+
+    // BookingRepository.java
+    @Query("SELECT b FROM Booking b " +
+            "JOIN b.bookingTables bt " +
+            "JOIN bt.storeTable st " +
+            "WHERE st.id = :tableId " +
+            "AND b.bookingDate = :date " +
+            "AND b.status = 'CONFIRMED'")
+    List<Booking> findActiveBookingsByTableAndDate(
+            @Param("tableId") Long tableId,
+            @Param("date") LocalDate date);
+
+    Optional<Booking> findByIdAndStatus(Long bookingId, BookingStatus status);
+
+    /**
+     * PENDING 상태이면서, 기준 시간(createdAt)보다 이전에 생성된 예약 목록 조회
+     * * @param status 예약 상태 (예: PENDING)
+     * @param threshold 기준 시간 (예: 현재 시간 - 10분)
+     * @return 만료된 예약 리스트
+     */
+    List<Booking> findAllByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime threshold);
 }
