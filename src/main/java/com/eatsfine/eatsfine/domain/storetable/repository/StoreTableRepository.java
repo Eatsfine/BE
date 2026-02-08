@@ -21,4 +21,7 @@ public interface StoreTableRepository extends JpaRepository<StoreTable,Long> {
 
     // 특정 레이아웃에서 특정 번호를 가진 활성 테이블 조회, 테이블 번호 중복 체크용
     Optional<StoreTable> findByTableLayoutAndTableNumberAndIsDeletedFalse(TableLayout tableLayout, String tableNumber);
+
+    //예약 시간 조회 시 필요한 특정 레이아웃의 모든 활성 테이블 조회
+    List<StoreTable> findAllByTableLayoutAndIsDeletedFalse(TableLayout tableLayout);
 }

@@ -65,7 +65,18 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
                                 "/api/v1/deploy/health-check",
-                                "/swagger-resources/**"
+                                "/swagger-resources/**",
+                                "/api/v1/stores/*/bookings/available-times",
+                                "/api/v1/stores/*/bookings/available-tables"
+
+                        ).permitAll()
+
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/stores/search", // 식당 검색
+                                "/api/v1/stores/*", //식당 상세 조회
+                                "/api/v1/stores/*/main-image", // 식당 대표 이미지 조회
+                                "/api/v1/stores/*/menus", // 식당 메뉴 조회
+                                "/api/v1/stores/*/table-images" // 식당 테이블 이미지(가게 전경) 조회
                         ).permitAll()
 
                         .requestMatchers("/auth/**", "/login/**", "/signup").permitAll()
