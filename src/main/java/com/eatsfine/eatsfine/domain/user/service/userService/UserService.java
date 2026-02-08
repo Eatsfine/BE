@@ -3,6 +3,7 @@ package com.eatsfine.eatsfine.domain.user.service.userService;
 import com.eatsfine.eatsfine.domain.user.dto.request.UserRequestDto;
 import com.eatsfine.eatsfine.domain.user.dto.response.UserResponseDto;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -23,6 +24,6 @@ public interface UserService {
 
     UserResponseDto.VerifyOwnerDto verifyOwner(UserRequestDto.VerifyOwnerDto verifyOwnerDto, HttpServletRequest request);
 
-    UserResponseDto.UpdatePasswordDto changePassword(UserRequestDto.ChangePasswordDto changePassword, HttpServletRequest request);
+    UserResponseDto.UpdatePasswordDto changePassword(UserRequestDto.ChangePasswordDto changePassword, HttpServletRequest request, HttpServletResponse response);
 
 }

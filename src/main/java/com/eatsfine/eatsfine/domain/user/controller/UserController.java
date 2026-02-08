@@ -12,6 +12,7 @@ import com.eatsfine.eatsfine.global.auth.AuthCookieProvider;
 import com.eatsfine.eatsfine.global.config.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -158,9 +159,10 @@ public class UserController {
             security = {@SecurityRequirement(name = "JWT")}
     )
     public ResponseEntity<ApiResponse<UserResponseDto.UpdatePasswordDto>> changePassword
-            (@RequestBody @Valid UserRequestDto.ChangePasswordDto changePassword, HttpServletRequest request){
+            (@RequestBody @Valid UserRequestDto.ChangePasswordDto changePassword,
+             HttpServletRequest request, HttpServletResponse response){
 
-        UserResponseDto.UpdatePasswordDto result =   userService.changePassword(changePassword, request);
+        UserResponseDto.UpdatePasswordDto result =   userService.changePassword(changePassword, request, response);
 
         return ResponseEntity.ok(ApiResponse.onSuccess(result));
     }
