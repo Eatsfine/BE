@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.store.dto;
 
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
 import com.eatsfine.eatsfine.domain.store.enums.Category;
+import com.eatsfine.eatsfine.domain.store.enums.DepositRate;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 
@@ -56,6 +57,7 @@ public class StoreResDto {
             Category category,
             BigDecimal rating,
             Long reviewCount,
+            DepositRate depositRate,
             String mainImageUrl,
             List<String> tableImageUrls,
             List<BusinessHoursResDto.Summary> businessHours,

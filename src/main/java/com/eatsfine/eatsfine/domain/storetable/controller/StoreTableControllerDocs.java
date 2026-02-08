@@ -102,7 +102,9 @@ public interface StoreTableControllerDocs {
             Long tableId,
 
             @Parameter(description = "조회할 날짜 (yyyy-MM-dd 형식, 미입력 시 오늘 날짜)", example = "2026-01-12")
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date,
+
+            @Parameter(hidden = true) User user
     );
 
     @Operation(
@@ -127,7 +129,9 @@ public interface StoreTableControllerDocs {
             Long tableId,
 
             @Parameter(description = "조회 날짜 (yyyy-MM-dd)", example = "2026-01-23")
-            LocalDate date
+            LocalDate date,
+
+            @Parameter(hidden = true) User user
     );
 
     @Operation(

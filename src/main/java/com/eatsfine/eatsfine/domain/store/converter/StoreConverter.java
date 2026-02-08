@@ -46,6 +46,7 @@ public class StoreConverter {
                 .category(store.getCategory())
                 .rating(store.getRating())
                 .reviewCount(null) // reviewCount는 추후 리뷰 로직 구현 시 추가 예정
+                .depositRate(store.getDepositRate())
                 .mainImageUrl(store.getMainImageKey())
                 .tableImageUrls(Collections.emptyList()) // tableImages는 추후 사진 등록 API 구현 시 추가 예정
                 .businessHours(
