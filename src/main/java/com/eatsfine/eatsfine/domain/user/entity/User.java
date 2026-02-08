@@ -82,11 +82,11 @@ public class User extends BaseEntity {
         }
     }
 
-        public void linkSocial (SocialType socialType, String socialId){
-            this.socialType = socialType;
-            this.socialId = socialId;
-        }
+    public void linkSocial (SocialType socialType, String socialId){
+        this.socialType = socialType;
+        this.socialId = socialId;
+    }
 
-        @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
-        private Term term;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Term term;
 }
