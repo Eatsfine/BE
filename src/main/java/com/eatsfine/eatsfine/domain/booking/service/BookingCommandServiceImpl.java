@@ -60,6 +60,10 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     @Transactional
     public BookingResponseDTO.CreateBookingResultDTO createBooking(Long userId, Long storeId, BookingRequestDTO.CreateBookingDTO dto) {
 
+        if (dto.date() == null || dto.time() == null) {
+            throw new BookingException(BookingErrorStatus._INVALID_DATE_TIME);
+        }
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
 
