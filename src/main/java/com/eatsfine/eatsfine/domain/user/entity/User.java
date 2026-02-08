@@ -80,14 +80,13 @@ public class User extends BaseEntity {
         if (term != null) {
             term.setUser(this);
         }
-
-
-    public void linkSocial(SocialType socialType, String socialId) {
-        this.socialType = socialType;
-        this.socialId = socialId;
     }
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
-    private Term term;
+        public void linkSocial (SocialType socialType, String socialId){
+            this.socialType = socialType;
+            this.socialId = socialId;
+        }
 
+        @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)
+        private Term term;
 }
