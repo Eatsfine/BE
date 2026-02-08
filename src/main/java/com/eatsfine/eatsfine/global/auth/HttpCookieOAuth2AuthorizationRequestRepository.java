@@ -78,7 +78,7 @@ public class HttpCookieOAuth2AuthorizationRequestRepository
             cookie.setMaxAge(COOKIE_EXPIRE_SECONDS);
 
             // 환경에 따라 설정
-            cookie.setSecure(true);  // 로컬 HTTP: false, 운영 HTTPS: true
+            cookie.setSecure(request.isSecure());  // 로컬 HTTP: false, 운영 HTTPS: true
             cookie.setAttribute("SameSite", "Lax");
             response.addCookie(cookie);
 
