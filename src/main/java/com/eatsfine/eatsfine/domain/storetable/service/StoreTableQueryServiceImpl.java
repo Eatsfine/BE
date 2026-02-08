@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.storetable.service;
 
+import com.eatsfine.eatsfine.domain.booking.entity.Booking;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
@@ -24,7 +25,9 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -48,16 +51,21 @@ public class StoreTableQueryServiceImpl implements StoreTableQueryService{
 
         StoreTableValidator.validateTableBelongsToStore(storeTable, storeId);
 
-        List<TableBlock> tableBlocks = tableBlockRepository.findByStoreTableAndTargetDate(storeTable, date);
-        List<LocalTime> bookedTimeList = bookingRepository.findBookedTimesByTableAndDate(tableId, date);
-        Set<LocalTime> bookedTimes = new HashSet<>(bookedTimeList);
+        List<Booking> activeBookings = bookingRepository.findActiveBookingsByTableAndDate(tableId, date);
 
-        SlotCalculator.SlotCalculationResult result = SlotCalculator.calculateSlots(storeTable, date, tableBlocks, bookedTimes);
+        // 시간을 키로, 예약 ID를 값으로 하는 맵 생성
+        Map<LocalTime, Long> bookingMap = activeBookings.stream()
+                .collect(Collectors.toMap(Booking::getBookingTime, Booking::getId));
+
+        List<TableBlock> tableBlocks = tableBlockRepository.findByStoreTableAndTargetDate(storeTable, date);
+
+        SlotCalculator.SlotCalculationResult result = SlotCalculator.calculateSlots(storeTable, date, tableBlocks, bookingMap.keySet());
 
         return StoreTableConverter.toSlotListDto(
                 result.totalSlotCount(),
                 result.availableSlotCount(),
-                result.slots()
+                result.slots(),
+                bookingMap
         );
     }
 

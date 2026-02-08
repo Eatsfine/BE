@@ -15,6 +15,8 @@ public enum StoreTableSuccessStatus implements BaseCode {
     _TABLE_DETAIL_FOUND(HttpStatus.OK, "TABLE200_2", "테이블 상세 정보 조회에 성공했습니다."),
     _TABLE_UPDATED(HttpStatus.OK, "TABLE200_3", "성공적으로 테이블 정보를 수정했습니다."),
     _TABLE_DELETED(HttpStatus.OK, "TABLE200_4", "성공적으로 테이블을 삭제했습니다."),
+    _TABLE_BOOKING_FOUND(HttpStatus.OK, "TABLE200_5", "테이블 예약 정보 조회에 성공했습니다."),
+    _TABLE_CANCELLED(HttpStatus.OK, "TABLE200_6", "성공적으로 테이블 예약을 취소했습니다.")
     ;
 
     private final HttpStatus httpStatus;

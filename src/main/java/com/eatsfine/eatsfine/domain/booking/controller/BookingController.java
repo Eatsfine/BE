@@ -5,14 +5,17 @@ import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
 import com.eatsfine.eatsfine.domain.booking.service.BookingCommandService;
 import com.eatsfine.eatsfine.domain.booking.service.BookingQueryService;
 import com.eatsfine.eatsfine.domain.booking.status.BookingSuccessStatus;
-import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -33,7 +36,7 @@ public class BookingController {
     public ApiResponse<BookingResponseDTO.TimeSlotListDTO> getAvailableTimes(
             @ParameterObject @ModelAttribute @Valid BookingRequestDTO.GetAvailableTimeDTO dto,
             @PathVariable Long storeId
-            ) {
+    ) {
 
         return ApiResponse.onSuccess(bookingQueryService.getAvailableTimeSlots(storeId, dto));
     }
@@ -42,23 +45,28 @@ public class BookingController {
             , description = "선택한 시간대에 예약 가능한 구체적인 테이블 목록을 반환")
     @GetMapping("/stores/{storeId}/bookings/available-tables")
     public ApiResponse<BookingResponseDTO.AvailableTableListDTO> getAvailableTables(
-             @PathVariable Long storeId,
-             @ParameterObject @ModelAttribute @Valid BookingRequestDTO.GetAvailableTableDTO dto
-            ) {
+            @PathVariable Long storeId,
+            @ParameterObject @ModelAttribute @Valid BookingRequestDTO.GetAvailableTableDTO dto
+    ) {
 
         return ApiResponse.onSuccess(bookingQueryService.getAvailableTables(storeId, dto));
     }
 
-    @Operation(summary = "예약 생성" ,
+
+    @Operation(summary = "예약 생성",
             description = "가게,날짜,시간,인원,테이블 정보를 입력받아 예약을 생성합니다.")
     @PostMapping("/stores/{storeId}/bookings")
     public ApiResponse<BookingResponseDTO.CreateBookingResultDTO> createBooking(
             @PathVariable Long storeId,
-            @RequestBody @Valid BookingRequestDTO.CreateBookingDTO dto
-            ) {
+            @RequestBody @Valid BookingRequestDTO.CreateBookingDTO dto,
+            @AuthenticationPrincipal User user
+    ) {
 
-        User user = userRepository.findById(1L).orElseThrow(); // 임시로 임의의 유저 사용
-        return ApiResponse.onSuccess(bookingCommandService.createBooking(user, storeId, dto));
+        String email = user.getUsername();
+        com.eatsfine.eatsfine.domain.user.entity.User userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+
+        return ApiResponse.onSuccess(bookingCommandService.createBooking(userEntity.getId(), storeId, dto));
     }
 
     //불필요한 api 삭제
@@ -75,14 +83,19 @@ public class BookingController {
 //    }
 
     @Operation(summary = "예약 취소",
-    description = "예약을 취소하고 환불을 진행합니다.")
+            description = "예약을 취소하고 환불을 진행합니다.")
     @PatchMapping("/bookings/{bookingId}/cancel")
     public ApiResponse<BookingResponseDTO.CancelBookingResultDTO> cancelBooking(
-        @PathVariable Long bookingId,
-        @RequestBody @Valid BookingRequestDTO.CancelBookingDTO dto
+            @PathVariable Long bookingId,
+            @RequestBody @Valid BookingRequestDTO.CancelBookingDTO dto,
+            @AuthenticationPrincipal User user
     ) {
+        String email = user.getUsername();
+        com.eatsfine.eatsfine.domain.user.entity.User userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+
         return ApiResponse.of(BookingSuccessStatus._BOOKING_CANCELED,
-            bookingCommandService.cancelBooking(bookingId, dto));
+                bookingCommandService.cancelBooking(userEntity.getId(), bookingId, dto));
     }
 
 
@@ -91,12 +104,15 @@ public class BookingController {
     @GetMapping("/users/bookings")
     public ApiResponse<BookingResponseDTO.BookingPreviewListDTO> getMyBookings(
             @RequestParam(name = "status", required = false) String status,
-            @RequestParam(name = "page", defaultValue = "1") Integer page
+            @RequestParam(name = "page", defaultValue = "1") Integer page,
+            @AuthenticationPrincipal User user
     ) {
-        User user = userRepository.findById(1L).orElseThrow(); // 임시로 임의의 유저 사용
+        String email = user.getUsername();
+        com.eatsfine.eatsfine.domain.user.entity.User userEntity = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
 
         // 서비스 호출 시 page - 1을 넘겨서 0-based index로 맞춰줍니다.
         return ApiResponse.of(BookingSuccessStatus._BOOKING_FOUND,
-                bookingQueryService.getBookingList(user, status, page-1));
+                bookingQueryService.getBookingList(userEntity.getId(), status, page - 1));
     }
 }
