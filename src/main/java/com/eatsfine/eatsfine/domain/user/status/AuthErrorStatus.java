@@ -19,8 +19,8 @@ public enum AuthErrorStatus implements BaseErrorCode {
     EXPIRED_TOKEN(HttpStatus.UNAUTHORIZED, "AUTH4004", "토큰이 만료되었습니다."),
     REFRESH_TOKEN_NOT_ISSUED(HttpStatus.INTERNAL_SERVER_ERROR, "AUTH5001", "리프레시 토큰이 발급되지 않았습니다."),
 
-    //소설 로그인 유저 비번 수정 관련 에러
-    OAUTH_PASSWORD_NOT_SUPPORTED(HttpStatus.CONFLICT, "AUTH_410", "소셜 로그인 계정은 비밀번호 변경을 지원하지 않습니다."),
+    //소셜 로그인 유저 비번 수정 관련 에러
+    OAUTH_PASSWORD_NOT_SUPPORTED(HttpStatus.CONFLICT, "AUTH410", "소셜 로그인 계정은 비밀번호 변경을 지원하지 않습니다."),
 
     EMPTY_TOKEN_ROLE(HttpStatus.UNAUTHORIZED, "AUTH407", "토큰 내 권한 정보가 누락되었습니다."),
     // 사장 인증 관련 에러
