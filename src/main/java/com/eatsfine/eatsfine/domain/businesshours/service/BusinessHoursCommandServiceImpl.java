@@ -4,6 +4,7 @@ import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConvert
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
 import com.eatsfine.eatsfine.domain.businesshours.validator.BreakTimeValidator;
 import com.eatsfine.eatsfine.domain.businesshours.validator.BusinessHoursValidator;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
@@ -12,12 +13,14 @@ import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
+@Slf4j
 public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandService {
 
     private final StoreRepository storeRepository;
@@ -61,7 +64,14 @@ public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandServ
 
         for(BusinessHours bh : store.getBusinessHours()) {
             if(bh.isClosed()) continue;
-            BreakTimeValidator.validateBreakTime(bh.getOpenTime(), bh.getCloseTime(), dto.breakStartTime(), dto.breakEndTime());
+            try {
+                BreakTimeValidator.validateBreakTime(bh.getOpenTime(), bh.getCloseTime(), dto.breakStartTime(), dto.breakEndTime());
+            } catch (BusinessHoursException e) {
+                log.error("브레이크 타임 검증 실패 - 요일: {}, 영업시간: {}~{}, 브레이크: {}~{}",
+                        bh.getDayOfWeek(), bh.getOpenTime(), bh.getCloseTime(),
+                        dto.breakStartTime(), dto.breakEndTime());
+                throw e;
+            }
         }
 
         store.getBusinessHours().forEach(s -> {
