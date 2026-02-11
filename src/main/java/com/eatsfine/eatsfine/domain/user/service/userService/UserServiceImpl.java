@@ -85,12 +85,12 @@ public class UserServiceImpl implements UserService {
                 .refreshToken(refreshToken)
                 .build();
     }
-
     @Override
     @Transactional
     public UserResponseDto.UserInfoDto getMemberInfo(HttpServletRequest request) {
         User user = getCurrentUser(request);
-        return UserConverter.toUserInfo(user);
+        String profileUrl = s3Service.toUrl(user.getProfileImage());
+        return UserConverter.toUserInfo(user, profileUrl);
     }
 
     @Override
@@ -191,6 +191,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
+
     @Override
     @Transactional
     public void withdraw(HttpServletRequest request) {
@@ -205,8 +206,8 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        user.updateRefreshToken(null);
-        userRepository.delete(user);
+        user.withdraw();
+        userRepository.save(user);
     }
 
     @Override
@@ -225,8 +226,13 @@ public class UserServiceImpl implements UserService {
 
         String email = jwtTokenProvider.getEmailFromToken(token);
 
-        return userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+
+        if (user.isDeleted()) {
+            throw new UserException(UserErrorStatus.WITHDRAWN_USER);
+        }
+        return user;
     }
 
     @Override

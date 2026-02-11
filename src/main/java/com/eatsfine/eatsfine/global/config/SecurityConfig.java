@@ -101,7 +101,7 @@ public class SecurityConfig {
         }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsConfigurationSource corsConfigurationSource() { // cors 설정
         CorsConfiguration config = new CorsConfiguration();
 
         config.setAllowedOrigins(List.of(
@@ -110,7 +110,7 @@ public class SecurityConfig {
         ));
         config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
         config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
-        config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+        config.setExposedHeaders(List.of("Authorization", "Set-Cookie")); // 쿠키, Authorization 헤더 노출
         config.setAllowCredentials(true);
         config.setMaxAge(3600L);
 

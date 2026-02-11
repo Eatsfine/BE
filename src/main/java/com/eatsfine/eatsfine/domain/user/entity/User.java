@@ -6,6 +6,9 @@ import com.eatsfine.eatsfine.domain.user.enums.SocialType;
 import com.eatsfine.eatsfine.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.time.LocalDateTime;
+
 @Entity
 @Getter
 // 수정한 부분: access 레벨을 PROTECTED로 설정하여 Hibernate가 접근할 수 있게 합니다.
@@ -46,6 +49,12 @@ public class User extends BaseEntity {
     @Column(length = 500)
     private String refreshToken;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "is_deleted")
+    private Boolean isDeleted = false;
+
     public void updateName(String name) {
         this.name = name;
     }
@@ -85,6 +94,17 @@ public class User extends BaseEntity {
     public void linkSocial (SocialType socialType, String socialId){
         this.socialType = socialType;
         this.socialId = socialId;
+    }
+
+    // 회원 탈퇴 메서드 추가
+    public void withdraw() {
+        this.isDeleted = true;
+        this.deletedAt = LocalDateTime.now();
+        this.refreshToken = null; // refresh token도 null 처리
+    }
+
+    public boolean isDeleted() {
+        return this.isDeleted != null && this.isDeleted;
     }
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.REMOVE, orphanRemoval = true, fetch = FetchType.LAZY)

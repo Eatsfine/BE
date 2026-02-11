@@ -30,10 +30,10 @@ public class UserConverter {
 
 
     // 유저 정보 조회 응답 변환
-    public static UserResponseDto.UserInfoDto toUserInfo(User user) {
+    public static UserResponseDto.UserInfoDto toUserInfo(User user, String profileImageUrl) {
         return UserResponseDto.UserInfoDto.builder()
                 .id(user.getId())
-                .profileImage(user.getProfileImage())
+                .profileImage(profileImageUrl)
                 .email(user.getEmail())
                 .name(user.getName())
                 .phoneNumber(user.getPhoneNumber())
