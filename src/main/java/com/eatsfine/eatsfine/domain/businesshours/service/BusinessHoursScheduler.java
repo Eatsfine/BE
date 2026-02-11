@@ -18,19 +18,37 @@ public class BusinessHoursScheduler {
 
     private final BusinessHoursRepository businessHoursRepository;
 
-    @Scheduled(cron = "0 0 0 * * *") // 매일 자정
-    @Transactional
+    @Scheduled(cron = "0 0 0 * * *")
     public void applyPendingBreakTimes() {
         log.info("[Scheduler] 브레이크 타임 지연 반영 작업 시작");
 
-        List<BusinessHours> targets = businessHoursRepository.findAllByEffectiveDate(LocalDate.now());
+        List<BusinessHours> pendingList = businessHoursRepository.findAllByEffectiveDateLessThanEqualAndEffectiveDateIsNotNull(LocalDate.now());
 
-        if(targets.isEmpty()) {
-            log.info("[Scheduler] 오늘 반영할 항목이 없습니다.");
+        // 전체 대상 건수 로그
+        log.info("[Scheduler] 처리 대상 건수: {}건", pendingList.size());
+
+        int successCount = 0;
+
+        for (BusinessHours bh : pendingList) {
+            try {
+                processEachPendingTime(bh);
+                successCount++;
+
+            } catch (Exception e) {
+                // 개별 건 처리 중 에러 발생 시 로그 남기고 다음 건 진행
+                log.error("[Scheduler Exception] 반영 실패 - BH ID: {}, Error: {}", bh.getId(), e.getMessage());
+            }
+        }
+        log.info("[Scheduler] 반영 작업 완료. (성공: {}/{} 건)", successCount, pendingList.size());
+    }
+
+    @Transactional
+    public void processEachPendingTime(BusinessHours bh) {
+        if((bh.getNewBreakStartTime() == null) ^ (bh.getNewBreakEndTime() == null)) {
+            log.warn("[XOR Error] ID: {}", bh.getId());
+            bh.clearPendingBreakTime();
             return;
         }
-
-        targets.forEach(BusinessHours::applyPendingBreakTime);
-        log.info("[Scheduler] 총 {}건의 브레이크 타임이 성공적으로 갱신되었습니다.", targets.size());
+        bh.applyPendingBreakTime();
     }
 }
