@@ -16,14 +16,14 @@ public class BusinessHoursValidator {
         validateDuplicateDayOfWeek(dto);
         validateOpenDay(dto);
         validateClosedDay(dto);
-        validateOpenCloseTime(dto);
+        //validateOpenCloseTime(dto);
     }
 
     public static void validateForUpdate(List<BusinessHoursReqDto.Summary> dto) {
         validateDuplicateDayOfWeek(dto);
         validateOpenDay(dto);
         validateClosedDay(dto);
-        validateOpenCloseTime(dto);
+        //validateOpenCloseTime(dto);
     }
 
     // 7일 모두 입력 여부 검증

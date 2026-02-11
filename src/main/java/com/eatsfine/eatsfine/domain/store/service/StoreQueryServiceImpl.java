@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.store.service;
 
+import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.store.condition.StoreSearchCondition;
 import com.eatsfine.eatsfine.domain.store.converter.StoreConverter;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
@@ -90,20 +91,47 @@ public class StoreQueryServiceImpl implements StoreQueryService {
     // 현재 영업 여부 계산 (실시간 계산)
     @Override
     public boolean isOpenNow(Store store, LocalDateTime now) {
-        DayOfWeek dayOfWeek = now.getDayOfWeek();
+        DayOfWeek today = now.getDayOfWeek();
+        DayOfWeek yesterday = today.minus(1);
+
         LocalTime time = now.toLocalTime();
 
-        return store.findBusinessHoursByDay(dayOfWeek)
-                .map(bh -> {
-                    if (bh.isClosed()) return false;
+        // 1. 오늘 기준 영업 중인지 확인
+        boolean openToday = store.findBusinessHoursByDay(today)
+                .map(bh -> isEffeciveOpen(bh, time, true))
+                .orElse(false);
 
-                    if ((bh.getBreakStartTime() != null && bh.getBreakEndTime() != null)) {
-                        if (!time.isBefore(bh.getBreakStartTime()) && (time.isBefore(bh.getBreakEndTime()))) {
-                            return false; // start <= time < end 에 쉼
-                        }
-                    }
-                    return (!time.isBefore(bh.getOpenTime()) && time.isBefore(bh.getCloseTime()));
+        if (openToday) return true;
 
-                }).orElse(false); // 현재 요일에 해당하는 영업시간 없으면 닫힘처리
+        // 2. 어제 시작된 심야 영업이 아직 종료되지 않았는지 확인
+        return store.findBusinessHoursByDay(yesterday)
+                .map(bh -> isEffeciveOpen(bh, time, false))
+                .orElse(false);
+    }
+
+    private boolean isEffeciveOpen(BusinessHours bh, LocalTime time, boolean isToday) {
+        LocalTime open = bh.getOpenTime();
+        LocalTime close = bh.getCloseTime();
+
+        if (bh.isClosed()) return false;
+
+        // 브레이크 타임 체크 (당일 내에서 영업만 체크)
+        if(isToday && bh.getBreakStartTime() != null && bh.getBreakEndTime() != null) {
+            if (!time.isBefore(bh.getBreakStartTime()) && time.isBefore(bh.getBreakEndTime())) {
+                return false;
+            }
+        }
+
+        if(open.isBefore(close)) {
+            // 일반 영업 (예: 09:00 ~ 18:00)
+            return isToday && (!time.isBefore(open) && time.isBefore(close));
+        } else {
+            // 심야 영업 (예: 23:00 ~ 02:00)
+            if(isToday) {
+                return !time.isBefore(open);
+            } else {
+                return time.isBefore(close);
+            }
+        }
     }
 }
