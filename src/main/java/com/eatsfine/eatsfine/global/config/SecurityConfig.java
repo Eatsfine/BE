@@ -1,20 +1,20 @@
 package com.eatsfine.eatsfine.global.config;
 
+import com.eatsfine.eatsfine.domain.user.exception.handler.CustomOAuth2FailureHandler;
+import com.eatsfine.eatsfine.domain.user.exception.handler.CustomOAuth2SuccessHandler;
+import com.eatsfine.eatsfine.domain.user.service.oauthService.CustomOAuth2MemberServiceImpl;
 import com.eatsfine.eatsfine.global.auth.CustomAccessDeniedHandler;
 import com.eatsfine.eatsfine.global.auth.CustomAuthenticationEntryPoint;
 
 import com.eatsfine.eatsfine.global.auth.HttpCookieOAuth2AuthorizationRequestRepository;
 import com.eatsfine.eatsfine.global.config.jwt.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
