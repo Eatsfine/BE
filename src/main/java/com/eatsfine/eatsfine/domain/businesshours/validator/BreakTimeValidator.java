@@ -17,7 +17,7 @@ public class BreakTimeValidator {
         // 24시간 영업이면 모든 브레이크 타임 X
         if (openTime.equals(closeTime)) {
             throw new BusinessHoursException(BusinessHoursErrorStatus._BREAK_TIME_NOT_ALLOWED_FOR_24H);
-        };
+        }
 
         // 1. 브레이크 시작 < 종료 검증 (자정을 넘기는 브레이크 타임은 없다고 가정)
         if (!breakEndTime.isAfter(breakStartTime)) {

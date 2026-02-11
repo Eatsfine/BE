@@ -6,6 +6,7 @@ import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.businesshours.exception.BusinessHoursException;
+import com.eatsfine.eatsfine.domain.businesshours.status.BusinessHoursErrorStatus;
 import com.eatsfine.eatsfine.domain.businesshours.validator.BreakTimeValidator;
 import com.eatsfine.eatsfine.domain.businesshours.validator.BusinessHoursValidator;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
@@ -88,6 +89,11 @@ public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandServ
             }
             return BusinessHoursConverter.toUpdateBreakTimeDto(storeId, dto, null);
 
+        }
+
+        // 한쪽만 null인 비정상 요청 방어
+        if (dto.breakStartTime() == null || dto.breakEndTime() == null) {
+            throw new BusinessHoursException(BusinessHoursErrorStatus._INVALID_BREAK_TIME);
         }
 
         LocalTime adjustedBreakStart = dto.breakStartTime().minusMinutes(store.getBookingIntervalMinutes());

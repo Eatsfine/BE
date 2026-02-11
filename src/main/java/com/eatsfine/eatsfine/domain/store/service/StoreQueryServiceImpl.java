@@ -119,8 +119,8 @@ public class StoreQueryServiceImpl implements StoreQueryService {
 
         // 1. 영업 시간 범위 먼저 체크
         if (open.equals(close)) {
+            isWithinBusinessHours = isToday;
             // 24시간 영업
-            isWithinBusinessHours = true;
         } else if (open.isBefore(close)) {
             // 일반 영업 (예: 09:00 ~ 18:00)
             isWithinBusinessHours = isToday && (!time.isBefore(open) && time.isBefore(close));
