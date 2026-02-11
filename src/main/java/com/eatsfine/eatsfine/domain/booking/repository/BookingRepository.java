@@ -85,11 +85,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "where b.store.id = :storeId " +
             "and b.status IN (com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.CONFIRMED, com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.PENDING) " +
             "and b.bookingDate >= CURRENT_DATE " +
-            "and b.bookingTime >= :breakStart and b.bookingTime < :breakEnd"
+            "and (" +
+            "   (b.bookingTime >= :breakStart and b.bookingTime < :breakEnd) " + // 케이스 A: 브레이크 중에 예약 시작
+            "   OR " +
+            "   (b.bookingTime >= :adjustedBreakStart and b.bookingTime < :breakStart)" + // 케이스 B: 브레이크 전에 시작해서 걸침
+            ")"
     )
     Optional<LocalDate> findLastConflictingDate(
             @Param("storeId") Long storeId,
             @Param("breakStart") LocalTime breakStart,
-            @Param("breakEnd") LocalTime breakEnd
+            @Param("breakEnd") LocalTime breakEnd,
+            @Param("adjustedBreakStart") LocalTime adjustedBreakStart
     );
 }
