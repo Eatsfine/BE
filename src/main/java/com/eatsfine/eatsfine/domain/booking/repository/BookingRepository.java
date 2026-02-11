@@ -89,9 +89,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "and b.status IN (com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.CONFIRMED, com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.PENDING) " +
             "and b.bookingDate >= CURRENT_DATE " +
             "and (" +
-            "   (b.bookingTime >= :breakStart and b.bookingTime < :breakEnd) " + // 케이스 A: 브레이크 중에 예약 시작
+            "   (b.bookingTime >= :breakStart and b.bookingTime < :breakEnd) " + // 1. 브레이크 타임 내 시작
             "   OR " +
-            "   (b.bookingTime >= :adjustedBreakStart and b.bookingTime < :breakStart)" + // 케이스 B: 브레이크 전에 시작해서 걸침
+            "   (:adjustedBreakStart < :breakStart and b.bookingTime >= :adjustedBreakStart and b.bookingTime < :breakStart) " + // 2. 일반적인 경우 (낮)
+            "   OR " +
+            "   (:adjustedBreakStart > :breakStart and (b.bookingTime >= :adjustedBreakStart or b.bookingTime < :breakStart)) " + // 3. 자정 넘어가는 경우 (밤)
             ")"
     )
     Optional<LocalDate> findLastConflictingDate(
