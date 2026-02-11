@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.businesshours.service;
 
+import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConverter;
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
@@ -17,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.util.Optional;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandServ
 
     private final StoreRepository storeRepository;
     private final StoreValidator storeValidator;
+    private final BookingRepository bookingRepository;
 
     @Override
     public BusinessHoursResDto.UpdateBusinessHoursDto updateBusinessHours(
@@ -62,6 +67,26 @@ public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandServ
 
         Store store = storeValidator.validateStoreOwner(storeId, email);
 
+        // 브레이크 타임 해제 요청인 경우 (두 시간 모두 null)
+        if (dto.breakStartTime() == null && dto.breakEndTime() == null) {
+            for(BusinessHours bh : store.getBusinessHours()) {
+                bh.updateBreakTime(null, null, LocalDate.now());
+            }
+            return BusinessHoursConverter.toUpdateBreakTimeDto(storeId, dto, null);
+
+        }
+
+        // 1. 예약 충돌 확인
+        Optional<LocalDate> lastConflictDate = bookingRepository.findLastConflictingDate(
+                storeId, dto.breakStartTime(), dto.breakEndTime()
+        );
+        LocalDate effectiveDate;
+
+        effectiveDate = lastConflictDate.map(
+                localDate -> localDate.plusDays(1)) // 예약이 있으면 그 다음날 부터
+                .orElseGet(LocalDate::now); // 예약 없으면 오늘부터
+
+
         for(BusinessHours bh : store.getBusinessHours()) {
             if(bh.isClosed()) continue;
             try {
@@ -76,10 +101,10 @@ public class BusinessHoursCommandServiceImpl implements BusinessHoursCommandServ
 
         store.getBusinessHours().forEach(s -> {
             if(!s.isClosed()) {
-                s.updateBreakTime(dto.breakStartTime(), dto.breakEndTime());
+                s.updateBreakTime(dto.breakStartTime(), dto.breakEndTime(), effectiveDate);
             }
         });
 
-        return BusinessHoursConverter.toUpdateBreakTimeDto(storeId, dto);
+        return BusinessHoursConverter.toUpdateBreakTimeDto(storeId, dto, effectiveDate);
     }
 }
