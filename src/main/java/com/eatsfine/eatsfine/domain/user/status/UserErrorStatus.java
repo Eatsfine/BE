@@ -17,7 +17,7 @@ public enum UserErrorStatus implements BaseErrorCode {
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4004", "비밀번호가 올바르지 않습니다."),
     PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "MEMBER4005", "현재 비밀번호가 일치하지 않습니다."),
     SAME_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4006", "새 비밀번호가 현재 비밀번호와 동일합니다."),
-    WITHDRAWN_USER(HttpStatus.FORBIDDEN, "MEMBER4007", "탈퇴한 회원입니다.");
+    WITHDRAWN_USER(HttpStatus.FORBIDDEN, "MEMBER4007", "탈퇴한 회원입니다.")
     ;
 
     private final HttpStatus httpStatus;
