@@ -110,32 +110,36 @@ public class StoreQueryServiceImpl implements StoreQueryService {
     }
 
     private boolean isEffectiveOpen(BusinessHours bh, LocalTime time, boolean isToday) {
+        if (bh.isClosed()) return false;
+
         LocalTime open = bh.getOpenTime();
         LocalTime close = bh.getCloseTime();
 
-        if (bh.isClosed()) return false;
+        boolean isWithinBusinessHours;
 
-        // 브레이크 타임 체크 (어제 오픈한 가게의 새벽 브레이크 타임도 걸러내야 함)
-        if(bh.getBreakStartTime() != null && bh.getBreakEndTime() != null) {
-            if (!time.isBefore(bh.getBreakStartTime()) && time.isBefore(bh.getBreakEndTime())) {
-                return false;
-            }
-        }
-
-        // 24시간 영업 체크 (open == close)
-        if(open.equals(close)) return true;
-
-        // 영업 시간 체크
-        if(open.isBefore(close)) {
+        // 1. 영업 시간 범위 먼저 체크
+        if (open.equals(close)) {
+            // 24시간 영업
+            isWithinBusinessHours = true;
+        } else if (open.isBefore(close)) {
             // 일반 영업 (예: 09:00 ~ 18:00)
-            return isToday && (!time.isBefore(open) && time.isBefore(close));
+            isWithinBusinessHours = isToday && (!time.isBefore(open) && time.isBefore(close));
         } else {
-            // 심야 영업 (예: 23:00 ~ 02:00)
-            if(isToday) {
-                return !time.isBefore(open);
-            } else {
-                return time.isBefore(close);
-            }
+            // 심야 영업 (예: 22:00 ~ 03:00)
+            isWithinBusinessHours = isToday ? !time.isBefore(open) : time.isBefore(close);
         }
+
+        // 2. 영업 시간일 경우에만 브레이크 타임 검사
+        if (isWithinBusinessHours) {
+            if (bh.getBreakStartTime() != null && bh.getBreakEndTime() != null) {
+                // 브레이크 타임 안에 있으면 false (영업 아님) 반환
+                if (!time.isBefore(bh.getBreakStartTime()) && time.isBefore(bh.getBreakEndTime())) {
+                    return false;
+                }
+            }
+            return true; // 영업 시간이고 브레이크 타임도 아님
+        }
+
+        return false; // 영업 시간 자체가 아님
     }
 }
