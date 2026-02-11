@@ -78,4 +78,18 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      * @return 만료된 예약 리스트
      */
     List<Booking> findAllByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime threshold);
+
+
+    // 특정 식당의 특정 시간대와 겹치는 가장 늦은 예약 날짜 찾기
+    @Query("select max(b.bookingDate) from Booking b " +
+            "where b.store.id = :storeId " +
+            "and b.status IN (com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.CONFIRMED, com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.PENDING) " +
+            "and b.bookingDate >= CURRENT_DATE " +
+            "and b.bookingTime >= :breakStart and b.bookingTime < :breakEnd"
+    )
+    Optional<LocalDate> findLastConflictingDate(
+            @Param("storeId") Long storeId,
+            @Param("breakStart") LocalTime breakStart,
+            @Param("breakEnd") LocalTime breakEnd
+    );
 }
