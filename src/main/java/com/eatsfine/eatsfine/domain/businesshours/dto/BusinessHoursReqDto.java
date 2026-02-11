@@ -46,7 +46,7 @@ public class BusinessHoursReqDto {
             LocalTime breakStartTime,
 
             @NotNull(message = "브레이크타임 종료 시간은 필수입니다.")
-            @Schema(description = "브레이크 시작 시간", type = "string", example = "17:00")
+            @Schema(description = "브레이크 종료 시간", type = "string", example = "17:00")
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
             LocalTime breakEndTime
     ){}

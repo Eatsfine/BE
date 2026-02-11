@@ -96,4 +96,10 @@ public class BusinessHours extends BaseEntity {
             this.effectiveDate = null;
         }
     }
+
+    public void clearPendingBreakTime() {
+        this.newBreakStartTime = null;
+        this.newBreakEndTime = null;
+        this.effectiveDate = null;
+    }
 }

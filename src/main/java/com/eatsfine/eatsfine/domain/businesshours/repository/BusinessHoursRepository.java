@@ -11,5 +11,5 @@ import java.util.Optional;
 
 public interface BusinessHoursRepository extends JpaRepository<BusinessHours, Long> {
     Optional<BusinessHours> findByStoreAndDayOfWeek(Store store, DayOfWeek dayOfWeek);
-    List<BusinessHours> findAllByEffectiveDate(LocalDate date);
+    List<BusinessHours> findAllByEffectiveDateLessThanEqualAndEffectiveDateIsNotNull(LocalDate date);
 }
