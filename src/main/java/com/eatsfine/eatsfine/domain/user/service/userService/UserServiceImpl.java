@@ -67,6 +67,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findByEmail(loginDto.getEmail())
                 .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
 
+        if (user.isDeleted()) {
+            throw new UserException(UserErrorStatus.WITHDRAWN_USER);
+        }
+
         // 2) 비밀번호 검증
         if (!passwordEncoder.matches(loginDto.getPassword(), user.getPassword())) {
             throw new UserException(UserErrorStatus.INVALID_PASSWORD);
