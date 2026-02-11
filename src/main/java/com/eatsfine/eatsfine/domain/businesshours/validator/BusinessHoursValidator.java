@@ -16,14 +16,14 @@ public class BusinessHoursValidator {
         validateDuplicateDayOfWeek(dto);
         validateOpenDay(dto);
         validateClosedDay(dto);
-        //validateOpenCloseTime(dto);
+        validateOpenCloseTime(dto);
     }
 
     public static void validateForUpdate(List<BusinessHoursReqDto.Summary> dto) {
         validateDuplicateDayOfWeek(dto);
         validateOpenDay(dto);
         validateClosedDay(dto);
-        //validateOpenCloseTime(dto);
+        validateOpenCloseTime(dto);
     }
 
     // 7일 모두 입력 여부 검증
@@ -37,8 +37,9 @@ public class BusinessHoursValidator {
     private static void validateOpenCloseTime(List<BusinessHoursReqDto.Summary> dto) {
         for(BusinessHoursReqDto.Summary s: dto) {
             if(!s.isClosed()){
-                if(s.openTime().isAfter(s.closeTime())) {
-                    throw new BusinessHoursException(BusinessHoursErrorStatus._INVALID_BUSINESS_TIME);
+                // 24시간 영업 허용
+                if(s.openTime().equals(s.closeTime())) {
+                    continue;
                 }
             }
         }

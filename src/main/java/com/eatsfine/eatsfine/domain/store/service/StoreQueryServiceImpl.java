@@ -98,30 +98,34 @@ public class StoreQueryServiceImpl implements StoreQueryService {
 
         // 1. 오늘 기준 영업 중인지 확인
         boolean openToday = store.findBusinessHoursByDay(today)
-                .map(bh -> isEffeciveOpen(bh, time, true))
+                .map(bh -> isEffectiveOpen(bh, time, true))
                 .orElse(false);
 
         if (openToday) return true;
 
         // 2. 어제 시작된 심야 영업이 아직 종료되지 않았는지 확인
         return store.findBusinessHoursByDay(yesterday)
-                .map(bh -> isEffeciveOpen(bh, time, false))
+                .map(bh -> isEffectiveOpen(bh, time, false))
                 .orElse(false);
     }
 
-    private boolean isEffeciveOpen(BusinessHours bh, LocalTime time, boolean isToday) {
+    private boolean isEffectiveOpen(BusinessHours bh, LocalTime time, boolean isToday) {
         LocalTime open = bh.getOpenTime();
         LocalTime close = bh.getCloseTime();
 
         if (bh.isClosed()) return false;
 
-        // 브레이크 타임 체크 (당일 내에서 영업만 체크)
-        if(isToday && bh.getBreakStartTime() != null && bh.getBreakEndTime() != null) {
+        // 브레이크 타임 체크 (어제 오픈한 가게의 새벽 브레이크 타임도 걸러내야 함)
+        if(bh.getBreakStartTime() != null && bh.getBreakEndTime() != null) {
             if (!time.isBefore(bh.getBreakStartTime()) && time.isBefore(bh.getBreakEndTime())) {
                 return false;
             }
         }
 
+        // 24시간 영업 체크 (open == close)
+        if(open.equals(close)) return true;
+
+        // 영업 시간 체크
         if(open.isBefore(close)) {
             // 일반 영업 (예: 09:00 ~ 18:00)
             return isToday && (!time.isBefore(open) && time.isBefore(close));
