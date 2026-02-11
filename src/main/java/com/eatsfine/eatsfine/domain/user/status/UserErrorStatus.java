@@ -15,7 +15,8 @@ public enum UserErrorStatus implements BaseErrorCode {
     NAME_NOT_EXIST(HttpStatus.BAD_REQUEST, "MEMBER4002", "이름은 필수 입니다."),
     EMAIL_ALREADY_EXISTS(HttpStatus.CONFLICT, "MEMBER4003", "이미 존재하는 이메일입니다."),
     INVALID_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4004", "비밀번호가 올바르지 않습니다."),
-    PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "MEMBER4005", "현재 비밀번호가 일치하지 않습니다.")
+    PASSWORD_NOT_MATCH(HttpStatus.BAD_REQUEST, "MEMBER4005", "현재 비밀번호가 일치하지 않습니다."),
+    SAME_PASSWORD(HttpStatus.BAD_REQUEST, "MEMBER4006", "새 비밀번호가 현재 비밀번호와 동일합니다.")
     ;
 
     private final HttpStatus httpStatus;

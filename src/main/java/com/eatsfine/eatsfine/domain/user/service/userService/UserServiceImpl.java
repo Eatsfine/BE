@@ -104,14 +104,16 @@ public class UserServiceImpl implements UserService {
         boolean changed = false;
 
         // 이름/전화번호 부분 수정
-        if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
-            user.updateName(updateDto.getName());
-            changed = true;
-        }
+        if (updateDto != null) {
+            if (updateDto.getName() != null && !updateDto.getName().isBlank()) {
+                user.updateName(updateDto.getName());
+                changed = true;
+            }
 
-        if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
-            user.updatePhoneNumber(updateDto.getPhoneNumber());
-            changed = true;
+            if (updateDto.getPhoneNumber() != null && !updateDto.getPhoneNumber().isBlank()) {
+                user.updatePhoneNumber(updateDto.getPhoneNumber());
+                changed = true;
+            }
         }
 
         //프로필 이미지 부분 수정 (파일이 들어온 경우에만)
@@ -264,6 +266,11 @@ public class UserServiceImpl implements UserService {
         //  현재 비밀번호 일치 여부 확인
         if (!passwordEncoder.matches(requestDto.getCurrentPassword(), user.getPassword())) {
             throw new UserException(UserErrorStatus.PASSWORD_NOT_MATCH);
+        }
+
+        // 새 비밀번호가 현재 비밀번호와 동일한지 확인
+        if (passwordEncoder.matches(requestDto.getNewPassword(), user.getPassword())) {
+            throw new UserException(UserErrorStatus.SAME_PASSWORD);
         }
 
         // 새 비밀번호 암호화 및 업데이트
