@@ -74,7 +74,8 @@ public class StoreQueryServiceImpl implements StoreQueryService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
-        return StoreConverter.toDetailDto(store, isOpenNow(store, LocalDateTime.now()));
+        String mainImageUrl = s3Service.toUrl(store.getMainImageKey());
+        return StoreConverter.toDetailDto(store, mainImageUrl, isOpenNow(store, LocalDateTime.now()));
     }
 
     // 식당 대표 이미지 조회

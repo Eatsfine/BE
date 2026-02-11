@@ -73,7 +73,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 3) 토큰 발급
-        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(),  user.getRole().name());
+        String accessToken = jwtTokenProvider.createAccessToken(user.getEmail(), user.getRole().name());
         String refreshToken = jwtTokenProvider.createRefreshToken(user.getEmail());
 
         // 4) refreshToken 저장
@@ -280,7 +280,7 @@ public class UserServiceImpl implements UserService {
         user.updateRefreshToken(null);
 
         // 결과 반환
-        return UserConverter.toUpdatePasswordResponse(true, LocalDateTime.now(), "비밀번호가 성공적으로 변경되었습니다." );
+        return UserConverter.toUpdatePasswordResponse(true, LocalDateTime.now(), "비밀번호가 성공적으로 변경되었습니다.");
     }
 
 }

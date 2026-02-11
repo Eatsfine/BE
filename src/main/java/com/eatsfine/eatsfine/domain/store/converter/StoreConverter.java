@@ -31,7 +31,7 @@ public class StoreConverter {
                 .build();
     }
 
-    public static StoreResDto.StoreDetailDto toDetailDto(Store store, boolean isOpenNow) {
+    public static StoreResDto.StoreDetailDto toDetailDto(Store store, String mainImageUrl, boolean isOpenNow) {
         BusinessHours anyOpenDay = store.getBusinessHours().stream()
                 .filter(bh -> !bh.isClosed())
                 .findFirst()
@@ -46,7 +46,8 @@ public class StoreConverter {
                 .category(store.getCategory())
                 .rating(store.getRating())
                 .reviewCount(null) // reviewCount는 추후 리뷰 로직 구현 시 추가 예정
-                .mainImageUrl(store.getMainImageKey())
+                .depositRate(store.getDepositRate().getPercent())
+                .mainImageUrl(mainImageUrl)
                 .tableImageUrls(Collections.emptyList()) // tableImages는 추후 사진 등록 API 구현 시 추가 예정
                 .businessHours(
                         store.getBusinessHours().stream()

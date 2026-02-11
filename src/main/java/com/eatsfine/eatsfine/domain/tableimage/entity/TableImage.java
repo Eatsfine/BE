@@ -21,7 +21,7 @@ public class TableImage extends BaseEntity {
     @JoinColumn(name = "store_id", nullable = false)
     private Store store;
 
-    @Column(name = "table_image_url", nullable = false)
+    @Column(name = "table_image_key", nullable = false)
     private String tableImageKey;
 
     @Column(name = "image_order", nullable = false)

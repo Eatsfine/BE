@@ -1,5 +1,9 @@
 package com.eatsfine.eatsfine.domain.storetable.controller;
 
+import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
+import com.eatsfine.eatsfine.domain.booking.service.BookingCommandService;
+import com.eatsfine.eatsfine.domain.booking.service.BookingQueryService;
+import com.eatsfine.eatsfine.domain.booking.status.BookingSuccessStatus;
 import com.eatsfine.eatsfine.domain.storetable.dto.req.StoreTableReqDto;
 import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.domain.storetable.exception.status.StoreTableSuccessStatus;
@@ -28,6 +32,8 @@ import java.time.LocalDate;
 public class StoreTableController implements StoreTableControllerDocs {
     private final StoreTableCommandService storeTableCommandService;
     private final StoreTableQueryService storeTableQueryService;
+    private final BookingQueryService bookingQueryService;
+    private final BookingCommandService bookingCommandService;
 
     @PostMapping("/stores/{storeId}/tables")
     @PreAuthorize("hasRole('OWNER')")
@@ -59,6 +65,30 @@ public class StoreTableController implements StoreTableControllerDocs {
     ) {
         LocalDate targetDate = (date != null) ? date : LocalDate.now();
         return ApiResponse.of(StoreTableSuccessStatus._SLOT_LIST_FOUND, storeTableQueryService.getTableSlots(storeId, tableId, targetDate, user.getUsername()));
+    }
+
+    @GetMapping("/stores/{storeId}/tables/{tableId}/slots/{bookingId}")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<BookingResponseDTO.BookingDetailDTO> getTableSlotDetail(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId,
+            @PathVariable Long bookingId,
+            @CurrentUser User user) {
+
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_BOOKING_FOUND
+                ,bookingQueryService.getBookingDetail(storeId,tableId,bookingId,user.getUsername()));
+    }
+
+    @PatchMapping("/stores/{storeId}/tables/{tableId}/slots/{bookingId}/cancel")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<BookingResponseDTO.OwnerCancelBookingResultDTO> cancelTableSlotBooking(
+            @PathVariable Long storeId,
+            @PathVariable Long tableId,
+            @PathVariable Long bookingId,
+            @CurrentUser User user
+            ) {
+
+        return ApiResponse.of(StoreTableSuccessStatus._TABLE_CANCELLED,bookingCommandService.cancelBookingByOwner(storeId, tableId, bookingId,user.getUsername()));
     }
 
     @GetMapping("/stores/{storeId}/tables/{tableId}")

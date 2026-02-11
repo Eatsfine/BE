@@ -1,5 +1,6 @@
 package com.eatsfine.eatsfine.domain.storetable.controller;
 
+import com.eatsfine.eatsfine.domain.booking.dto.response.BookingResponseDTO;
 import com.eatsfine.eatsfine.domain.storetable.dto.req.StoreTableReqDto;
 import com.eatsfine.eatsfine.domain.storetable.dto.res.StoreTableResDto;
 import com.eatsfine.eatsfine.global.apiPayload.ApiResponse;
@@ -106,6 +107,53 @@ public interface StoreTableControllerDocs {
 
             @Parameter(hidden = true) User user
     );
+
+    @Operation(
+            summary = "테이블 특정 슬롯(예약) 상세 조회",
+            description = """
+                사장이 특정 테이블 슬롯에 잡힌 예약의 상세 정보를 조회합니다.
+                
+                - 해당 슬롯이 'BOOKED' 상태일 때 상세 예약 정보를 반환합니다.
+                - **인가**: 요청한 사용자가 해당 가게의 주인(OWNER)인지 검증합니다.
+                - **정보**: 예약자 성함, 예약 인원, 결제된 예약금 금액 등을 포함합니다.
+                """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 상세 정보 조회 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "가게 주인이 아님 (접근 권한 없음)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "가게, 테이블 또는 해당 예약을 찾을 수 없음")
+    })
+    ApiResponse<BookingResponseDTO.BookingDetailDTO> getTableSlotDetail(
+            @Parameter(description = "가게 ID", required = true, example = "1") Long storeId,
+            @Parameter(description = "테이블 ID", required = true, example = "3") Long tableId,
+            @Parameter(description = "예약 ID", required = true, example = "4") Long bookingId,
+            @Parameter(hidden = true) User user
+    );
+
+    @Operation(
+            summary = "사장 권한 예약 취소 및 환불",
+            description = """
+                사장이 특정 테이블 슬롯의 예약을 직접 취소하고 환불을 진행합니다.
+                
+                - **환불 처리**: 예약 상태가 'CONFIRMED'인 경우, 연동된 결제 시스템을 통해 실제 결제 금액을 환불합니다.
+                - **응답**: 실제 환불 처리된 금액(`refundAmount`)과 취소 시각을 반환합니다.
+                - **무결성**: 해당 예약이 요청된 가게와 테이블의 예약인지 확인합니다.
+                - **예외**: 이미 취소된 예약은 중복 취소할 수 없습니다.
+                """
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "예약 취소 및 환불 성공"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "이미 취소된 예약이거나 잘못된 테이블 접근"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "403", description = "가게 주인이 아님 (접근 권한 없음)"),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "예약 정보를 찾을 수 없음")
+    })
+    ApiResponse<BookingResponseDTO.OwnerCancelBookingResultDTO> cancelTableSlotBooking(
+            @Parameter(description = "가게 ID", required = true, example = "1") Long storeId,
+            @Parameter(description = "테이블 ID", required = true, example = "2") Long tableId,
+            @Parameter(description = "예약 ID", required = true, example = "4") Long bookingId,
+            @Parameter(hidden = true) User user
+    );
+
 
     @Operation(
             summary = "테이블 상세 조회",

@@ -69,6 +69,9 @@ public class UserResponseDto {
     }
 
     @Builder
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     public static class VerifyOwnerDto {
         @Schema(description = "권한 승격이 완료된 유저의 식별자", example = "1")
         private Long userId;
