@@ -1,25 +1,31 @@
 package com.eatsfine.eatsfine.domain.table_layout.service;
 
+import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
-import com.eatsfine.eatsfine.domain.store.exception.StoreException;
-import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
-import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
 import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
+import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.table_layout.converter.TableLayoutConverter;
 import com.eatsfine.eatsfine.domain.table_layout.dto.req.TableLayoutReqDto;
 import com.eatsfine.eatsfine.domain.table_layout.dto.res.TableLayoutResDto;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
+import com.eatsfine.eatsfine.domain.table_layout.exception.TableLayoutException;
+import com.eatsfine.eatsfine.domain.table_layout.exception.status.TableLayoutErrorStatus;
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.Optional;
+
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class TableLayoutCommandServiceImpl implements TableLayoutCommandService {
-    private final StoreRepository storeRepository;
     private final TableLayoutRepository tableLayoutRepository;
+    private final BookingRepository bookingRepository;
     private final StoreValidator storeValidator;
 
     // 테이블 배치도 생성
@@ -32,7 +38,19 @@ public class TableLayoutCommandServiceImpl implements TableLayoutCommandService 
 
         Store store = storeValidator.validateStoreOwner(storeId, email);
 
-        deactivateExistingLayout(store);
+        Optional<TableLayout> existingLayout = tableLayoutRepository.findByStoreIdAndIsActiveTrue(storeId);
+
+        if (existingLayout.isPresent()) {
+            // 미래 예약 확인
+            boolean hasFutureBookings = checkFutureBookingsInLayout(existingLayout.get());
+
+            if (hasFutureBookings) {
+                throw new TableLayoutException(TableLayoutErrorStatus._CANNOT_DELETE_LAYOUT_WITH_FUTURE_BOOKINGS);
+            }
+            
+            // 미래 예약이 없으면 배치도 비활성화 후 재생성
+            tableLayoutRepository.delete(existingLayout.get());
+        }
 
         // 새 배치도 생성
         TableLayout newLayout = TableLayout.builder()
@@ -48,9 +66,20 @@ public class TableLayoutCommandServiceImpl implements TableLayoutCommandService 
         return TableLayoutConverter.toLayoutDetailDto(savedLayout);
     }
 
-    // 기존 테이블 배치도 비활성화
-    private void deactivateExistingLayout(Store store) {
-        tableLayoutRepository.findByStoreIdAndIsActiveTrue(store.getId())
-                .ifPresent(tableLayoutRepository::delete);
+    // 미래 예약 확인
+    private boolean checkFutureBookingsInLayout(TableLayout layout) {
+        LocalDate currentDate = LocalDate.now();
+        LocalTime currentTime = LocalTime.now();
+        List<Long> tableIds = layout.getTables().stream()
+                .map(StoreTable::getId)
+                .toList();
+
+        if (tableIds.isEmpty()) {
+            return false;
+        }
+
+        List<Long> tableIdsWithFutureBookings = bookingRepository.findTableIdsWithFutureBookings(tableIds, currentDate, currentTime);
+
+        return !tableIdsWithFutureBookings.isEmpty();
     }
 }

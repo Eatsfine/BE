@@ -78,4 +78,40 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      * @return 만료된 예약 리스트
      */
     List<Booking> findAllByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime threshold);
+
+
+    /**
+     * 특정 식당의 브레이크 타임과 겹치는 가장 늦은 예약 날짜를 조회합니다.
+     * @param adjustedBreakStart 브레이크 시작 시간에서 식당의 예약 간격(bookingIntervalMinutes)을 뺀 시간
+     */
+    @Query("select max(b.bookingDate) from Booking b " +
+            "where b.store.id = :storeId " +
+            "and b.status IN (com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.CONFIRMED, com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.PENDING) " +
+            "and b.bookingDate >= CURRENT_DATE " +
+            "and (" +
+            "   (b.bookingTime >= :breakStart and b.bookingTime < :breakEnd) " + // 1. 브레이크 타임 내 시작
+            "   OR " +
+            "   (:adjustedBreakStart < :breakStart and b.bookingTime >= :adjustedBreakStart and b.bookingTime < :breakStart) " + // 2. 일반적인 경우 (낮)
+            "   OR " +
+            "   (:adjustedBreakStart > :breakStart and (b.bookingTime >= :adjustedBreakStart or b.bookingTime < :breakStart)) " + // 3. 자정 넘어가는 경우 (밤)
+            ")"
+    )
+    Optional<LocalDate> findLastConflictingDate(
+            @Param("storeId") Long storeId,
+            @Param("breakStart") LocalTime breakStart,
+            @Param("breakEnd") LocalTime breakEnd,
+            @Param("adjustedBreakStart") LocalTime adjustedBreakStart
+    );
+
+    @Query("SELECT DISTINCT bt.storeTable.id FROM BookingTable bt " +
+            "JOIN bt.booking b " +
+            "WHERE bt.storeTable.id IN :tableIds " +
+            "AND (b.bookingDate > :currentDate " +
+            "     OR (b.bookingDate = :currentDate AND b.bookingTime >= :currentTime)) " +
+            "AND b.status IN ('CONFIRMED', 'PENDING')")
+    List<Long> findTableIdsWithFutureBookings(
+            @Param("tableIds") List<Long> tableIds,
+            @Param("currentDate") LocalDate currentDate,
+            @Param("currentTime") LocalTime currentTime
+    );
 }

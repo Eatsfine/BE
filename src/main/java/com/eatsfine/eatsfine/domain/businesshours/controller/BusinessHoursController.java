@@ -14,6 +14,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.LocalDate;
 
 @Tag(name = "BusinessHours", description = "영업시간 관련 API")
 @RequestMapping("/api/v1")
@@ -51,6 +52,14 @@ public class BusinessHoursController {
             @RequestBody BusinessHoursReqDto.UpdateBreakTimeDto dto,
             @CurrentUser User user
     ){
+        BusinessHoursResDto.UpdateBreakTimeDto result = businessHoursCommandService.updateBreakTime(storeId, dto, user.getUsername());
+
+        // 1. 날짜가 미래라면 DELAYED(지연) 코드 반환
+        if (result.effectiveDate().isAfter(LocalDate.now())) {
+            return ApiResponse.of(
+                    BusinessHoursSuccessStatus._UPDATE_BREAKTIME_DELAYED,
+                    result);
+        }
         return ApiResponse.of(
                 BusinessHoursSuccessStatus._UPDATE_BREAKTIME_SUCCESS,
                 businessHoursCommandService.updateBreakTime(storeId, dto, user.getUsername())

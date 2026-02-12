@@ -11,7 +11,8 @@ import org.springframework.http.HttpStatus;
 public enum BusinessHoursSuccessStatus implements BaseCode {
 
     _UPDATE_BUSINESS_HOURS_SUCCESS(HttpStatus.OK, "BUSINESS_HOURS200", "영업시간이 성공적으로 수정되었습니다."),
-    _UPDATE_BREAKTIME_SUCCESS(HttpStatus.OK, "BUSINESS_HOURS2001", "브레이크타임이 성공적으로 설정되었습니다.")
+    _UPDATE_BREAKTIME_SUCCESS(HttpStatus.OK, "BUSINESS_HOURS2001", "브레이크타임이 성공적으로 설정되었습니다."),
+    _UPDATE_BREAKTIME_DELAYED(HttpStatus.OK, "BUSINESS_HOURS2002", "기존 예약이 존재하여, 마지막 예약 종료 후 다음 날부터 반영됩니다.")
     ;
 
     private final HttpStatus httpStatus;
