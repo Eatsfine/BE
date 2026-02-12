@@ -4,6 +4,7 @@ import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursReqDto;
 import com.eatsfine.eatsfine.domain.businesshours.dto.BusinessHoursResDto;
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public class BusinessHoursConverter {
@@ -49,11 +50,12 @@ public class BusinessHoursConverter {
                 .build();
     }
 
-    public static BusinessHoursResDto.UpdateBreakTimeDto toUpdateBreakTimeDto(Long storeId, BusinessHoursReqDto.UpdateBreakTimeDto dto) {
+    public static BusinessHoursResDto.UpdateBreakTimeDto toUpdateBreakTimeDto(Long storeId, BusinessHoursReqDto.UpdateBreakTimeDto dto, LocalDate effectiveDate) {
         return BusinessHoursResDto.UpdateBreakTimeDto.builder()
                 .storeId(storeId)
                 .breakStartTime(dto.breakStartTime())
                 .breakEndTime(dto.breakEndTime())
+                .effectiveDate(effectiveDate)
                 .build();
     }
 }

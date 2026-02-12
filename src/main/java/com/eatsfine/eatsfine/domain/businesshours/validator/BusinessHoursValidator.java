@@ -37,8 +37,9 @@ public class BusinessHoursValidator {
     private static void validateOpenCloseTime(List<BusinessHoursReqDto.Summary> dto) {
         for(BusinessHoursReqDto.Summary s: dto) {
             if(!s.isClosed()){
-                if(s.openTime().isAfter(s.closeTime())) {
-                    throw new BusinessHoursException(BusinessHoursErrorStatus._INVALID_BUSINESS_TIME);
+                // 24시간 영업 허용
+                if(s.openTime().equals(s.closeTime())) {
+                    continue;
                 }
             }
         }

@@ -95,7 +95,6 @@ public class SecurityConfig {
             return http.build();
     }
 
-
         @Bean
         public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
                 return new HttpCookieOAuth2AuthorizationRequestRepository();

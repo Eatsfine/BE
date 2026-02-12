@@ -1,9 +1,11 @@
 package com.eatsfine.eatsfine.domain.businesshours.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
 
@@ -38,6 +40,9 @@ public class BusinessHoursResDto {
             LocalTime breakStartTime,
 
             @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm")
-            LocalTime breakEndTime
+            LocalTime breakEndTime,
+
+            @JsonIgnore
+            LocalDate effectiveDate
     ){}
 }
