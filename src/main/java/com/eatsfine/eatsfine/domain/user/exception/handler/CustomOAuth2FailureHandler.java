@@ -16,7 +16,7 @@ public class CustomOAuth2FailureHandler implements AuthenticationFailureHandler 
 
     private static final Logger log = LoggerFactory.getLogger(CustomOAuth2FailureHandler.class);
 
-    private static final String ERROR_REDIRECT_BASE = "https://www.eatsfine.co.kr/login/error";
+    private static final String ERROR_REDIRECT_BASE =  "https://www.eatsfine.co.kr/login/error";
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
