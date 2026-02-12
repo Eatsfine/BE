@@ -90,10 +90,11 @@ public class SecurityConfig {
                                                 .successHandler(customOAuth2SuccessHandler)
                                                 .failureHandler(customOAuth2FailureHandler))
 
-                                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
-                return http.build();
-        }
+            return http.build();
+    }
+
 
         @Bean
         public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
