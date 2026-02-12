@@ -101,24 +101,26 @@ public class SecurityConfig {
                 return new HttpCookieOAuth2AuthorizationRequestRepository();
         }
 
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
+        @Bean
+        public CorsConfigurationSource corsConfigurationSource() {
+                CorsConfiguration config = new CorsConfiguration();
 
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://eatsfine.co.kr"
-        ));
-        config.setAllowedMethods(List.of("GET","POST","PUT","DELETE","OPTIONS","PATCH"));
-        config.setAllowedHeaders(List.of("Content-Type", "Authorization", "X-Requested-With"));
-        config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
-        config.setAllowCredentials(true);
-        config.setMaxAge(3600L);
+                // Merged origins from both remote and local
+                config.setAllowedOriginPatterns(List.of(
+                                "https://www.eatsfine.co.kr",
+                                "https://eatsfine.co.kr",
+                                "http://localhost:3000",
+                                "http://localhost:5173"));
+                config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+                config.setAllowedHeaders(List.of("*"));
+                config.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+                config.setAllowCredentials(true);
+                config.setMaxAge(Duration.ofHours(1));
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+                UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+                source.registerCorsConfiguration("/**", config);
+                return source;
+        }
 
         @Bean
         public PasswordEncoder passwordEncoder() {
