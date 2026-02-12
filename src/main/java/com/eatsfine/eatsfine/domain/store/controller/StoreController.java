@@ -117,7 +117,7 @@ public class StoreController {
     public ApiResponse<StoreResDto.MyStoreListDto> getMyStores(
             @CurrentUser User user
     ) {
-        return ApiResponse.of(StoreSuccessStatus._STORE_FOUND, storeQueryService.getMyStores(user.getUsername()));
+        return ApiResponse.of(StoreSuccessStatus._MY_STORE_LIST_FOUND, storeQueryService.getMyStores(user.getUsername()));
     }
 
 }

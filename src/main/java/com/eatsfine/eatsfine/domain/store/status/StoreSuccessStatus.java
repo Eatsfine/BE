@@ -22,7 +22,9 @@ public enum StoreSuccessStatus implements BaseCode {
 
     _STORE_MAIN_IMAGE_UPLOAD_SUCCESS(HttpStatus.OK, "STORE2005", "성공적으로 가게 대표 이미지를 업로드했습니다."),
 
-    _STORE_MAIN_IMAGE_GET_SUCCESS(HttpStatus.OK, "STORE2005", "성공적으로 가게 대표 이미지를 조회했습니다.")
+    _STORE_MAIN_IMAGE_GET_SUCCESS(HttpStatus.OK, "STORE2005", "성공적으로 가게 대표 이미지를 조회했습니다."),
+
+    _MY_STORE_LIST_FOUND(HttpStatus.OK, "STORE2006", "성공적으로 내 가게 리스트를 조회했습니다.")
     ;
 
 
