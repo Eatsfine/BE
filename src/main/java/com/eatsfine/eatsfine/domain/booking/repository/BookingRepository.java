@@ -2,6 +2,7 @@ package com.eatsfine.eatsfine.domain.booking.repository;
 
 import com.eatsfine.eatsfine.domain.booking.entity.Booking;
 import com.eatsfine.eatsfine.domain.booking.enums.BookingStatus;
+import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.user.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -114,4 +115,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("currentDate") LocalDate currentDate,
             @Param("currentTime") LocalTime currentTime
     );
+    @Query("select count(b) from Booking b " +
+            "where b.store = :store " +
+            "and b.status in (com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.CONFIRMED, " +
+            "com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.PENDING, " +
+            "com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.COMPLETED)")
+    Long countActiveBookings(@Param("store") Store store);
 }
