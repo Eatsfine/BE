@@ -157,6 +157,9 @@ cd eatsfine-be
 DB 접속 정보 및 외부 API 키 등은 환경변수 또는 로컬 설정 파일로 관리합니다.
 `src/main/resources/application-local.yml`을 생성하여 필요한 설정을 추가하세요.
 
+<details>
+  <summary>폴더 구조 펼치기/접기</summary>
+  
 ```yaml
 server:
   port: 8080
@@ -230,6 +233,7 @@ cloud:
 jwt:
   secret: ${SECRET_KEY}
 ```
+</details>
 
 ### 3. Run
 
