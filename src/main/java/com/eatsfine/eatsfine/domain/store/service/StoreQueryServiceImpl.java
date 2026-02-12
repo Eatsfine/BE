@@ -152,13 +152,17 @@ public class StoreQueryServiceImpl implements StoreQueryService {
         return false; // 영업 시간 자체가 아님
     }
 
+    // 내 가게 리스트 조회
     @Override
     public StoreResDto.MyStoreListDto getMyStores(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
 
         List<Store> myStores = storeRepository.findAllByOwner(user);
-        
+
+        if(myStores.isEmpty()) {
+            return StoreConverter.toMyStoreListDto(List.of());
+        }
         // N+1 문제 해결을 위한 Bulk Query 실행
         List<Object[]> bookingCounts = bookingRepository.countActiveBookingsByStores(myStores);
         Map<Long, Long> bookingCountMap = bookingCounts.stream()
