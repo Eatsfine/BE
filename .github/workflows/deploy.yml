@@ -82,13 +82,13 @@ jobs:
             set -e
             cd /home/ec2-user/deploy
           
+            # 불필요한 도커 이미지 및 컨테이너 정리
+            docker system prune -a -f || true
+          
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/eatsfine-be:latest
           
             docker compose down
             docker compose up -d
-          
-            # 불필요한 도커 이미지 및 컨테이너 정리
-            docker image prune -f
           
             docker ps
           EOF

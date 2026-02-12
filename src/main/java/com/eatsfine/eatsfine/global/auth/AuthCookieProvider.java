@@ -15,8 +15,8 @@ public class AuthCookieProvider {
         return ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("None") // Lax → None
-                .domain(".eatsfine.co.kr") //로컬 개발로 인해 주석 처리
+                .sameSite("None")
+                .domain(".eatsfine.co.kr") 
                 .path("/")
                 .maxAge(Duration.ofDays(14))
                 .build();
