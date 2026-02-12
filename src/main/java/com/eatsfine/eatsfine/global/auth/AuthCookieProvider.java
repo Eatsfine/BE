@@ -15,8 +15,8 @@ public class AuthCookieProvider {
         return ResponseCookie.from("refreshToken", refreshToken)
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                //.domain(".eatsfine.co.kr") 로컬 개발로 인해 주석 처리
+                .sameSite("None") // Lax → None
+                .domain(".eatsfine.co.kr") 로컬 개발로 인해 주석 처리
                 .path("/")
                 .maxAge(Duration.ofDays(14))
                 .build();
@@ -26,8 +26,8 @@ public class AuthCookieProvider {
         return ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
-                .sameSite("Lax")
-                //.domain(".eatsfine.co.kr")
+                .sameSite("None")
+                .domain(".eatsfine.co.kr")
                 .path("/")
                 .maxAge(0) // 수명을 0으로 설정하여 즉시 삭제
                 .build();
