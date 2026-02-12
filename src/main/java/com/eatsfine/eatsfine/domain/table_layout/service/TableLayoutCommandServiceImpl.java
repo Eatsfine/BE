@@ -3,19 +3,21 @@ package com.eatsfine.eatsfine.domain.table_layout.service;
 import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.validator.StoreValidator;
+import com.eatsfine.eatsfine.domain.storetable.entity.StoreTable;
 import com.eatsfine.eatsfine.domain.table_layout.converter.TableLayoutConverter;
 import com.eatsfine.eatsfine.domain.table_layout.dto.req.TableLayoutReqDto;
 import com.eatsfine.eatsfine.domain.table_layout.dto.res.TableLayoutResDto;
 import com.eatsfine.eatsfine.domain.table_layout.entity.TableLayout;
+import com.eatsfine.eatsfine.domain.table_layout.exception.TableLayoutException;
 import com.eatsfine.eatsfine.domain.table_layout.exception.status.TableLayoutErrorStatus;
 import com.eatsfine.eatsfine.domain.table_layout.repository.TableLayoutRepository;
-import com.eatsfine.eatsfine.domain.tableblock.exception.TableBlockException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -43,11 +45,11 @@ public class TableLayoutCommandServiceImpl implements TableLayoutCommandService 
             boolean hasFutureBookings = checkFutureBookingsInLayout(existingLayout.get());
 
             if (hasFutureBookings) {
-                throw new TableBlockException(TableLayoutErrorStatus._CANNOT_DELETE_LAYOUT_WITH_FUTURE_BOOKINGS);
+                throw new TableLayoutException(TableLayoutErrorStatus._CANNOT_DELETE_LAYOUT_WITH_FUTURE_BOOKINGS);
             }
             
-            // 미래 예약이 없으면 배치도 재생성
-            deactivateExistingLayout(store);
+            // 미래 예약이 없으면 배치도 비활성화 후 재생성
+            tableLayoutRepository.delete(existingLayout.get());
         }
 
         // 새 배치도 생성
@@ -64,20 +66,20 @@ public class TableLayoutCommandServiceImpl implements TableLayoutCommandService 
         return TableLayoutConverter.toLayoutDetailDto(savedLayout);
     }
 
-    // 기존 테이블 배치도 비활성화
-    private void deactivateExistingLayout(Store store) {
-        tableLayoutRepository.findByStoreIdAndIsActiveTrue(store.getId())
-                .ifPresent(tableLayoutRepository::delete);
-    }
-
     // 미래 예약 확인
     private boolean checkFutureBookingsInLayout(TableLayout layout) {
         LocalDate currentDate = LocalDate.now();
         LocalTime currentTime = LocalTime.now();
+        List<Long> tableIds = layout.getTables().stream()
+                .map(StoreTable::getId)
+                .toList();
 
-        return layout.getTables().stream()
-                .anyMatch(table ->
-                        bookingRepository.existsFutureBookingByTable(table.getId(), currentDate, currentTime)
-                );
+        if (tableIds.isEmpty()) {
+            return false;
+        }
+
+        List<Long> tableIdsWithFutureBookings = bookingRepository.findTableIdsWithFutureBookings(tableIds, currentDate, currentTime);
+
+        return !tableIdsWithFutureBookings.isEmpty();
     }
 }

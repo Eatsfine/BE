@@ -102,4 +102,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("breakEnd") LocalTime breakEnd,
             @Param("adjustedBreakStart") LocalTime adjustedBreakStart
     );
+
+    @Query("SELECT DISTINCT bt.storeTable.id FROM BookingTable bt " +
+            "JOIN bt.booking b " +
+            "WHERE bt.storeTable.id IN :tableIds " +
+            "AND (b.bookingDate > :currentDate " +
+            "     OR (b.bookingDate = :currentDate AND b.bookingTime >= :currentTime)) " +
+            "AND b.status IN ('CONFIRMED', 'PENDING')")
+    List<Long> findTableIdsWithFutureBookings(
+            @Param("tableIds") List<Long> tableIds,
+            @Param("currentDate") LocalDate currentDate,
+            @Param("currentTime") LocalTime currentTime
+    );
 }
