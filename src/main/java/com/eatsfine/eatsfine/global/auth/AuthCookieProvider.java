@@ -16,7 +16,7 @@ public class AuthCookieProvider {
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("None") // Lax → None
-                .domain(".eatsfine.co.kr") 로컬 개발로 인해 주석 처리
+                .domain(".eatsfine.co.kr") //로컬 개발로 인해 주석 처리
                 .path("/")
                 .maxAge(Duration.ofDays(14))
                 .build();
