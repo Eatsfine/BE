@@ -21,6 +21,7 @@ public interface StoreRepository extends JpaRepository<Store, Long>, StoreReposi
 """)
     Optional<Store> findByIdWithMenus(@Param("id") Long id);
 
+    @Query("select s from Store s left join fetch s.businessHours where s.owner = :owner")
     List<Store> findAllByOwner(User owner);
 
 }

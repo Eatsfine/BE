@@ -26,6 +26,8 @@ import java.time.DayOfWeek;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -151,19 +153,28 @@ public class StoreQueryServiceImpl implements StoreQueryService {
     }
 
     @Override
-    public StoreResDto.MyStoreListDto getMyStores(String username) {
-        User user = userRepository.findByEmail(username)
+    public StoreResDto.MyStoreListDto getMyStores(String email) {
+        User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
 
         List<Store> myStores = storeRepository.findAllByOwner(user);
+        
+        // N+1 문제 해결을 위한 Bulk Query 실행
+        List<Object[]> bookingCounts = bookingRepository.countActiveBookingsByStores(myStores);
+        Map<Long, Long> bookingCountMap = bookingCounts.stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (Long) row[1]
+                ));
+
         LocalDateTime now = LocalDateTime.now();
 
         List<StoreResDto.MyStoreDto> storeDtos = myStores.stream()
                 .map(store -> {
                     boolean isOpen = isOpenNow(store, now);
-                    Long totalBookingCount = bookingRepository.countActiveBookings(store);
+                    Long totalBookingCount = bookingCountMap.getOrDefault(store.getId(), 0L);
                     String mainImageUrl = s3Service.toUrl(store.getMainImageKey());
-                    return StoreConverter.toMyStoreDto(store, isOpen, totalBookingCount, mainImageUrl);
+                    return StoreConverter.toMyStoreDto(store, isOpen, mainImageUrl, totalBookingCount);
                 })
                 .toList();
 

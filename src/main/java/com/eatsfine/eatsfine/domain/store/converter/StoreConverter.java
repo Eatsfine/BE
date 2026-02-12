@@ -80,7 +80,7 @@ public class StoreConverter {
                 .build();
     }
 
-    public static StoreResDto.MyStoreDto toMyStoreDto(Store store, boolean isOpenNow, Long totalBookingCount, String mainImageUrl) {
+    public static StoreResDto.MyStoreDto toMyStoreDto(Store store, boolean isOpenNow, String mainImageUrl, Long totalBookingCount) {
         return StoreResDto.MyStoreDto.builder()
                 .storeId(store.getId())
                 .storeName(store.getStoreName())

@@ -121,4 +121,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             "com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.PENDING, " +
             "com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.COMPLETED)")
     Long countActiveBookings(@Param("store") Store store);
+
+    @Query("select b.store.id, count(b) from Booking b " +
+            "where b.store in :stores " +
+            "and b.status in (com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.CONFIRMED, " +
+            "com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.PENDING, " +
+            "com.eatsfine.eatsfine.domain.booking.enums.BookingStatus.COMPLETED) " +
+            "group by b.store.id")
+    List<Object[]> countActiveBookingsByStores(@Param("stores") List<Store> stores);
 }
