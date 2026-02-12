@@ -95,11 +95,11 @@ public class SecurityConfig {
             return http.build();
     }
 
-
         @Bean
         public HttpCookieOAuth2AuthorizationRequestRepository cookieAuthorizationRequestRepository() {
                 return new HttpCookieOAuth2AuthorizationRequestRepository();
         }
+
 
         @Bean
         public CorsConfigurationSource corsConfigurationSource() {
@@ -121,6 +121,7 @@ public class SecurityConfig {
                 source.registerCorsConfiguration("/**", config);
                 return source;
         }
+
 
         @Bean
         public PasswordEncoder passwordEncoder() {
