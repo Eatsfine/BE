@@ -21,4 +21,6 @@ public interface StoreQueryService {
 
     boolean isOpenNow(Store store, LocalDateTime now);
 
+    StoreResDto.MyStoreListDto getMyStores(String username);
+
 }

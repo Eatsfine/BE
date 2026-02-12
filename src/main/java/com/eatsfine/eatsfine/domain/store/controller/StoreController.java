@@ -108,4 +108,16 @@ public class StoreController {
         return ApiResponse.of(StoreSuccessStatus._STORE_MAIN_IMAGE_GET_SUCCESS, storeQueryService.getMainImage(storeId));
     }
 
+    @Operation(
+            summary = "내 가게 리스트 조회",
+            description = "사장님이 등록한 모든 가게 리스트를 조회합니다."
+    )
+    @GetMapping("/stores/my")
+    @PreAuthorize("hasRole('OWNER')")
+    public ApiResponse<StoreResDto.MyStoreListDto> getMyStores(
+            @CurrentUser User user
+    ) {
+        return ApiResponse.of(StoreSuccessStatus._STORE_FOUND, storeQueryService.getMyStores(user.getUsername()));
+    }
+
 }

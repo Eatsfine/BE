@@ -1,6 +1,7 @@
 package com.eatsfine.eatsfine.domain.store.service;
 
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
+import com.eatsfine.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.eatsfine.domain.store.condition.StoreSearchCondition;
 import com.eatsfine.eatsfine.domain.store.converter.StoreConverter;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
@@ -9,6 +10,10 @@ import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.store.exception.StoreException;
 import com.eatsfine.eatsfine.domain.store.repository.StoreRepository;
 import com.eatsfine.eatsfine.domain.store.status.StoreErrorStatus;
+import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.s3.S3Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -28,6 +33,8 @@ import java.util.List;
 public class StoreQueryServiceImpl implements StoreQueryService {
 
     private final StoreRepository storeRepository;
+    private final BookingRepository bookingRepository;
+    private final UserRepository userRepository;
     private final S3Service s3Service;
 
     // 식당 검색
@@ -141,5 +148,25 @@ public class StoreQueryServiceImpl implements StoreQueryService {
         }
 
         return false; // 영업 시간 자체가 아님
+    }
+
+    @Override
+    public StoreResDto.MyStoreListDto getMyStores(String username) {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+
+        List<Store> myStores = storeRepository.findAllByOwner(user);
+        LocalDateTime now = LocalDateTime.now();
+
+        List<StoreResDto.MyStoreDto> storeDtos = myStores.stream()
+                .map(store -> {
+                    boolean isOpen = isOpenNow(store, now);
+                    Long totalBookingCount = bookingRepository.countActiveBookings(store);
+                    String mainImageUrl = s3Service.toUrl(store.getMainImageKey());
+                    return StoreConverter.toMyStoreDto(store, isOpen, totalBookingCount, mainImageUrl);
+                })
+                .toList();
+
+        return StoreConverter.toMyStoreListDto(storeDtos);
     }
 }
