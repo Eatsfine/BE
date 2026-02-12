@@ -79,5 +79,24 @@ public class StoreConverter {
                 .mainImageUrl(key)
                 .build();
     }
-}
 
+    public static StoreResDto.MyStoreDto toMyStoreDto(Store store, boolean isOpenNow, Long totalBookingCount, String mainImageUrl) {
+        return StoreResDto.MyStoreDto.builder()
+                .storeId(store.getId())
+                .storeName(store.getStoreName())
+                .address(store.getAddress())
+                .category(store.getCategory())
+                .rating(store.getRating())
+                .totalBookingCount(totalBookingCount)
+                .reviewCount(null) // 리뷰 도메인 구현 이후 추가 예정
+                .mainImageUrl(mainImageUrl)
+                .isOpenNow(isOpenNow)
+                .build();
+    }
+
+    public static StoreResDto.MyStoreListDto toMyStoreListDto(List<StoreResDto.MyStoreDto> stores) {
+        return StoreResDto.MyStoreListDto.builder()
+                .stores(stores)
+                .build();
+    }
+}
