@@ -211,9 +211,13 @@ public class PaymentService {
         }
 
         @Transactional(readOnly = true)
-        public PaymentResponseDTO.PaymentDetailResultDTO getPaymentDetail(Long paymentId) {
+        public PaymentResponseDTO.PaymentDetailResultDTO getPaymentDetail(Long paymentId, Long userId) {
                 Payment payment = paymentRepository.findById(paymentId)
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
+
+                if (!payment.getBooking().getUser().getId().equals(userId)) {
+                        throw new PaymentException(PaymentErrorStatus._PAYMENT_ACCESS_DENIED);
+                }
 
                 return new PaymentResponseDTO.PaymentDetailResultDTO(
                                 payment.getId(),
