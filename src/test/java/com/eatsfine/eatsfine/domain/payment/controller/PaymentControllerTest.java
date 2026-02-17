@@ -4,6 +4,9 @@ import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
 import com.eatsfine.eatsfine.domain.payment.service.PaymentService;
+import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.enums.Role;
+import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.global.auth.CustomAccessDeniedHandler;
 import com.eatsfine.eatsfine.global.auth.CustomAuthenticationEntryPoint;
 import com.eatsfine.eatsfine.global.config.jwt.JwtAuthenticationFilter;
@@ -27,6 +30,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -43,145 +47,155 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @WithMockUser
 class PaymentControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
+        @Autowired
+        private MockMvc mockMvc;
 
-    @MockBean
-    private PaymentService paymentService;
+        @MockBean
+        private PaymentService paymentService;
 
-    @MockBean
-    private JwtAuthenticationFilter jwtAuthenticationFilter;
+        @MockBean
+        private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    @MockBean
-    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+        @MockBean
+        private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-    @MockBean
-    private CustomAccessDeniedHandler customAccessDeniedHandler;
+        @MockBean
+        private CustomAccessDeniedHandler customAccessDeniedHandler;
 
-    @Autowired
-    private ObjectMapper objectMapper;
+        @MockBean
+        private UserRepository userRepository;
 
-    @BeforeEach
-    void setUp() throws ServletException, IOException {
-        doAnswer(invocation -> {
-            HttpServletRequest request = invocation.getArgument(0);
-            HttpServletResponse response = invocation.getArgument(1);
-            FilterChain chain = invocation.getArgument(2);
-            chain.doFilter(request, response);
-            return null;
-        }).when(jwtAuthenticationFilter).doFilter(any(HttpServletRequest.class), any(HttpServletResponse.class),
-                any(FilterChain.class));
-    }
+        @Autowired
+        private ObjectMapper objectMapper;
 
-    @Test
-    @DisplayName("결제 요청 성공")
-    void requestPayment_success() throws Exception {
-        // given
-        PaymentRequestDTO.RequestPaymentDTO request = new PaymentRequestDTO.RequestPaymentDTO(1L);
-        PaymentResponseDTO.PaymentRequestResultDTO response = new PaymentResponseDTO.PaymentRequestResultDTO(
-                1L, 1L, "order-id-123", BigDecimal.valueOf(10000), LocalDateTime.now());
+        @BeforeEach
+        void setUp() throws ServletException, IOException {
+                doAnswer(invocation -> {
+                        HttpServletRequest request = invocation.getArgument(0);
+                        HttpServletResponse response = invocation.getArgument(1);
+                        FilterChain chain = invocation.getArgument(2);
+                        chain.doFilter(request, response);
+                        return null;
+                }).when(jwtAuthenticationFilter).doFilter(any(HttpServletRequest.class), any(HttpServletResponse.class),
+                                any(FilterChain.class));
+        }
 
-        given(paymentService.requestPayment(any(PaymentRequestDTO.RequestPaymentDTO.class))).willReturn(response);
+        @Test
+        @DisplayName("결제 요청 성공")
+        void requestPayment_success() throws Exception {
+                // given
+                PaymentRequestDTO.RequestPaymentDTO request = new PaymentRequestDTO.RequestPaymentDTO(1L);
+                PaymentResponseDTO.PaymentRequestResultDTO response = new PaymentResponseDTO.PaymentRequestResultDTO(
+                                1L, 1L, "order-id-123", BigDecimal.valueOf(10000), LocalDateTime.now());
 
-        // when & then
-        mockMvc.perform(post("/api/v1/payments/request")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.paymentId").value(1L))
-                .andExpect(jsonPath("$.result.orderId").value("order-id-123"));
-    }
+                given(paymentService.requestPayment(any(PaymentRequestDTO.RequestPaymentDTO.class)))
+                                .willReturn(response);
 
-    @Test
-    @DisplayName("결제 승인 성공")
-    void confirmPayment_success() throws Exception {
-        // given
-        PaymentConfirmDTO request = PaymentConfirmDTO.builder()
-                .paymentKey("payment-key-123")
-                .orderId("order-id-123")
-                .amount(BigDecimal.valueOf(10000))
-                .build();
+                // when & then
+                mockMvc.perform(post("/api/v1/payments/request")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.isSuccess").value(true))
+                                .andExpect(jsonPath("$.result.paymentId").value(1L))
+                                .andExpect(jsonPath("$.result.orderId").value("order-id-123"));
+        }
 
-        PaymentResponseDTO.PaymentSuccessResultDTO response = new PaymentResponseDTO.PaymentSuccessResultDTO(
-                1L, "COMPLETED", LocalDateTime.now(), "order-id-123", BigDecimal.valueOf(10000),
-                "CARD", "TOSS", "http://receipt.url");
+        @Test
+        @DisplayName("결제 승인 성공")
+        void confirmPayment_success() throws Exception {
+                // given
+                PaymentConfirmDTO request = PaymentConfirmDTO.builder()
+                                .paymentKey("payment-key-123")
+                                .orderId("order-id-123")
+                                .amount(BigDecimal.valueOf(10000))
+                                .build();
 
-        given(paymentService.confirmPayment(any(PaymentConfirmDTO.class))).willReturn(response);
+                PaymentResponseDTO.PaymentSuccessResultDTO response = new PaymentResponseDTO.PaymentSuccessResultDTO(
+                                1L, "COMPLETED", LocalDateTime.now(), "order-id-123", BigDecimal.valueOf(10000),
+                                "CARD", "TOSS", "http://receipt.url");
 
-        // when & then
-        mockMvc.perform(post("/api/v1/payments/confirm")
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.status").value("COMPLETED"));
-    }
+                given(paymentService.confirmPayment(any(PaymentConfirmDTO.class))).willReturn(response);
 
-    @Test
-    @DisplayName("결제 취소 성공")
-    void cancelPayment_success() throws Exception {
-        // given
-        String paymentKey = "payment-key-123";
-        PaymentRequestDTO.CancelPaymentDTO request = new PaymentRequestDTO.CancelPaymentDTO("단순 변심");
-        PaymentResponseDTO.CancelPaymentResultDTO response = new PaymentResponseDTO.CancelPaymentResultDTO(
-                1L, "order-id-123", paymentKey, "CANCELED", LocalDateTime.now());
+                // when & then
+                mockMvc.perform(post("/api/v1/payments/confirm")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.isSuccess").value(true))
+                                .andExpect(jsonPath("$.result.status").value("COMPLETED"));
+        }
 
-        given(paymentService.cancelPayment(eq(paymentKey), any(PaymentRequestDTO.CancelPaymentDTO.class)))
-                .willReturn(response);
+        @Test
+        @DisplayName("결제 취소 성공")
+        void cancelPayment_success() throws Exception {
+                // given
+                String paymentKey = "payment-key-123";
+                PaymentRequestDTO.CancelPaymentDTO request = new PaymentRequestDTO.CancelPaymentDTO("단순 변심");
+                PaymentResponseDTO.CancelPaymentResultDTO response = new PaymentResponseDTO.CancelPaymentResultDTO(
+                                1L, "order-id-123", paymentKey, "CANCELED", LocalDateTime.now());
 
-        // when & then
-        mockMvc.perform(post("/api/v1/payments/{paymentKey}/cancel", paymentKey)
-                .with(csrf())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.status").value("CANCELED"));
-    }
+                given(paymentService.cancelPayment(eq(paymentKey), any(PaymentRequestDTO.CancelPaymentDTO.class)))
+                                .willReturn(response);
 
-    @Test
-    @DisplayName("결제 내역 조회 성공")
-    void getPaymentList_success() throws Exception {
-        // given
-        PaymentResponseDTO.PaginationDTO pagination = new PaymentResponseDTO.PaginationDTO(1, 1, 1L);
-        PaymentResponseDTO.PaymentHistoryResultDTO history = new PaymentResponseDTO.PaymentHistoryResultDTO(
-                1L, 1L, "Store Name", BigDecimal.valueOf(10000), "DEPOSIT", "CARD", "TOSS", "COMPLETED",
-                LocalDateTime.now());
-        PaymentResponseDTO.PaymentListResponseDTO response = new PaymentResponseDTO.PaymentListResponseDTO(
-                Collections.singletonList(history), pagination);
+                // when & then
+                mockMvc.perform(post("/api/v1/payments/{paymentKey}/cancel", paymentKey)
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.isSuccess").value(true))
+                                .andExpect(jsonPath("$.result.status").value("CANCELED"));
+        }
 
-        given(paymentService.getPaymentList(any(Long.class), any(Integer.class), any(Integer.class), any()))
-                .willReturn(response);
+        @Test
+        @DisplayName("결제 내역 조회 성공")
+        void getPaymentList_success() throws Exception {
+                // given
+                PaymentResponseDTO.PaginationDTO pagination = new PaymentResponseDTO.PaginationDTO(1, 1, 1L);
+                PaymentResponseDTO.PaymentHistoryResultDTO history = new PaymentResponseDTO.PaymentHistoryResultDTO(
+                                1L, 1L, "Store Name", BigDecimal.valueOf(10000), "DEPOSIT", "CARD", "TOSS", "COMPLETED",
+                                LocalDateTime.now());
+                PaymentResponseDTO.PaymentListResponseDTO response = new PaymentResponseDTO.PaymentListResponseDTO(
+                                Collections.singletonList(history), pagination);
 
-        // when & then
-        mockMvc.perform(get("/api/v1/payments")
-                .param("page", "1")
-                .param("limit", "10")
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.payments[0].storeName").value("Store Name"));
-    }
+                User user = User.builder().id(1L).email("user").role(Role.ROLE_CUSTOMER).build();
+                given(userRepository.findByEmail("user")).willReturn(Optional.of(user));
 
-    @Test
-    @DisplayName("결제 상세 조회 성공")
-    void getPaymentDetail_success() throws Exception {
-        // given
-        Long paymentId = 1L;
-        PaymentResponseDTO.PaymentDetailResultDTO response = new PaymentResponseDTO.PaymentDetailResultDTO(
-                paymentId, 1L, "Store Name", "CARD", "TOSS", BigDecimal.valueOf(10000), "DEPOSIT",
-                "COMPLETED", LocalDateTime.now(), LocalDateTime.now(), "http://receipt.url", null);
+                given(paymentService.getPaymentList(eq(1L), any(Integer.class), any(Integer.class), any()))
+                                .willReturn(response);
 
-        given(paymentService.getPaymentDetail(eq(paymentId))).willReturn(response);
+                // when & then
+                mockMvc.perform(get("/api/v1/payments")
+                                .param("page", "1")
+                                .param("limit", "10")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.isSuccess").value(true))
+                                .andExpect(jsonPath("$.result.payments[0].storeName").value("Store Name"));
+        }
 
-        // when & then
-        mockMvc.perform(get("/api/v1/payments/{paymentId}", paymentId)
-                .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.isSuccess").value(true))
-                .andExpect(jsonPath("$.result.paymentId").value(paymentId));
-    }
+        @Test
+        @DisplayName("결제 상세 조회 성공")
+        void getPaymentDetail_success() throws Exception {
+                // given
+                Long paymentId = 1L;
+                PaymentResponseDTO.PaymentDetailResultDTO response = new PaymentResponseDTO.PaymentDetailResultDTO(
+                                paymentId, 1L, "Store Name", "CARD", "TOSS", BigDecimal.valueOf(10000), "DEPOSIT",
+                                "COMPLETED", LocalDateTime.now(), LocalDateTime.now(), "http://receipt.url", null);
+
+                User user = User.builder().id(1L).email("user").role(Role.ROLE_CUSTOMER).build();
+                given(userRepository.findByEmail("user")).willReturn(Optional.of(user));
+
+                given(paymentService.getPaymentDetail(eq(paymentId), eq(1L))).willReturn(response);
+
+                // when & then
+                mockMvc.perform(get("/api/v1/payments/{paymentId}", paymentId)
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.isSuccess").value(true))
+                                .andExpect(jsonPath("$.result.paymentId").value(paymentId));
+        }
 }
