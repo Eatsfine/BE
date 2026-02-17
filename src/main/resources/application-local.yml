@@ -60,14 +60,16 @@ spring:
 
 payment:
   toss:
-    widget-secret-key: test_gsk_docs_OaPz8L5KdmQXkzRz3y47BMw6
+    widget-secret-key: ${TOSS_WIDGET_SECRET_KEY}
 
 cloud:
   aws:
-    region: ap-northeast-2
+    region: ${AWS_REGION}
     s3:
-      bucket: eatsfine-images
-      base-url: https://eatsfine-images.s3.ap-northeast-2.amazonaws.com
+      bucket: ${AWS_S3_BUCKET}
+      base-url: ${AWS_S3_BASE_URL}
 
+api:
+  service-key: ${BIZ_API_KEY}
 jwt:
   secret: ${SECRET_KEY}
