@@ -180,10 +180,10 @@ public class PaymentService {
                                 // 유효하지 않은 status가 들어오면 BadRequest 예외 발생
                                 throw new GeneralException(ErrorStatus._BAD_REQUEST);
                         }
-                        paymentPage = paymentRepository.findAllByBooking_User_IdAndPaymentStatus(userId, paymentStatus,
+                        paymentPage = paymentRepository.findAllByUserIdAndStatusWithDetails(userId, paymentStatus,
                                         pageable);
                 } else {
-                        paymentPage = paymentRepository.findAllByBooking_User_Id(userId, pageable);
+                        paymentPage = paymentRepository.findAllByUserIdWithDetails(userId, pageable);
                 }
 
                 List<PaymentResponseDTO.PaymentHistoryResultDTO> payments = paymentPage.getContent().stream()
@@ -212,7 +212,7 @@ public class PaymentService {
 
         @Transactional(readOnly = true)
         public PaymentResponseDTO.PaymentDetailResultDTO getPaymentDetail(Long paymentId, Long userId) {
-                Payment payment = paymentRepository.findById(paymentId)
+                Payment payment = paymentRepository.findByIdWithDetails(paymentId)
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
 
                 if (!payment.getBooking().getUser().getId().equals(userId)) {
