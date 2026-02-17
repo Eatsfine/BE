@@ -4,9 +4,6 @@ import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
 import com.eatsfine.eatsfine.domain.payment.service.PaymentService;
-import com.eatsfine.eatsfine.domain.user.entity.User;
-import com.eatsfine.eatsfine.domain.user.enums.Role;
-import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.global.auth.CustomAccessDeniedHandler;
 import com.eatsfine.eatsfine.global.auth.CustomAuthenticationEntryPoint;
 import com.eatsfine.eatsfine.global.config.jwt.JwtAuthenticationFilter;
@@ -20,7 +17,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -29,8 +26,6 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -50,20 +45,17 @@ class PaymentControllerTest {
         @Autowired
         private MockMvc mockMvc;
 
-        @MockBean
+        @MockitoBean
         private PaymentService paymentService;
 
-        @MockBean
+        @MockitoBean
         private JwtAuthenticationFilter jwtAuthenticationFilter;
 
-        @MockBean
+        @MockitoBean
         private CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
-        @MockBean
+        @MockitoBean
         private CustomAccessDeniedHandler customAccessDeniedHandler;
-
-        @MockBean
-        private UserRepository userRepository;
 
         @Autowired
         private ObjectMapper objectMapper;
@@ -161,10 +153,7 @@ class PaymentControllerTest {
                 PaymentResponseDTO.PaymentListResponseDTO response = new PaymentResponseDTO.PaymentListResponseDTO(
                                 Collections.singletonList(history), pagination);
 
-                User user = User.builder().id(1L).email("user").role(Role.ROLE_CUSTOMER).build();
-                given(userRepository.findByEmail("user")).willReturn(Optional.of(user));
-
-                given(paymentService.getPaymentList(eq(1L), any(Integer.class), any(Integer.class), any()))
+                given(paymentService.getPaymentList(anyString(), any(Integer.class), any(Integer.class), any()))
                                 .willReturn(response);
 
                 // when & then
@@ -186,10 +175,7 @@ class PaymentControllerTest {
                                 paymentId, 1L, "Store Name", "CARD", "TOSS", BigDecimal.valueOf(10000), "DEPOSIT",
                                 "COMPLETED", LocalDateTime.now(), LocalDateTime.now(), "http://receipt.url", null);
 
-                User user = User.builder().id(1L).email("user").role(Role.ROLE_CUSTOMER).build();
-                given(userRepository.findByEmail("user")).willReturn(Optional.of(user));
-
-                given(paymentService.getPaymentDetail(eq(paymentId), eq(1L))).willReturn(response);
+                given(paymentService.getPaymentDetail(eq(paymentId), anyString())).willReturn(response);
 
                 // when & then
                 mockMvc.perform(get("/api/v1/payments/{paymentId}", paymentId)

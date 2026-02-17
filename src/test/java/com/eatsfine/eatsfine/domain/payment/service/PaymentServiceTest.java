@@ -13,8 +13,13 @@ import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentType;
 import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
 import com.eatsfine.eatsfine.domain.payment.repository.PaymentRepository;
+import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
 import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
+import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.enums.Role;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,14 +28,18 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
@@ -50,6 +59,9 @@ class PaymentServiceTest {
 
         @Mock
         private TossPaymentService tossPaymentService;
+
+        @Mock
+        private UserRepository userRepository;
 
         @Test
         @DisplayName("결제 요청 성공")
@@ -214,5 +226,117 @@ class PaymentServiceTest {
                 // then
                 assertThat(response.status()).isEqualTo("REFUNDED");
                 assertThat(payment.getPaymentStatus()).isEqualTo(PaymentStatus.REFUNDED);
+        }
+
+        @Test
+        @DisplayName("결제 내역 조회 - 손님")
+        void getPaymentList_Customer_success() {
+                // given
+                User user = User.builder().id(1L).role(Role.ROLE_CUSTOMER).build();
+                // Pageable pageable = PageRequest.of(0, 10);
+
+                Payment payment = Payment.builder()
+                                .id(1L)
+                                .booking(Booking.builder().id(1L).store(Store.builder().storeName("Store").build())
+                                                .build())
+                                .amount(BigDecimal.valueOf(10000))
+                                .paymentStatus(PaymentStatus.COMPLETED)
+                                .paymentType(PaymentType.DEPOSIT)
+                                .paymentMethod(PaymentMethod.SIMPLE_PAYMENT)
+                                .paymentProvider(PaymentProvider.TOSS)
+                                .approvedAt(LocalDateTime.now())
+                                .build();
+
+                Page<Payment> paymentPage = new PageImpl<>(List.of(payment));
+
+                given(userRepository.findByEmail("customer")).willReturn(Optional.of(user));
+                given(paymentRepository.findAllByUserIdWithDetails(eq(1L), any(Pageable.class)))
+                                .willReturn(paymentPage);
+
+                // when
+                PaymentResponseDTO.PaymentListResponseDTO response = paymentService.getPaymentList("customer", 1, 10,
+                                null);
+
+                // then
+                assertThat(response.payments()).hasSize(1);
+                assertThat(response.payments().get(0).storeName()).isEqualTo("Store");
+                verify(paymentRepository, times(1)).findAllByUserIdWithDetails(eq(1L), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("결제 내역 조회 - 사장님")
+        void getPaymentList_Owner_success() {
+                // given
+                User user = User.builder().id(2L).role(Role.ROLE_OWNER).build();
+                // Pageable pageable = PageRequest.of(0, 10);
+
+                Payment payment = Payment.builder()
+                                .id(2L)
+                                .booking(Booking.builder().id(1L)
+                                                .store(Store.builder().storeName("My Store").owner(user).build())
+                                                .build())
+                                .amount(BigDecimal.valueOf(20000))
+                                .paymentStatus(PaymentStatus.COMPLETED)
+                                .paymentType(PaymentType.DEPOSIT)
+                                .paymentMethod(PaymentMethod.SIMPLE_PAYMENT)
+                                .paymentProvider(PaymentProvider.TOSS)
+                                .approvedAt(LocalDateTime.now())
+                                .build();
+
+                Page<Payment> paymentPage = new PageImpl<>(List.of(payment));
+
+                given(userRepository.findByEmail("owner")).willReturn(Optional.of(user));
+                given(paymentRepository.findAllByOwnerIdWithDetails(eq(2L), any(Pageable.class)))
+                                .willReturn(paymentPage);
+
+                // when
+                PaymentResponseDTO.PaymentListResponseDTO response = paymentService.getPaymentList("owner", 1, 10,
+                                null);
+
+                // then
+                assertThat(response.payments()).hasSize(1);
+                assertThat(response.payments().get(0).storeName()).isEqualTo("My Store");
+                verify(paymentRepository, times(1)).findAllByOwnerIdWithDetails(eq(2L), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("결제 상세 조회 실패 - 사용자 없음")
+        void getPaymentDetail_UserNotFound() {
+                // given
+                String email = "unknown@example.com";
+                given(userRepository.findByEmail(email)).willReturn(Optional.empty());
+
+                // when & then
+                assertThatThrownBy(() -> paymentService.getPaymentDetail(1L, email))
+                                .isInstanceOf(UserException.class)
+                                .extracting("code")
+                                .isEqualTo(UserErrorStatus.MEMBER_NOT_FOUND);
+        }
+
+        @Test
+        @DisplayName("결제 상세 조회 실패 - 권한 없음 (남의 결제 내역)")
+        void getPaymentDetail_AccessDenied() {
+                // given
+                String email = "hacker@example.com";
+                User hacker = User.builder().id(999L).role(Role.ROLE_CUSTOMER).build();
+                User owner = User.builder().id(1L).role(Role.ROLE_CUSTOMER).build();
+                User storeOwner = User.builder().id(2L).role(Role.ROLE_OWNER).build();
+
+                Store store = Store.builder().id(1L).owner(storeOwner).build();
+                Booking booking = Booking.builder().user(owner).store(store).build(); // owner(1L) is booker,
+                                                                                      // storeOwner(2L) is owner
+                Payment payment = Payment.builder()
+                                .id(1L)
+                                .booking(booking)
+                                .build();
+
+                given(userRepository.findByEmail(email)).willReturn(Optional.of(hacker));
+                given(paymentRepository.findByIdWithDetails(1L)).willReturn(Optional.of(payment));
+
+                // when & then
+                assertThatThrownBy(() -> paymentService.getPaymentDetail(1L, email))
+                                .isInstanceOf(PaymentException.class)
+                                .extracting("code")
+                                .isEqualTo(PaymentErrorStatus._PAYMENT_ACCESS_DENIED);
         }
 }
