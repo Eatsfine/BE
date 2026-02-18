@@ -251,7 +251,7 @@ public class UserServiceImpl implements UserService {
             throw new AuthException(AuthErrorStatus.ALREADY_OWNER);
         }
 
-        businessNumberValidator.validate(dto.getBusinessNumber(), dto.getStartDate(), user.getName());
+        businessNumberValidator.validate(dto.getBusinessNumber(), dto.getStartDate(), dto.getName());
 
         user.updateToOwner();
         User savedUser = userRepository.save(user);
