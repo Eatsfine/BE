@@ -11,28 +11,25 @@ public class UserRequestDto {
 
     @PasswordMatch
     @Getter
-    public static class JoinDto{
+    public static class JoinDto {
 
         @NotBlank(message = "이름은 필수입니다.")
-        private String name;  // 이름
+        private String name; // 이름
 
         @NotBlank(message = "이메일은 필수입니다.")
         @Email(message = "유효한 이메일 형식이어야 합니다.")
-        private String email;  // 이메일
+        private String email; // 이메일
 
         @NotBlank(message = "휴대전화 번호는 필수입니다.")
         @Pattern(regexp = "^010\\d{8}$", message = "휴대전화 번호는 010으로 시작하는 11자리 숫자여야 합니다.")
-        private String phoneNumber;  // 휴대전화 번호
+        private String phoneNumber; // 휴대전화 번호
 
         @NotBlank(message = "비밀번호는 필수 입니다.")
-        @Pattern(
-                regexp = "^(?=(.*[a-zA-Z].*[0-9])|(?=.*[a-zA-Z].*[!@#$%^&*])|(?=.*[0-9].*[!@#$%^&*]))[a-zA-Z0-9!@#$%^&*]{8,20}$",
-                message = "비밀번호는 영문, 숫자, 특수문자 중 2가지 이상 조합이며, 8자 ~20자 이내 이어야 합니다."
-        )
+        @Pattern(regexp = "^(?=(.*[a-zA-Z].*[0-9])|(?=.*[a-zA-Z].*[!@#$%^&*])|(?=.*[0-9].*[!@#$%^&*]))[a-zA-Z0-9!@#$%^&*]{8,20}$", message = "비밀번호는 영문, 숫자, 특수문자 중 2가지 이상 조합이며, 8자 ~20자 이내 이어야 합니다.")
         private String password;
 
         @NotBlank(message = "비밀번호 확인은 필수입니다.")
-        private String passwordConfirm;  // 비밀번호 확인
+        private String passwordConfirm; // 비밀번호 확인
 
         @AssertTrue(message = "이용약관에 동의해야 합니다.")
         @Schema(description = "서비스 이용약관 동의 여부 (필수)", example = "true")
@@ -75,10 +72,7 @@ public class UserRequestDto {
         private String currentPassword;
 
         @NotBlank(message = "새 비밀번호는 필수입니다.")
-        @Pattern(
-                regexp = "^(?=(.*[a-zA-Z].*[0-9])|(?=.*[a-zA-Z].*[!@#$%^&*])|(?=.*[0-9].*[!@#$%^&*]))[a-zA-Z0-9!@#$%^&*]{8,20}$",
-                message = "새 비밀번호는 영문, 숫자, 특수문자 중 2가지 이상 조합이며, 8자 ~20자 이내 이어야 합니다."
-        )
+        @Pattern(regexp = "^(?=(.*[a-zA-Z].*[0-9])|(?=.*[a-zA-Z].*[!@#$%^&*])|(?=.*[0-9].*[!@#$%^&*]))[a-zA-Z0-9!@#$%^&*]{8,20}$", message = "새 비밀번호는 영문, 숫자, 특수문자 중 2가지 이상 조합이며, 8자 ~20자 이내 이어야 합니다.")
         @Schema(description = "새 비밀번호", example = "NewPw!1234")
         private String newPassword;
 
@@ -90,6 +84,11 @@ public class UserRequestDto {
     @Getter
     @NoArgsConstructor
     public static class VerifyOwnerDto {
+
+        @Schema(description = "이름", example = "홍길동")
+        @NotBlank(message = "이름은 필수입니다.")
+        @Size(min = 2, max = 20, message = "이름은 2자 이상 20자 이내여야 합니다.")
+        private String name;
 
         @Schema(description = "사업자번호", example = "1234567890")
         @NotBlank(message = "사업자번호는 필수입니다.")

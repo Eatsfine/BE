@@ -48,8 +48,10 @@ public class TableLayoutCommandServiceImpl implements TableLayoutCommandService 
                 throw new TableLayoutException(TableLayoutErrorStatus._CANNOT_DELETE_LAYOUT_WITH_FUTURE_BOOKINGS);
             }
             
-            // 미래 예약이 없으면 배치도 비활성화 후 재생성
+            // 미래 예약이 없으면 배치도와 속해있는 테이블 삭제 (soft delete)
             tableLayoutRepository.delete(existingLayout.get());
+
+            tableLayoutRepository.flush();
         }
 
         // 새 배치도 생성

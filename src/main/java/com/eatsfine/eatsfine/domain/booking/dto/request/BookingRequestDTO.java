@@ -2,8 +2,10 @@ package com.eatsfine.eatsfine.domain.booking.dto.request;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,12 +38,12 @@ public class BookingRequestDTO {
             @NotNull @Min(1) Integer partySize,
             @NotNull List<Long> tableIds,
             @NotNull boolean isSplitAccepted,
-            @NotNull List<MenuOrderDto> menuItems
+            @Valid @NotEmpty(message = "예약 시 메뉴 선택은 필수입니다.") List<MenuOrderDto> menuItems
     ){}
 
     public record MenuOrderDto(
             @NotNull Long menuId,
-            @NotNull @Min(1) Integer quantity
+            @NotNull @Min(value = 1, message = "최소 1개 이상 주문해야 합니다.") Integer quantity
     ){}
 
     public record PaymentConfirmDTO(
