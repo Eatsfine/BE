@@ -55,7 +55,7 @@ public class StoreCommandServiceImpl implements StoreCommandService {
         businessNumberValidator.validate(
                 dto.businessNumberDto().businessNumber(),
                 dto.businessNumberDto().startDate(),
-                user.getName());
+                dto.businessNumberDto().name());
 
         log.info("사업자 번호 검증 성공: {}", dto.businessNumberDto().businessNumber());
 
