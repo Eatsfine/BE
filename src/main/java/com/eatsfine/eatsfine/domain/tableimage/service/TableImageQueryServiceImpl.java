@@ -29,13 +29,16 @@ public class TableImageQueryServiceImpl implements TableImageQueryService {
         Store store = storeRepository.findById(storeId)
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
-        List<TableImage> tableImages = tableImageRepository.findAllByStoreOrderByImageOrder(store);
+        List<TableImage> tableImageEntities = tableImageRepository.findAllByStoreOrderByImageOrder(store);
 
-        List<String> tableImageUrls = tableImages.stream()
-                .map(ti-> s3Service.toUrl(ti.getTableImageKey()))
+        List<TableImageResDto.TableImageItem> tableItems = tableImageEntities.stream()
+                .map(ti -> TableImageResDto.TableImageItem.builder()
+                        .tableImageId(ti.getId())
+                        .tableImageUrl(s3Service.toUrl(ti.getTableImageKey()))
+                        .build())
                 .toList();
 
-        return TableImageConverter.toGetTableImageDto(storeId, tableImageUrls);
+        return TableImageConverter.toGetTableImageDto(storeId, tableItems);
     }
 
 }
