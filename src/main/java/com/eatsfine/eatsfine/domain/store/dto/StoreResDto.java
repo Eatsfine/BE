@@ -28,6 +28,8 @@ public class StoreResDto {
             BigDecimal rating,
             Integer reviewCount, // 리뷰 도메인이 존재하지 않아 null 허용
             double distance,
+            double latitude,
+            double longitude,
             String mainImageUrl,
             boolean isOpenNow
     ){}
