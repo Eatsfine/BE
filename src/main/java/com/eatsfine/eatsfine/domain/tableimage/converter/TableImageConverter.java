@@ -13,14 +13,16 @@ public class TableImageConverter {
                 .build();
     }
 
-    public static TableImageResDto.GetTableImageDto toGetTableImageDto(Long storeId, List<String> tableImages) {
+    public static TableImageResDto.GetTableImageDto toGetTableImageDto(Long storeId,
+            List<TableImageResDto.TableImageItem> tableImages) {
         return TableImageResDto.GetTableImageDto.builder()
                 .storeId(storeId)
-                .tableImageUrls(tableImages)
+                .tableImages(tableImages)
                 .build();
     }
 
-    public static TableImageResDto.DeleteTableImageDto toDeleteTableImageDto(Long storeId, List<Long> removedTableImages) {
+    public static TableImageResDto.DeleteTableImageDto toDeleteTableImageDto(Long storeId,
+            List<Long> removedTableImages) {
         return TableImageResDto.DeleteTableImageDto.builder()
                 .storeId(storeId)
                 .deletedTableImageIds(removedTableImages)
