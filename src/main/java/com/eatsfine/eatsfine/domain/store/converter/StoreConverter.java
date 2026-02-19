@@ -4,7 +4,6 @@ import com.eatsfine.eatsfine.domain.businesshours.converter.BusinessHoursConvert
 import com.eatsfine.eatsfine.domain.businesshours.entity.BusinessHours;
 import com.eatsfine.eatsfine.domain.store.dto.StoreResDto;
 import com.eatsfine.eatsfine.domain.store.entity.Store;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -25,6 +24,8 @@ public class StoreConverter {
                                 .rating(store.getRating())
                                 .reviewCount(null) // 리뷰 도메인 구현 이후 추가 예정
                                 .distance(distance)
+                                .latitude(store.getLatitude())
+                                .longitude(store.getLongitude())
                                 .mainImageUrl(store.getMainImageKey())
                                 .isOpenNow(isOpenNow)
                                 .build();
