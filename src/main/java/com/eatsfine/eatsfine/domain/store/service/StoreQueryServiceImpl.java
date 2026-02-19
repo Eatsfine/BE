@@ -44,25 +44,21 @@ public class StoreQueryServiceImpl implements StoreQueryService {
     public StoreResDto.StoreSearchResDto search(
             StoreSearchCondition cond,
             int page,
-            int limit
-    ) {
+            int limit) {
         Pageable pageable = PageRequest.of(page - 1, limit);
 
         Page<StoreSearchResult> resultPage = storeRepository.searchStores(
                 cond.getLat(), cond.getLng(), cond.getKeyword(), cond.getCategory(), cond.getSort(),
-                cond.getSido(), cond.getSigungu(), cond.getBname(), pageable
-        );
+                cond.getSido(), cond.getSigungu(), cond.getBname(), pageable);
 
         LocalDateTime now = LocalDateTime.now();
 
-        List<StoreResDto.StoreSearchDto> stores =
-                resultPage.getContent().stream()
-                        .map(row -> StoreConverter.toSearchDto(
-                                row.store(),
-                                row.distance(),
-                                isOpenNow(row.store(), now)
-                        ))
-                        .toList();
+        List<StoreResDto.StoreSearchDto> stores = resultPage.getContent().stream()
+                .map(row -> StoreConverter.toSearchDto(
+                        row.store(),
+                        row.distance(),
+                        isOpenNow(row.store(), now)))
+                .toList();
 
         return StoreResDto.StoreSearchResDto.builder()
                 .stores(stores)
@@ -73,8 +69,7 @@ public class StoreQueryServiceImpl implements StoreQueryService {
                                 .totalCount(resultPage.getTotalElements())
                                 .isFirst(resultPage.isFirst())
                                 .isLast(resultPage.isLast())
-                                .build()
-                )
+                                .build())
                 .build();
     }
 
@@ -85,7 +80,14 @@ public class StoreQueryServiceImpl implements StoreQueryService {
                 .orElseThrow(() -> new StoreException(StoreErrorStatus._STORE_NOT_FOUND));
 
         String mainImageUrl = s3Service.toUrl(store.getMainImageKey());
-        return StoreConverter.toDetailDto(store, mainImageUrl, isOpenNow(store, LocalDateTime.now()));
+
+        List<String> tableImageUrls = store.getTableImages().stream()
+                .sorted(java.util.Comparator
+                        .comparingInt(com.eatsfine.eatsfine.domain.tableimage.entity.TableImage::getImageOrder))
+                .map(ti -> s3Service.toUrl(ti.getTableImageKey()))
+                .toList();
+
+        return StoreConverter.toDetailDto(store, mainImageUrl, tableImageUrls, isOpenNow(store, LocalDateTime.now()));
     }
 
     // 식당 대표 이미지 조회
@@ -110,7 +112,8 @@ public class StoreQueryServiceImpl implements StoreQueryService {
                 .map(bh -> isEffectiveOpen(bh, time, true))
                 .orElse(false);
 
-        if (openToday) return true;
+        if (openToday)
+            return true;
 
         // 2. 어제 시작된 심야 영업이 아직 종료되지 않았는지 확인
         return store.findBusinessHoursByDay(yesterday)
@@ -119,7 +122,8 @@ public class StoreQueryServiceImpl implements StoreQueryService {
     }
 
     private boolean isEffectiveOpen(BusinessHours bh, LocalTime time, boolean isToday) {
-        if (bh.isClosed()) return false;
+        if (bh.isClosed())
+            return false;
 
         LocalTime open = bh.getOpenTime();
         LocalTime close = bh.getCloseTime();
@@ -160,7 +164,7 @@ public class StoreQueryServiceImpl implements StoreQueryService {
 
         List<Store> myStores = storeRepository.findAllByOwner(user);
 
-        if(myStores.isEmpty()) {
+        if (myStores.isEmpty()) {
             return StoreConverter.toMyStoreListDto(List.of());
         }
         // N+1 문제 해결을 위한 Bulk Query 실행
@@ -168,8 +172,7 @@ public class StoreQueryServiceImpl implements StoreQueryService {
         Map<Long, Long> bookingCountMap = bookingCounts.stream()
                 .collect(Collectors.toMap(
                         row -> (Long) row[0],
-                        row -> (Long) row[1]
-                ));
+                        row -> (Long) row[1]));
 
         LocalDateTime now = LocalDateTime.now();
 
