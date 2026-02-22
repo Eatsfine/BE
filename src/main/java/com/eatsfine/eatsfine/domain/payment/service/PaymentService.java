@@ -323,7 +323,7 @@ public class PaymentService {
         }
 
         private PaymentStatus parsePaymentStatus(String status) {
-                if (status == null || status.isEmpty()) {
+                if (status == null || status.isBlank()) {
                         return null;
                 }
                 try {
