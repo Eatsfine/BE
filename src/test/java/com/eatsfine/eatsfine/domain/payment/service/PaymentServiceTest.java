@@ -20,6 +20,7 @@ import com.eatsfine.eatsfine.domain.user.entity.User;
 import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
+import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -138,21 +139,7 @@ class PaymentServiceTest {
                                 10000, 10000, "DONE",
                                 java.time.OffsetDateTime.now(), java.time.OffsetDateTime.now(),
                                 false, null, 10000, 0,
-                                easyPay, new TossPaymentResponse.Receipt("http://receipt.url"));// TossPaymentResponse
-                                                                                                // record 생성자가 많아서
-                                                                                                // 필드에 맞게 넣어줌 (가정)
-                                                                                                // 실제 record 구조에 따라 맞춰야
-                                                                                                // 함. 위 내용은 예시.
-                                                                                                // TossPaymentResponse가
-                                                                                                // record이므로 생성자
-                                                                                                // 파라미터 순서 중요.
-                                                                                                // 여기서는 Mocking을 하거나,
-                                                                                                // 필드가 많으면 빌더나 생성자를
-                                                                                                // 확인해야 함.
-                                                                                                // TossPaymentService가
-                                                                                                // Mock이므로 response
-                                                                                                // 리턴값만 잘 맞춰주면 됨.
-
+                                easyPay, new TossPaymentResponse.Receipt("http://receipt.url"));
                 given(paymentRepository.findByOrderId(orderId)).willReturn(Optional.of(payment));
                 given(tossPaymentService.confirm(any(PaymentConfirmDTO.class))).willReturn(tossResponse);
 
@@ -233,7 +220,6 @@ class PaymentServiceTest {
         void getPaymentList_Customer_success() {
                 // given
                 User user = User.builder().id(1L).role(Role.ROLE_CUSTOMER).build();
-                // Pageable pageable = PageRequest.of(0, 10);
 
                 Payment payment = Payment.builder()
                                 .id(1L)
@@ -338,5 +324,129 @@ class PaymentServiceTest {
                                 .isInstanceOf(PaymentException.class)
                                 .extracting("code")
                                 .isEqualTo(PaymentErrorStatus._PAYMENT_ACCESS_DENIED);
+        }
+
+        @Test
+        @DisplayName("결제 상세 조회 성공 - 예약자 본인 조회")
+        void getPaymentDetail_success_asBooker() {
+                // given
+                String email = "booker@example.com";
+                User booker = User.builder().id(1L).role(Role.ROLE_CUSTOMER).build();
+                User storeOwner = User.builder().id(2L).role(Role.ROLE_OWNER).build();
+
+                Store store = Store.builder().id(1L).storeName("Test Store").owner(storeOwner).build();
+                Booking booking = Booking.builder().id(10L).user(booker).store(store).build();
+                Payment payment = Payment.builder()
+                                .id(1L)
+                                .booking(booking)
+                                .amount(BigDecimal.valueOf(15000))
+                                .paymentStatus(PaymentStatus.COMPLETED)
+                                .paymentType(PaymentType.DEPOSIT)
+                                .paymentMethod(PaymentMethod.SIMPLE_PAYMENT)
+                                .paymentProvider(PaymentProvider.TOSS)
+                                .requestedAt(LocalDateTime.of(2026, 2, 22, 12, 0))
+                                .approvedAt(LocalDateTime.of(2026, 2, 22, 12, 1))
+                                .receiptUrl("http://receipt.url")
+                                .build();
+
+                given(userRepository.findByEmail(email)).willReturn(Optional.of(booker));
+                given(paymentRepository.findByIdWithDetails(1L)).willReturn(Optional.of(payment));
+
+                // when
+                PaymentResponseDTO.PaymentDetailResultDTO response = paymentService.getPaymentDetail(1L, email);
+
+                // then
+                assertThat(response.paymentId()).isEqualTo(1L);
+                assertThat(response.bookingId()).isEqualTo(10L);
+                assertThat(response.storeName()).isEqualTo("Test Store");
+                assertThat(response.amount()).isEqualTo(BigDecimal.valueOf(15000));
+                assertThat(response.status()).isEqualTo("COMPLETED");
+                assertThat(response.paymentMethod()).isEqualTo("SIMPLE_PAYMENT");
+                assertThat(response.paymentProvider()).isEqualTo("TOSS");
+                assertThat(response.receiptUrl()).isEqualTo("http://receipt.url");
+        }
+
+        @Test
+        @DisplayName("결제 상세 조회 성공 - 상점 주인 조회")
+        void getPaymentDetail_success_asStoreOwner() {
+                // given
+                String email = "owner@example.com";
+                User booker = User.builder().id(1L).role(Role.ROLE_CUSTOMER).build();
+                User storeOwner = User.builder().id(2L).role(Role.ROLE_OWNER).build();
+
+                Store store = Store.builder().id(1L).storeName("Owner Store").owner(storeOwner).build();
+                Booking booking = Booking.builder().id(20L).user(booker).store(store).build();
+                Payment payment = Payment.builder()
+                                .id(5L)
+                                .booking(booking)
+                                .amount(BigDecimal.valueOf(20000))
+                                .paymentStatus(PaymentStatus.COMPLETED)
+                                .paymentType(PaymentType.DEPOSIT)
+                                .paymentMethod(PaymentMethod.SIMPLE_PAYMENT)
+                                .paymentProvider(PaymentProvider.TOSS)
+                                .requestedAt(LocalDateTime.of(2026, 2, 22, 15, 0))
+                                .approvedAt(LocalDateTime.of(2026, 2, 22, 15, 1))
+                                .build();
+
+                given(userRepository.findByEmail(email)).willReturn(Optional.of(storeOwner));
+                given(paymentRepository.findByIdWithDetails(5L)).willReturn(Optional.of(payment));
+
+                // when
+                PaymentResponseDTO.PaymentDetailResultDTO response = paymentService.getPaymentDetail(5L, email);
+
+                // then
+                assertThat(response.paymentId()).isEqualTo(5L);
+                assertThat(response.storeName()).isEqualTo("Owner Store");
+                assertThat(response.amount()).isEqualTo(BigDecimal.valueOf(20000));
+                assertThat(response.paymentMethod()).isEqualTo("SIMPLE_PAYMENT");
+        }
+
+        @Test
+        @DisplayName("결제 내역 조회 - status 필터 적용 (Customer)")
+        void getPaymentList_Customer_withStatusFilter() {
+                // given
+                User user = User.builder().id(1L).role(Role.ROLE_CUSTOMER).build();
+
+                Payment payment = Payment.builder()
+                                .id(1L)
+                                .booking(Booking.builder().id(1L)
+                                                .store(Store.builder().storeName("Filtered Store").build())
+                                                .build())
+                                .amount(BigDecimal.valueOf(10000))
+                                .paymentStatus(PaymentStatus.COMPLETED)
+                                .paymentType(PaymentType.DEPOSIT)
+                                .paymentMethod(PaymentMethod.SIMPLE_PAYMENT)
+                                .paymentProvider(PaymentProvider.TOSS)
+                                .approvedAt(LocalDateTime.now())
+                                .build();
+
+                Page<Payment> paymentPage = new PageImpl<>(List.of(payment));
+
+                given(userRepository.findByEmail("customer")).willReturn(Optional.of(user));
+                given(paymentRepository.findAllByUserIdAndStatusWithDetails(eq(1L), eq(PaymentStatus.COMPLETED),
+                                any(Pageable.class)))
+                                .willReturn(paymentPage);
+
+                // when
+                PaymentResponseDTO.PaymentListResponseDTO response = paymentService.getPaymentList("customer", 1, 10,
+                                "COMPLETED");
+
+                // then
+                assertThat(response.payments()).hasSize(1);
+                assertThat(response.payments().get(0).status()).isEqualTo("COMPLETED");
+                verify(paymentRepository, times(1)).findAllByUserIdAndStatusWithDetails(eq(1L),
+                                eq(PaymentStatus.COMPLETED), any(Pageable.class));
+        }
+
+        @Test
+        @DisplayName("결제 내역 조회 실패 - 잘못된 status 문자열")
+        void getPaymentList_fail_invalidStatus() {
+                // given
+                User user = User.builder().id(1L).role(Role.ROLE_CUSTOMER).build();
+                given(userRepository.findByEmail("customer")).willReturn(Optional.of(user));
+
+                // when & then
+                assertThatThrownBy(() -> paymentService.getPaymentList("customer", 1, 10, "INVALID_STATUS"))
+                                .isInstanceOf(GeneralException.class);
         }
 }

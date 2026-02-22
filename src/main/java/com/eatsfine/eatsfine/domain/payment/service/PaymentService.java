@@ -177,33 +177,19 @@ public class PaymentService {
 
                 Pageable pageable = PageRequest.of(pageNumber, size);
 
+                PaymentStatus paymentStatus = parsePaymentStatus(status);
+
                 Page<Payment> paymentPage;
                 if (user.getRole() == Role.ROLE_OWNER) {
-                        if (status != null && !status.isEmpty()) {
-                                PaymentStatus paymentStatus;
-                                try {
-                                        paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
-                                } catch (IllegalArgumentException e) {
-                                        throw new GeneralException(ErrorStatus._BAD_REQUEST);
-                                }
-                                paymentPage = paymentRepository.findAllByOwnerIdAndStatusWithDetails(user.getId(),
-                                                paymentStatus, pageable);
-                        } else {
-                                paymentPage = paymentRepository.findAllByOwnerIdWithDetails(user.getId(), pageable);
-                        }
+                        paymentPage = (paymentStatus != null)
+                                        ? paymentRepository.findAllByOwnerIdAndStatusWithDetails(user.getId(),
+                                                        paymentStatus, pageable)
+                                        : paymentRepository.findAllByOwnerIdWithDetails(user.getId(), pageable);
                 } else {
-                        if (status != null && !status.isEmpty()) {
-                                PaymentStatus paymentStatus;
-                                try {
-                                        paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
-                                } catch (IllegalArgumentException e) {
-                                        throw new GeneralException(ErrorStatus._BAD_REQUEST);
-                                }
-                                paymentPage = paymentRepository.findAllByUserIdAndStatusWithDetails(user.getId(),
-                                                paymentStatus, pageable);
-                        } else {
-                                paymentPage = paymentRepository.findAllByUserIdWithDetails(user.getId(), pageable);
-                        }
+                        paymentPage = (paymentStatus != null)
+                                        ? paymentRepository.findAllByUserIdAndStatusWithDetails(user.getId(),
+                                                        paymentStatus, pageable)
+                                        : paymentRepository.findAllByUserIdWithDetails(user.getId(), pageable);
                 }
 
                 List<PaymentResponseDTO.PaymentHistoryResultDTO> payments = paymentPage.getContent().stream()
@@ -333,6 +319,17 @@ public class PaymentService {
                 } else if (targetStatus == PaymentStatus.REFUNDED) {
                         payment.cancelPayment();
                         log.info("Webhook processed: Payment {} status updated to REFUNDED", data.orderId());
+                }
+        }
+
+        private PaymentStatus parsePaymentStatus(String status) {
+                if (status == null || status.isEmpty()) {
+                        return null;
+                }
+                try {
+                        return PaymentStatus.valueOf(status.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                        throw new GeneralException(ErrorStatus._BAD_REQUEST);
                 }
         }
 }

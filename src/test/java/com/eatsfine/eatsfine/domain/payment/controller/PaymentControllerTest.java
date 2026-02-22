@@ -3,7 +3,11 @@ package com.eatsfine.eatsfine.domain.payment.controller;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
 import com.eatsfine.eatsfine.domain.payment.dto.response.PaymentResponseDTO;
+import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
 import com.eatsfine.eatsfine.domain.payment.service.PaymentService;
+import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import com.eatsfine.eatsfine.global.auth.CustomAccessDeniedHandler;
 import com.eatsfine.eatsfine.global.auth.CustomAuthenticationEntryPoint;
 import com.eatsfine.eatsfine.global.config.jwt.JwtAuthenticationFilter;
@@ -28,7 +32,6 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
@@ -153,7 +156,7 @@ class PaymentControllerTest {
                 PaymentResponseDTO.PaymentListResponseDTO response = new PaymentResponseDTO.PaymentListResponseDTO(
                                 Collections.singletonList(history), pagination);
 
-                given(paymentService.getPaymentList(anyString(), any(Integer.class), any(Integer.class), any()))
+                given(paymentService.getPaymentList(eq("user"), any(Integer.class), any(Integer.class), any()))
                                 .willReturn(response);
 
                 // when & then
@@ -175,7 +178,7 @@ class PaymentControllerTest {
                                 paymentId, 1L, "Store Name", "CARD", "TOSS", BigDecimal.valueOf(10000), "DEPOSIT",
                                 "COMPLETED", LocalDateTime.now(), LocalDateTime.now(), "http://receipt.url", null);
 
-                given(paymentService.getPaymentDetail(eq(paymentId), anyString())).willReturn(response);
+                given(paymentService.getPaymentDetail(eq(paymentId), eq("user"))).willReturn(response);
 
                 // when & then
                 mockMvc.perform(get("/api/v1/payments/{paymentId}", paymentId)
@@ -183,5 +186,73 @@ class PaymentControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.isSuccess").value(true))
                                 .andExpect(jsonPath("$.result.paymentId").value(paymentId));
+        }
+
+        // ===== 예외 케이스 테스트 =====
+
+        @Test
+        @DisplayName("결제 요청 실패 - bookingId가 null이면 400 Bad Request")
+        void requestPayment_fail_validationError() throws Exception {
+                // given - bookingId가 null인 잘못된 요청
+                String invalidRequest = "{\"bookingId\": null}";
+
+                // when & then
+                mockMvc.perform(post("/api/v1/payments/request")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidRequest))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.isSuccess").value(false));
+        }
+
+        @Test
+        @DisplayName("결제 승인 실패 - 필수 파라미터 누락 시 400 Bad Request")
+        void confirmPayment_fail_validationError() throws Exception {
+                // given - paymentKey, orderId, amount 모두 null
+                String invalidRequest = "{}";
+
+                // when & then
+                mockMvc.perform(post("/api/v1/payments/confirm")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(invalidRequest))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.isSuccess").value(false));
+        }
+
+        @Test
+        @DisplayName("결제 요청 실패 - 서비스에서 PaymentException 발생 시 에러 응답")
+        void requestPayment_fail_serviceException() throws Exception {
+                // given
+                PaymentRequestDTO.RequestPaymentDTO request = new PaymentRequestDTO.RequestPaymentDTO(999L);
+
+                given(paymentService.requestPayment(any(PaymentRequestDTO.RequestPaymentDTO.class)))
+                                .willThrow(new PaymentException(PaymentErrorStatus._BOOKING_NOT_FOUND));
+
+                // when & then
+                mockMvc.perform(post("/api/v1/payments/request")
+                                .with(csrf())
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request)))
+                                .andExpect(status().isNotFound())
+                                .andExpect(jsonPath("$.isSuccess").value(false))
+                                .andExpect(jsonPath("$.code").value("BOOKING4001"));
+        }
+
+        @Test
+        @WithMockUser(roles = {}) // 인증되지 않은 사용자 시뮬레이션 (빈 권한)
+        @DisplayName("결제 내역 조회 실패 - 서비스에서 UserException 발생 시 에러 응답")
+        void getPaymentList_fail_serviceException() throws Exception {
+                // given
+                given(paymentService.getPaymentList(eq("user"), any(Integer.class), any(Integer.class), any()))
+                                .willThrow(new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+
+                // when & then
+                mockMvc.perform(get("/api/v1/payments")
+                                .param("page", "1")
+                                .param("limit", "10")
+                                .contentType(MediaType.APPLICATION_JSON))
+                                .andExpect(status().isBadRequest())
+                                .andExpect(jsonPath("$.isSuccess").value(false));
         }
 }

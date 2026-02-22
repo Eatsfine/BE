@@ -22,13 +22,13 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
         Page<Payment> findAllByUserIdAndStatusWithDetails(@Param("userId") Long userId,
                         @Param("status") PaymentStatus status, Pageable pageable);
 
-        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store s WHERE s.owner.id = :userId", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b JOIN b.store s WHERE s.owner.id = :userId")
-        Page<Payment> findAllByOwnerIdWithDetails(@Param("userId") Long userId, Pageable pageable);
+        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store s WHERE s.owner.id = :ownerId", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b JOIN b.store s WHERE s.owner.id = :ownerId")
+        Page<Payment> findAllByOwnerIdWithDetails(@Param("ownerId") Long ownerId, Pageable pageable);
 
-        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store s WHERE s.owner.id = :userId AND p.paymentStatus = :status", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b JOIN b.store s WHERE s.owner.id = :userId AND p.paymentStatus = :status")
-        Page<Payment> findAllByOwnerIdAndStatusWithDetails(@Param("userId") Long userId,
+        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store s WHERE s.owner.id = :ownerId AND p.paymentStatus = :status", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b JOIN b.store s WHERE s.owner.id = :ownerId AND p.paymentStatus = :status")
+        Page<Payment> findAllByOwnerIdAndStatusWithDetails(@Param("ownerId") Long ownerId,
                         @Param("status") PaymentStatus status, Pageable pageable);
 
-        @Query("SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store JOIN FETCH b.user WHERE p.id = :paymentId")
+        @Query("SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store s JOIN FETCH s.owner JOIN FETCH b.user WHERE p.id = :paymentId")
         Optional<Payment> findByIdWithDetails(@Param("paymentId") Long paymentId);
 }
