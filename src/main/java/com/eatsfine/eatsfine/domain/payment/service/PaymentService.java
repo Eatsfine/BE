@@ -12,11 +12,16 @@ import com.eatsfine.eatsfine.domain.payment.enums.PaymentMethod;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentProvider;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentStatus;
 import com.eatsfine.eatsfine.domain.payment.enums.PaymentType;
+import com.eatsfine.eatsfine.domain.user.entity.User;
+import com.eatsfine.eatsfine.domain.user.enums.Role;
 import com.eatsfine.eatsfine.domain.payment.repository.PaymentRepository;
 import com.eatsfine.eatsfine.domain.payment.exception.PaymentException;
 import com.eatsfine.eatsfine.domain.payment.status.PaymentErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.code.status.ErrorStatus;
 import com.eatsfine.eatsfine.global.apiPayload.exception.GeneralException;
+import com.eatsfine.eatsfine.domain.user.repository.UserRepository;
+import com.eatsfine.eatsfine.domain.user.exception.UserException;
+import com.eatsfine.eatsfine.domain.user.status.UserErrorStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -38,6 +43,7 @@ public class PaymentService {
 
         private final PaymentRepository paymentRepository;
         private final BookingRepository bookingRepository;
+        private final UserRepository userRepository;
         private final TossPaymentService tossPaymentService;
 
         @Transactional
@@ -122,7 +128,6 @@ public class PaymentService {
                         log.info("Booking confirmed for OrderID: {}", dto.orderId());
                 }
 
-
                 log.info("Payment confirmed for OrderID: {}", dto.orderId());
 
                 return new PaymentResponseDTO.PaymentSuccessResultDTO(
@@ -135,7 +140,6 @@ public class PaymentService {
                                 payment.getPaymentProvider() != null ? payment.getPaymentProvider().name() : null,
                                 payment.getReceiptUrl());
         }
-
 
         @Transactional(noRollbackFor = GeneralException.class)
         public PaymentResponseDTO.CancelPaymentResultDTO cancelPayment(String paymentKey,
@@ -162,28 +166,30 @@ public class PaymentService {
         }
 
         @Transactional(readOnly = true)
-        public PaymentResponseDTO.PaymentListResponseDTO getPaymentList(Long userId, Integer page, Integer limit,
+        public PaymentResponseDTO.PaymentListResponseDTO getPaymentList(String email, Integer page, Integer limit,
                         String status) {
-                // limit 기본값 처리 (만약 null이면 10)
-                int size = (limit != null) ? limit : 10;
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+                // limit 기본값 처리 (null이거나 0 이하이면 10)
+                int size = (limit != null && limit > 0) ? limit : 10;
                 // page 기본값 처리 (만약 null이면 1, 0보다 작으면 1로 보정). Spring Data는 0-based index이므로 -1
                 int pageNumber = (page != null && page > 0) ? page - 1 : 0;
 
                 Pageable pageable = PageRequest.of(pageNumber, size);
 
+                PaymentStatus paymentStatus = parsePaymentStatus(status);
+
                 Page<Payment> paymentPage;
-                if (status != null && !status.isEmpty()) {
-                        PaymentStatus paymentStatus;
-                        try {
-                                paymentStatus = PaymentStatus.valueOf(status.toUpperCase());
-                        } catch (IllegalArgumentException e) {
-                                // 유효하지 않은 status가 들어오면 BadRequest 예외 발생
-                                throw new GeneralException(ErrorStatus._BAD_REQUEST);
-                        }
-                        paymentPage = paymentRepository.findAllByBooking_User_IdAndPaymentStatus(userId, paymentStatus,
-                                        pageable);
+                if (user.getRole() == Role.ROLE_OWNER) {
+                        paymentPage = (paymentStatus != null)
+                                        ? paymentRepository.findAllByOwnerIdAndStatusWithDetails(user.getId(),
+                                                        paymentStatus, pageable)
+                                        : paymentRepository.findAllByOwnerIdWithDetails(user.getId(), pageable);
                 } else {
-                        paymentPage = paymentRepository.findAllByBooking_User_Id(userId, pageable);
+                        paymentPage = (paymentStatus != null)
+                                        ? paymentRepository.findAllByUserIdAndStatusWithDetails(user.getId(),
+                                                        paymentStatus, pageable)
+                                        : paymentRepository.findAllByUserIdWithDetails(user.getId(), pageable);
                 }
 
                 List<PaymentResponseDTO.PaymentHistoryResultDTO> payments = paymentPage.getContent().stream()
@@ -211,9 +217,18 @@ public class PaymentService {
         }
 
         @Transactional(readOnly = true)
-        public PaymentResponseDTO.PaymentDetailResultDTO getPaymentDetail(Long paymentId) {
-                Payment payment = paymentRepository.findById(paymentId)
+        public PaymentResponseDTO.PaymentDetailResultDTO getPaymentDetail(Long paymentId, String email) {
+                User user = userRepository.findByEmail(email)
+                                .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
+                Payment payment = paymentRepository.findByIdWithDetails(paymentId)
                                 .orElseThrow(() -> new PaymentException(PaymentErrorStatus._PAYMENT_NOT_FOUND));
+
+                boolean isBooker = payment.getBooking().getUser().getId().equals(user.getId());
+                boolean isStoreOwner = payment.getBooking().getStore().getOwner().getId().equals(user.getId());
+
+                if (!isBooker && !isStoreOwner) {
+                        throw new PaymentException(PaymentErrorStatus._PAYMENT_ACCESS_DENIED);
+                }
 
                 return new PaymentResponseDTO.PaymentDetailResultDTO(
                                 payment.getId(),
@@ -304,6 +319,17 @@ public class PaymentService {
                 } else if (targetStatus == PaymentStatus.REFUNDED) {
                         payment.cancelPayment();
                         log.info("Webhook processed: Payment {} status updated to REFUNDED", data.orderId());
+                }
+        }
+
+        private PaymentStatus parsePaymentStatus(String status) {
+                if (status == null || status.isBlank()) {
+                        return null;
+                }
+                try {
+                        return PaymentStatus.valueOf(status.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                        throw new GeneralException(ErrorStatus._BAD_REQUEST);
                 }
         }
 }
