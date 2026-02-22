@@ -170,8 +170,8 @@ public class PaymentService {
                         String status) {
                 User user = userRepository.findByEmail(email)
                                 .orElseThrow(() -> new UserException(UserErrorStatus.MEMBER_NOT_FOUND));
-                // limit 기본값 처리 (만약 null이면 10)
-                int size = (limit != null) ? limit : 10;
+                // limit 기본값 처리 (null이거나 0 이하이면 10)
+                int size = (limit != null && limit > 0) ? limit : 10;
                 // page 기본값 처리 (만약 null이면 1, 0보다 작으면 1로 보정). Spring Data는 0-based index이므로 -1
                 int pageNumber = (page != null && page > 0) ? page - 1 : 0;
 

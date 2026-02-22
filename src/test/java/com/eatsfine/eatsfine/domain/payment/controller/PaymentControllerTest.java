@@ -236,11 +236,10 @@ class PaymentControllerTest {
                                 .content(objectMapper.writeValueAsString(request)))
                                 .andExpect(status().isNotFound())
                                 .andExpect(jsonPath("$.isSuccess").value(false))
-                                .andExpect(jsonPath("$.code").value("BOOKING4001"));
+                                .andExpect(jsonPath("$.code").value(PaymentErrorStatus._BOOKING_NOT_FOUND.getCode()));
         }
 
         @Test
-        @WithMockUser(roles = {}) // 인증되지 않은 사용자 시뮬레이션 (빈 권한)
         @DisplayName("결제 내역 조회 실패 - 서비스에서 UserException 발생 시 에러 응답")
         void getPaymentList_fail_serviceException() throws Exception {
                 // given

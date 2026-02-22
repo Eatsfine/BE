@@ -15,10 +15,10 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
         Optional<Payment> findByPaymentKey(String paymentKey);
 
-        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store WHERE b.user.id = :userId", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b WHERE b.user.id = :userId")
+        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store WHERE b.user.id = :userId", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b JOIN b.store WHERE b.user.id = :userId")
         Page<Payment> findAllByUserIdWithDetails(@Param("userId") Long userId, Pageable pageable);
 
-        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store WHERE b.user.id = :userId AND p.paymentStatus = :status", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b WHERE b.user.id = :userId AND p.paymentStatus = :status")
+        @Query(value = "SELECT p FROM Payment p JOIN FETCH p.booking b JOIN FETCH b.store WHERE b.user.id = :userId AND p.paymentStatus = :status", countQuery = "SELECT COUNT(p) FROM Payment p JOIN p.booking b JOIN b.store WHERE b.user.id = :userId AND p.paymentStatus = :status")
         Page<Payment> findAllByUserIdAndStatusWithDetails(@Param("userId") Long userId,
                         @Param("status") PaymentStatus status, Pageable pageable);
 
