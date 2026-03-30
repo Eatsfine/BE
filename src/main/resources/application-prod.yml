@@ -1,27 +1,20 @@
 server:
-  port: 8080
-  profile: local
+  forward-headers-strategy: native
+  profile: prod
 
 spring:
   config:
     activate:
-      on-profile: local
+      on-profile: prod
   datasource:
-    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:eatsfine_local}?useSSL=false&allowPublicKeyRetrieval=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul&zeroDateTimeBehavior=convertToNull
-    username: ${DB_USERNAME:user}
-    password: ${DB_PASSWORD:password}
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
   security:
     oauth2:
       client:
@@ -32,7 +25,7 @@ spring:
             scope:
               - email
               - profile
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://eatsfine.co.kr/login/oauth2/code/google"
             authorization-grant-type: authorization_code
           kakao:
             client-id: ${KAKAO_CLIENT_ID}
@@ -41,13 +34,14 @@ spring:
               - profile_nickname
               - profile_image
               - account_email
-            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            redirect-uri: "https://eatsfine.co.kr/login/oauth2/code/kakao"
             authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
             client-name: Kakao
             provider: kakao
         provider:
           google:
-            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
             token-uri: https://oauth2.googleapis.com/token
             user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
           kakao:
@@ -55,6 +49,13 @@ spring:
             token-uri: https://kauth.kakao.com/oauth/token
             user-info-uri: https://kapi.kakao.com/v2/user/me
             user-name-attribute: id
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
 
 payment:
   toss:

@@ -53,3 +53,5 @@ build.gradle
 
 src/main/resources/static/payment-test.html
 src/main/resources/static/payment-success.html
+
+.env
