@@ -1,5 +1,0 @@
-package com.eatsfine.eatsfine.domain.user.enums;
-
-public enum Role {
-    ROLE_CUSTOMER, ROLE_OWNER
-}
