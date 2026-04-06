@@ -1,0 +1,75 @@
+server:
+  forward-headers-strategy: native
+  profile: prod
+
+spring:
+  config:
+    activate:
+      on-profile: prod
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            scope:
+              - email
+              - profile
+            redirect-uri: "https://eatsfine.co.kr/login/oauth2/code/google"
+            authorization-grant-type: authorization_code
+          kakao:
+            client-id: ${KAKAO_CLIENT_ID}
+            client-secret: ${KAKAO_CLIENT_SECRET}
+            scope:
+              - profile_nickname
+              - profile_image
+              - account_email
+            redirect-uri: "https://eatsfine.co.kr/login/oauth2/code/kakao"
+            authorization-grant-type: authorization_code
+            client-authentication-method: client_secret_post
+            client-name: Kakao
+            provider: kakao
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+          kakao:
+            authorization-uri: https://kauth.kakao.com/oauth/authorize
+            token-uri: https://kauth.kakao.com/oauth/token
+            user-info-uri: https://kapi.kakao.com/v2/user/me
+            user-name-attribute: id
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+payment:
+  toss:
+    widget-secret-key: ${TOSS_WIDGET_SECRET_KEY}
+
+cloud:
+  aws:
+    region: ${AWS_REGION}
+    s3:
+      bucket: ${AWS_S3_BUCKET}
+      base-url: ${AWS_S3_BASE_URL}
+
+api:
+  service-key: ${BIZ_API_KEY}
+
+jwt:
+  secret: ${SECRET_KEY}
