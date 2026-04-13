@@ -171,6 +171,7 @@ public class BookingQueryServiceImpl implements BookingQueryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BookingResponseDTO.BookingPreviewListDTO getBookingList(Long userId, String status, Integer page) {
         PageRequest pageRequest = PageRequest.of(page, 10, Sort.by("bookingDate").descending());
 
