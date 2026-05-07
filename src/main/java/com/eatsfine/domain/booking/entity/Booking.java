@@ -104,10 +104,12 @@ public class Booking extends BaseEntity {
         this.status = BookingStatus.CONFIRMED;
     }
 
-    public void cancel(String cancelReason)
-    {
+    public void cancel(String cancelReason) {
         this.status = BookingStatus.CANCELED;
         this.cancelReason = cancelReason;
+        // 유니크 제약 해제: 취소된 예약의 테이블 점유를 풀어 동일 시간대 재예약 허용
+        // orphanRemoval = true이므로 리스트 비우면 DB에서 자동 삭제됨
+        this.bookingTables.clear();
     }
 
     //예약과 관련된 결제 중 결제 완료된 결제키 조회
