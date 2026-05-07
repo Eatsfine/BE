@@ -32,6 +32,7 @@ import com.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.domain.user.status.UserErrorStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -126,8 +127,14 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .divide(hundred, 0, RoundingMode.HALF_UP);
         booking.setDepositAmount(totalDeposit);
 
-        Booking savedBooking = bookingRepository.save(booking);
-        bookingRepository.flush();
+        Booking savedBooking;
+        try {
+            savedBooking = bookingRepository.save(booking);
+            bookingRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            // uq_booking_table_slot 유니크 제약 위반 — 동시 요청으로 동일 슬롯이 선점된 경우
+            throw new BookingException(BookingErrorStatus._ALREADY_RESERVED_TABLE);
+        }
 
         // 결제 대기 데이터 생성 (내부 서비스 호출)
         PaymentRequestDTO.RequestPaymentDTO paymentRequest = new PaymentRequestDTO.RequestPaymentDTO(savedBooking.getId());
