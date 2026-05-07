@@ -34,16 +34,18 @@ public class BookingScheduler {
 
         log.info("스케줄러 실행: 만료된 PENDING 예약 {}건 처리 시작", expiredIds.size());
 
-        int successCount = 0;
+        int canceledCount = 0;
+        int skippedCount = 0;
         for (Long id : expiredIds) {
             try {
-                bookingCancelExecutor.cancelIfPending(id);
-                successCount++;
+                if (bookingCancelExecutor.cancelIfPending(id)) canceledCount++;
+                else skippedCount++;
             } catch (Exception e) {
                 log.warn("예약 ID {} 자동 취소 실패 — 다음 실행에서 재시도: {}", id, e.getMessage());
             }
         }
 
-        log.info("스케줄러 완료: {}건 성공 / {}건 시도", successCount, expiredIds.size());
+        log.info("스케줄러 완료: 취소 {}건 / 스킵 {}건 / 시도 {}건",
+                canceledCount, skippedCount, expiredIds.size());
     }
 }
