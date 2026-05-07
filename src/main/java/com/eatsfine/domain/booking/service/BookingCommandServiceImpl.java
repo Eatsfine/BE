@@ -167,8 +167,11 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
-        //이미 예약이 확정됐는지 최종 확인
-        if(booking.getStatus() == BookingStatus.CONFIRMED) {
+        if (booking.getStatus() == BookingStatus.CANCELED) {
+            throw new BookingException(BookingErrorStatus._ALREADY_CANCELED);
+        }
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
             throw new BookingException(BookingErrorStatus._ALREADY_CONFIRMED);
         }
 
