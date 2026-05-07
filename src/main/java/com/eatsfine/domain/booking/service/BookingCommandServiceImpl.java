@@ -132,8 +132,12 @@ public class BookingCommandServiceImpl implements BookingCommandService{
             savedBooking = bookingRepository.save(booking);
             bookingRepository.flush();
         } catch (DataIntegrityViolationException e) {
-            // uq_booking_table_slot 유니크 제약 위반 — 동시 요청으로 동일 슬롯이 선점된 경우
-            throw new BookingException(BookingErrorStatus._ALREADY_RESERVED_TABLE);
+            // uq_booking_table_slot 위반만 도메인 예외로 변환 — FK/NOT NULL 등 다른 위반은 원본 그대로 전파
+            String cause = e.getMostSpecificCause().getMessage();
+            if (cause != null && cause.contains("uq_booking_table_slot")) {
+                throw new BookingException(BookingErrorStatus._ALREADY_RESERVED_TABLE, e);
+            }
+            throw e;
         }
 
         // 결제 대기 데이터 생성 (내부 서비스 호출)
