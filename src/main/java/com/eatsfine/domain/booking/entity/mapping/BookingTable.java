@@ -17,7 +17,7 @@ import java.time.LocalTime;
     name = "booking_table",
     uniqueConstraints = @UniqueConstraint(
         name = "uq_booking_table_slot",
-        columnNames = {"store_table_id", "booking_date", "booking_time"}
+        columnNames = {"store_table_id", "booking_date", "booking_time", "is_active"}
     )
 )
 public class BookingTable {
@@ -40,4 +40,13 @@ public class BookingTable {
 
     @Column(name = "booking_time", nullable = false)
     private LocalTime bookingTime;
+
+    // true = 활성 예약 슬롯 (유니크 제약 적용)
+    // null = 취소된 슬롯 — MySQL은 NULL을 유니크 인덱스에서 중복으로 보지 않으므로 동일 시간대 재예약 허용
+    @Column(name = "is_active")
+    private Boolean isActive = true;
+
+    public void deactivate() {
+        this.isActive = null;
+    }
 }

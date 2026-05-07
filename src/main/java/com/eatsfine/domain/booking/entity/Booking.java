@@ -107,9 +107,9 @@ public class Booking extends BaseEntity {
     public void cancel(String cancelReason) {
         this.status = BookingStatus.CANCELED;
         this.cancelReason = cancelReason;
-        // 유니크 제약 해제: 취소된 예약의 테이블 점유를 풀어 동일 시간대 재예약 허용
-        // orphanRemoval = true이므로 리스트 비우면 DB에서 자동 삭제됨
-        this.bookingTables.clear();
+        // BookingTable 행은 보존하되 is_active를 null로 설정하여 슬롯만 해제
+        // MySQL 유니크 인덱스는 NULL을 중복으로 취급하지 않으므로 동일 시간대 재예약 허용
+        this.bookingTables.forEach(BookingTable::deactivate);
     }
 
     //예약과 관련된 결제 중 결제 완료된 결제키 조회
