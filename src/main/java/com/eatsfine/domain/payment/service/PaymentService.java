@@ -121,7 +121,7 @@ public class PaymentService {
                         // 비관적 락으로 재조회하여 스케줄러 / 다른 스레드와의 동시 수정 방지
                         Booking lockedBooking = bookingRepository.findByIdWithLock(booking.getId())
                                 .orElse(null);
-                        if (lockedBooking != null && lockedBooking.getStatus() != BookingStatus.CONFIRMED) {
+                        if (lockedBooking != null && lockedBooking.getStatus() == BookingStatus.PENDING) {
                                 lockedBooking.confirm();
                                 log.info("Booking confirmed for OrderID: {}", dto.orderId());
                         }
