@@ -65,6 +65,9 @@ dependencies {
 
     // WebFlux
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Flyway (MySQL)
+    implementation 'org.flywaydb:flyway-mysql'
 }
 // --- QueryDSL ---
 def generated = 'build/generated/sources/annotationProcessor/java/main'

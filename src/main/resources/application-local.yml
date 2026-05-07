@@ -17,11 +17,15 @@ spring:
       port: ${REDIS_PORT}
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
     properties:
       hibernate:
         format_sql: true
+  flyway:
+    enabled: true
+    baseline-on-migrate: true  # 기존 DB(Flyway 미적용 상태)를 version 0 베이스라인으로 처리
+    baseline-version: 0
   security:
     oauth2:
       client:
