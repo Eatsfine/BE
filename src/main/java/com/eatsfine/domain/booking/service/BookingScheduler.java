@@ -1,13 +1,9 @@
 package com.eatsfine.domain.booking.service;
 
-import com.eatsfine.domain.booking.entity.Booking;
-import com.eatsfine.domain.booking.enums.BookingStatus;
-import com.eatsfine.domain.booking.repository.BookingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,36 +13,37 @@ import java.util.List;
 @Slf4j
 public class BookingScheduler {
 
-    private final BookingRepository bookingRepository;
+    private final BookingCancelExecutor bookingCancelExecutor;
 
     /**
      * 결제 미완료(PENDING) 상태로 10분이 경과한 예약을 주기적으로 취소 처리
      * cron: 0분부터 10분 단위로 실행 (0, 10, 20, 30, 40, 50분)
+     *
+     * 각 예약을 독립 트랜잭션(REQUIRES_NEW)으로 처리하여
+     * 낙관적 락 충돌 등 일부 실패가 전체 배치에 영향을 주지 않음
      */
     @Scheduled(cron = "0 0/10 * * * *")
-    @Transactional
     public void cleanupExpiredPendingBookings() {
         LocalDateTime threshold = LocalDateTime.now().minusMinutes(10);
 
-        // 1. 10분 전보다 이전에 생성되었고, 여전히 PENDING인 예약 조회
-        List<Booking> expiredBookings = bookingRepository.findAllByStatusAndCreatedAtBefore(
-                BookingStatus.PENDING,
-                threshold
-        );
+        List<Long> expiredIds = bookingCancelExecutor.findExpiredPendingIds(threshold);
 
-        if (expiredBookings.isEmpty()) {
+        if (expiredIds.isEmpty()) {
             return;
         }
 
-        log.info("스케줄러 실행: 만료된 PENDING 예약 {}건을 취소 처리합니다.", expiredBookings.size());
+        log.info("스케줄러 실행: 만료된 PENDING 예약 {}건 처리 시작", expiredIds.size());
 
-        // 2. 상태 변경 및 로그 기록
-        expiredBookings.forEach(booking -> {
-            // 조회 후 상태가 변경되었을 수 있으므로 PENDING 여부를 재확인
-            if (booking.getStatus() == BookingStatus.PENDING) {
-                booking.cancel("결제 시간 초과로 인한 자동 취소");
+        int successCount = 0;
+        for (Long id : expiredIds) {
+            try {
+                bookingCancelExecutor.cancelIfPending(id);
+                successCount++;
+            } catch (Exception e) {
+                log.warn("예약 ID {} 자동 취소 실패 — 다음 실행에서 재시도: {}", id, e.getMessage());
             }
-        });
+        }
 
+        log.info("스케줄러 완료: {}건 성공 / {}건 시도", successCount, expiredIds.size());
     }
 }
