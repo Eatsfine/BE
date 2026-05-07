@@ -1,6 +1,7 @@
 package com.eatsfine.domain.payment.service;
 
 import com.eatsfine.domain.booking.entity.Booking;
+import com.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.domain.booking.repository.BookingRepository;
 import com.eatsfine.domain.payment.dto.request.PaymentWebhookDTO;
 import com.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
@@ -115,11 +116,15 @@ public class PaymentService {
                                 provider,
                                 response.receipt() != null ? response.receipt().url() : null);
 
-                Booking booking = payment.getBooking(); // 결제 엔티티에 매핑된 예약 객체 가져오기
+                Booking booking = payment.getBooking();
                 if (booking != null) {
-                        // 예약 상태를 CONFIRMED로 변경
-                        booking.confirm();
-                        log.info("Booking confirmed for OrderID: {}", dto.orderId());
+                        // 비관적 락으로 재조회하여 스케줄러 / 다른 스레드와의 동시 수정 방지
+                        Booking lockedBooking = bookingRepository.findByIdWithLock(booking.getId())
+                                .orElse(null);
+                        if (lockedBooking != null && lockedBooking.getStatus() != BookingStatus.CONFIRMED) {
+                                lockedBooking.confirm();
+                                log.info("Booking confirmed for OrderID: {}", dto.orderId());
+                        }
                 }
 
 

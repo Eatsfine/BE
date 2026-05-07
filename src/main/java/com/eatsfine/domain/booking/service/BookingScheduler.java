@@ -3,11 +3,11 @@ package com.eatsfine.domain.booking.service;
 import com.eatsfine.domain.booking.entity.Booking;
 import com.eatsfine.domain.booking.enums.BookingStatus;
 import com.eatsfine.domain.booking.repository.BookingRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -42,7 +42,10 @@ public class BookingScheduler {
 
         // 2. 상태 변경 및 로그 기록
         expiredBookings.forEach(booking -> {
-            booking.cancel("결제 시간 초과로 인한 자동 취소");
+            // 조회 후 상태가 변경되었을 수 있으므로 PENDING 여부를 재확인
+            if (booking.getStatus() == BookingStatus.PENDING) {
+                booking.cancel("결제 시간 초과로 인한 자동 취소");
+            }
         });
 
     }

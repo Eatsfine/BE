@@ -34,6 +34,9 @@ public class Booking extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -87,6 +90,8 @@ public class Booking extends BaseEntity {
         BookingTable bookingTable = BookingTable.builder()
                 .booking(this)
                 .storeTable(storeTable)
+                .bookingDate(this.bookingDate)
+                .bookingTime(this.bookingTime)
                 .build();
         this.bookingTables.add(bookingTable);
     }

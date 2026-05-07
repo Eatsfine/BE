@@ -153,7 +153,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     @Transactional
     public BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(Long bookingId, BookingRequestDTO.PaymentConfirmDTO dto) {
 
-        Booking booking = bookingRepository.findById(bookingId)
+        Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
         //이미 예약이 확정됐는지 최종 확인
@@ -182,7 +182,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long userId, Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
 
 
-        Booking booking = bookingRepository.findById(bookingId)
+        Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
 
@@ -220,7 +220,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         storeValidator.validateStoreOwner(storeId, email);
 
         // 1. 예약 존재 확인
-        Booking booking = bookingRepository.findById(bookingId)
+        Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
         // 2. 데이터 무결성 검증
