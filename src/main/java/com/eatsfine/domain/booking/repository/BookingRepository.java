@@ -87,6 +87,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      */
     List<Booking> findAllByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime threshold);
 
+    @Query("SELECT b.id FROM Booking b WHERE b.status = :status AND b.createdAt < :threshold")
+    List<Long> findIdsByStatusAndCreatedAtBefore(@Param("status") BookingStatus status,
+                                                 @Param("threshold") LocalDateTime threshold);
+
 
     /**
      * 특정 식당의 브레이크 타임과 겹치는 가장 늦은 예약 날짜를 조회합니다.

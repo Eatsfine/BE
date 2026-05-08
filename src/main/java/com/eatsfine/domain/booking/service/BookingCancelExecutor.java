@@ -20,10 +20,7 @@ public class BookingCancelExecutor {
 
     @Transactional(readOnly = true)
     public List<Long> findExpiredPendingIds(LocalDateTime threshold) {
-        return bookingRepository.findAllByStatusAndCreatedAtBefore(BookingStatus.PENDING, threshold)
-                .stream()
-                .map(booking -> booking.getId())
-                .toList();
+        return bookingRepository.findIdsByStatusAndCreatedAtBefore(BookingStatus.PENDING, threshold);
     }
 
     // REQUIRES_NEW: 호출마다 독립 트랜잭션 — 하나 실패해도 다른 예약에 영향 없음
