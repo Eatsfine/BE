@@ -32,6 +32,7 @@ import com.eatsfine.domain.user.exception.UserException;
 import com.eatsfine.domain.user.repository.UserRepository;
 import com.eatsfine.domain.user.status.UserErrorStatus;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -126,8 +127,18 @@ public class BookingCommandServiceImpl implements BookingCommandService{
                 .divide(hundred, 0, RoundingMode.HALF_UP);
         booking.setDepositAmount(totalDeposit);
 
-        Booking savedBooking = bookingRepository.save(booking);
-        bookingRepository.flush();
+        Booking savedBooking;
+        try {
+            savedBooking = bookingRepository.save(booking);
+            bookingRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            // uq_booking_table_slot 위반만 도메인 예외로 변환 — FK/NOT NULL 등 다른 위반은 원본 그대로 전파
+            String cause = e.getMostSpecificCause().getMessage();
+            if (cause != null && cause.contains("uq_booking_table_slot")) {
+                throw new BookingException(BookingErrorStatus._ALREADY_RESERVED_TABLE, e);
+            }
+            throw e;
+        }
 
         // 결제 대기 데이터 생성 (내부 서비스 호출)
         PaymentRequestDTO.RequestPaymentDTO paymentRequest = new PaymentRequestDTO.RequestPaymentDTO(savedBooking.getId());
@@ -153,11 +164,14 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     @Transactional
     public BookingResponseDTO.ConfirmPaymentResultDTO confirmPayment(Long bookingId, BookingRequestDTO.PaymentConfirmDTO dto) {
 
-        Booking booking = bookingRepository.findById(bookingId)
+        Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
-        //이미 예약이 확정됐는지 최종 확인
-        if(booking.getStatus() == BookingStatus.CONFIRMED) {
+        if (booking.getStatus() == BookingStatus.CANCELED) {
+            throw new BookingException(BookingErrorStatus._ALREADY_CANCELED);
+        }
+
+        if (booking.getStatus() == BookingStatus.CONFIRMED) {
             throw new BookingException(BookingErrorStatus._ALREADY_CONFIRMED);
         }
 
@@ -182,7 +196,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
     public BookingResponseDTO.CancelBookingResultDTO cancelBooking(Long userId, Long bookingId, BookingRequestDTO.CancelBookingDTO dto) {
 
 
-        Booking booking = bookingRepository.findById(bookingId)
+        Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
 
@@ -220,7 +234,7 @@ public class BookingCommandServiceImpl implements BookingCommandService{
         storeValidator.validateStoreOwner(storeId, email);
 
         // 1. 예약 존재 확인
-        Booking booking = bookingRepository.findById(bookingId)
+        Booking booking = bookingRepository.findByIdWithLock(bookingId)
                 .orElseThrow(() -> new BookingException(BookingErrorStatus._BOOKING_NOT_FOUND));
 
         // 2. 데이터 무결성 검증

@@ -34,6 +34,9 @@ public class Booking extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Version
+    private Long version;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -87,6 +90,8 @@ public class Booking extends BaseEntity {
         BookingTable bookingTable = BookingTable.builder()
                 .booking(this)
                 .storeTable(storeTable)
+                .bookingDate(this.bookingDate)
+                .bookingTime(this.bookingTime)
                 .build();
         this.bookingTables.add(bookingTable);
     }
@@ -99,10 +104,12 @@ public class Booking extends BaseEntity {
         this.status = BookingStatus.CONFIRMED;
     }
 
-    public void cancel(String cancelReason)
-    {
+    public void cancel(String cancelReason) {
         this.status = BookingStatus.CANCELED;
         this.cancelReason = cancelReason;
+        // BookingTable 행은 보존하되 is_active를 null로 설정하여 슬롯만 해제
+        // MySQL 유니크 인덱스는 NULL을 중복으로 취급하지 않으므로 동일 시간대 재예약 허용
+        this.bookingTables.forEach(BookingTable::deactivate);
     }
 
     //예약과 관련된 결제 중 결제 완료된 결제키 조회

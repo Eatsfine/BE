@@ -8,8 +8,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -70,6 +73,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
             @Param("tableId") Long tableId,
             @Param("date") LocalDate date);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT b FROM Booking b WHERE b.id = :id")
+    Optional<Booking> findByIdWithLock(@Param("id") Long id);
+
     Optional<Booking> findByIdAndStatus(Long bookingId, BookingStatus status);
 
     /**
@@ -79,6 +86,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
      * @return 만료된 예약 리스트
      */
     List<Booking> findAllByStatusAndCreatedAtBefore(BookingStatus status, LocalDateTime threshold);
+
+    @Query("SELECT b.id FROM Booking b WHERE b.status = :status AND b.createdAt < :threshold")
+    List<Long> findIdsByStatusAndCreatedAtBefore(@Param("status") BookingStatus status,
+                                                 @Param("threshold") LocalDateTime threshold);
 
 
     /**

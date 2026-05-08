@@ -1,7 +1,10 @@
 package com.eatsfine.domain.payment.service;
 
 import com.eatsfine.domain.booking.entity.Booking;
+import com.eatsfine.domain.booking.enums.BookingStatus;
+import com.eatsfine.domain.booking.exception.BookingException;
 import com.eatsfine.domain.booking.repository.BookingRepository;
+import com.eatsfine.domain.booking.status.BookingErrorStatus;
 import com.eatsfine.domain.payment.dto.request.PaymentWebhookDTO;
 import com.eatsfine.domain.payment.dto.request.PaymentConfirmDTO;
 import com.eatsfine.domain.payment.dto.request.PaymentRequestDTO;
@@ -115,11 +118,34 @@ public class PaymentService {
                                 provider,
                                 response.receipt() != null ? response.receipt().url() : null);
 
-                Booking booking = payment.getBooking(); // 결제 엔티티에 매핑된 예약 객체 가져오기
+                Booking booking = payment.getBooking();
                 if (booking != null) {
-                        // 예약 상태를 CONFIRMED로 변경
-                        booking.confirm();
-                        log.info("Booking confirmed for OrderID: {}", dto.orderId());
+                        // 비관적 락으로 재조회하여 스케줄러 / 다른 스레드와의 동시 수정 방지
+                        Booking lockedBooking = bookingRepository.findByIdWithLock(booking.getId())
+                                .orElseThrow(() -> new PaymentException(PaymentErrorStatus._BOOKING_NOT_FOUND));
+
+                        if (lockedBooking.getStatus() == BookingStatus.CONFIRMED) {
+                                // 멱등성: 이미 확정된 경우 중복 처리 방지
+                                log.info("Booking {} already CONFIRMED (idempotent), skipping update for OrderID: {}",
+                                                lockedBooking.getId(), dto.orderId());
+                        } else if (lockedBooking.getStatus() == BookingStatus.CANCELED) {
+                                // 보상 처리: 스케줄러 등에 의해 예약이 취소됐으나 결제가 완료된 경우 자동 환불
+                                log.warn("Booking {} is CANCELED but payment was completed. Triggering compensation refund for OrderID: {}",
+                                                lockedBooking.getId(), dto.orderId());
+                                try {
+                                        tossPaymentService.cancel(response.paymentKey(),
+                                                        new PaymentRequestDTO.CancelPaymentDTO("예약 취소 상태에서 결제 완료 - 자동 환불"));
+                                } catch (Exception refundEx) {
+                                        log.error("Compensation refund failed for OrderID: {}. Manual intervention required.",
+                                                        dto.orderId(), refundEx);
+                                }
+                                payment.cancelPayment();
+                                // noRollbackFor = GeneralException.class 이므로 payment.cancelPayment() 변경은 커밋됨
+                                throw new BookingException(BookingErrorStatus._ALREADY_CANCELED);
+                        } else {
+                                lockedBooking.confirm();
+                                log.info("Booking confirmed for OrderID: {}", dto.orderId());
+                        }
                 }
 
 

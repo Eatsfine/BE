@@ -8,6 +8,8 @@ spring:
     driver-class-name: org.h2.Driver
     username:
     password:
+  flyway:
+    enabled: false  # 테스트는 H2 ddl-auto:create-drop으로 스키마 관리
   jpa:
     hibernate:
       ddl-auto: create-drop

@@ -7,4 +7,8 @@ public class BookingException extends GeneralException {
     public BookingException(BaseErrorCode code) {
         super(code);
     }
+
+    public BookingException(BaseErrorCode code, Throwable cause) {
+        super(code, cause);
+    }
 }
