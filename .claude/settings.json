@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(src/main/resources/application-local.yml)",
+      "Read(src/main/resources/application-prod.yml)",
+      "Read(.env)",
+      "Read(.env.*)",
+      "Read(**/*.secret)",
+      "Read(**/*.key)",
+      "Read(**/*-credentials.yml)",
+      "Read(**/*-credentials.yaml)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/pre-push-test.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
