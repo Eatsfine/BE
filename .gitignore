@@ -47,3 +47,17 @@ src/main/resources/static/payment-test.html
 src/main/resources/static/payment-success.html
 
 .env
+.env.*
+
+# 민감한 설정 파일 (DB 비밀번호, API Key 등 포함)
+src/main/resources/application-local.yml
+src/main/resources/application-prod.yml
+*.secret
+*.key
+*-credentials.yml
+*-credentials.yaml
+
+# Claude Code 개인 설정
+.claude/settings.local.json
+
+/CLAUDE.local.md
